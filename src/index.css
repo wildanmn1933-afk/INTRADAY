@@ -1,0 +1,115 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+    /* shadcn/ui Slate Dark Theme tokens */
+    --background: 224 71% 4%;
+    --foreground: 210 40% 98%;
+    --card: 222 47% 7%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 47% 7%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 188 95% 43%;
+    --primary-foreground: 222 47% 5%;
+    --secondary: 217 33% 13%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217 33% 13%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 217 33% 15%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217 33% 16%;
+    --input: 217 33% 16%;
+    --ring: 188 95% 43%;
+    --radius: 0.5rem;
+    
+    /* Linear Pro Terminal Design System Tokens */
+    --linear-bg-canvas: #08090d;
+    --linear-bg-sidebar: #0b0d14;
+    --linear-bg-card: #0f121b;
+    --linear-bg-card-subtle: #0a0c13;
+    --linear-bg-hover: #151824;
+    --linear-border-hairline: rgba(255, 255, 255, 0.08);
+    --linear-border-strong: rgba(255, 255, 255, 0.14);
+    --linear-border-cyan: rgba(6, 182, 212, 0.45);
+    --linear-accent-cyan: #06b6d4;
+    --linear-accent-emerald: #10b981;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: #08090d; /* Linear obsidian dark canvas */
+    color: #f1f5f9; /* high-contrast clean typography */
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Linear Pro Custom Subtle Scrollbars */
+  ::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 9999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.22);
+  }
+}
+
+/* Linear Pro Terminal Design System Utility Classes */
+.linear-card {
+  background-color: #0d1018;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+  border-radius: 0.75rem;
+}
+
+.linear-card-elevated {
+  background-color: #111420;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 0 4px 12px rgba(0, 0, 0, 0.4);
+  border-radius: 0.75rem;
+}
+
+.linear-card-subtle {
+  background-color: #090b11;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 0.625rem;
+}
+
+.linear-border-glow-cyan {
+  border-color: rgba(6, 182, 212, 0.5);
+  box-shadow: 0 0 16px -2px rgba(6, 182, 212, 0.15), inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
+}
+
+.linear-badge {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.03em;
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* No scrollbar utility */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
