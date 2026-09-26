@@ -13,8 +13,7 @@ export const PUBLIC_ROUTES = [
 export const PRIVATE_ROUTES = [
   '/dashboard',
   '/arah-market',
-  '/intraday-map',
-  '/catalysts',
+  '/daily-report',
   '/markets',
   '/intermarket',
   '/news',
@@ -98,10 +97,8 @@ export function routeToTab(path: string): NavTabId {
   switch (norm) {
     case '/arah-market':
       return 'arah_market';
-    case '/intraday-map':
-      return 'intraday_map';
-    case '/catalysts':
-      return 'today_catalysts';
+    case '/daily-report':
+      return 'daily_report';
     case '/markets':
       return 'markets';
     case '/intermarket':
@@ -132,10 +129,8 @@ export function tabToRoute(tab: NavTabId): string {
       return '/dashboard';
     case 'arah_market':
       return '/arah-market';
-    case 'intraday_map':
-      return '/intraday-map';
-    case 'today_catalysts':
-      return '/catalysts';
+    case 'daily_report':
+      return '/daily-report';
     case 'markets':
       return '/markets';
     case 'intermarket':

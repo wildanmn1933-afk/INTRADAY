@@ -558,7 +558,7 @@ export interface CurrencyStrengthConfluenceItem {
   netDifferential: number; // baseScore - quoteScore e.g. +1.8
   bias: 'BULLISH' | 'BEARISH' | 'NEUTRAL';
   alignment: 'CONFIRMED' | 'DIVERGENCE' | 'NEUTRAL';
-  advantageLabel: string; // e.g. 'USD (#5, 4.3) Unggul +3.8 atas JPY (#8, 0.5)'
+  advantageLabel: string; // e.g. 'USD (#5, 4.3) leads JPY (#8, 0.5) by +3.8'
   summary: string;
 }
 
@@ -637,3 +637,637 @@ export interface ArahMarketTodayData {
   pairs: IntradayPairConfluence[];
   generatedAt: string;
 }
+
+export interface DailyReportAssetItem {
+  symbol: string;
+  name: string;
+  price: number;
+  change_24h_pct: number;
+  category: 'FOREX' | 'COMMODITY' | 'CRYPTO' | 'INDEX' | 'BOND';
+  bias: 'BULLISH' | 'BEARISH' | 'NEUTRAL';
+  key_level_support?: string;
+  key_level_resistance?: string;
+  catalyst?: string;
+}
+
+export interface DailyReportCurrencyItem {
+  currency: string;
+  score: number;
+  status: 'LEADER' | 'LAGGARD' | 'NEUTRAL';
+  bias: 'STRONG' | 'WEAK' | 'MIXED';
+}
+
+// ==========================================
+// MARKET INTELLIGENCE REPORTING SYSTEM
+// ==========================================
+
+export type EpistemicTag = 'FACT' | 'REACTION' | 'AI_INTERPRETATION' | 'UNCERTAINTY';
+
+export type MarketImpactLevel = 'HIGH_IMPACT' | 'MODERATE_IMPACT' | 'LOW_IMPACT' | 'NO_SIGNIFICANT_REACTION';
+
+export interface EpistemicStatement {
+  text: string;
+  tag: EpistemicTag;
+  citation?: string;
+}
+
+export interface ExpectedVsActualItem {
+  id: string;
+  event_name: string;
+  category: 'INFLATION' | 'CENTRAL_BANK' | 'EMPLOYMENT' | 'GROWTH' | 'GEOPOLITICS' | 'EARNINGS';
+  expected_scenario: string; // "Inflation remains elevated → expectations for rate cuts decrease → USD potentially strengthens"
+  actual_event: string;      // "Inflation came in below expectations (Core 2.8% vs 3.1% exp)"
+  market_reaction: string;   // "US 10Y yields tumbled 9 bps, DXY plunged 0.6%, Gold surged $28/oz"
+  observed_outcome: string;  // "Rate cut probabilities repriced higher; USD weakened and real yields declined"
+  impact_level: MarketImpactLevel;
+  date: string;
+  assets_impacted: string[];
+  historical_lesson: string;
+}
+
+export interface MarketImpactRankedEvent {
+  id: string;
+  headline: string;
+  category: string;
+  impact_level: MarketImpactLevel;
+  price_reaction_magnitude: string; // e.g. "+1.42% in Gold, -0.68% in DXY"
+  why_it_mattered_or_ignored: string; // Reason based on real market data
+  epistemic_type: EpistemicTag;
+  timestamp: string;
+}
+
+export interface DailyMarketReportData {
+  id: string;
+  title: string;
+  reportDate: string;
+  session: string;
+  language: 'id' | 'en';
+  generatedAt: string;
+  isHistorical?: boolean;
+
+  // 1. Executive Summary with epistemic distinctions
+  executiveSummary: EpistemicStatement[];
+
+  // 2. Overall Market Environment
+  overallMarketEnvironment: {
+    regime: string;
+    riskScore: number;
+    stance: 'RISK_ON' | 'RISK_OFF' | 'ROTATIONAL' | 'NEUTRAL';
+    volatilityState: string;
+    summary: string;
+  };
+
+  // 3. Major Macro Catalysts
+  majorMacroCatalysts: Array<{
+    id: string;
+    catalyst: string;
+    driver: string;
+    impact_level: MarketImpactLevel;
+    epistemic_tag: EpistemicTag;
+    transmission_channel: string;
+  }>;
+
+  // 4. Important Economic Releases
+  importantEconomicReleases: Array<{
+    time: string;
+    currency: string;
+    event_name: string;
+    forecast?: string;
+    actual?: string;
+    previous?: string;
+    surprise_factor: 'ABOVE_CONSENSUS' | 'IN_LINE' | 'BELOW_CONSENSUS' | 'PENDING';
+    market_reaction: string;
+    impact_level: MarketImpactLevel;
+  }>;
+
+  // 5. Central Bank / Fed-related Developments
+  centralBankDevelopments: {
+    fedStance: string;
+    ratePathExpectation: string;
+    speechesAndComments: Array<{
+      speaker: string;
+      institution: string;
+      quoteSummary: string;
+      marketInterpretation: string;
+      epistemic_tag: EpistemicTag;
+    }>;
+    yieldCurveImplication: string;
+  };
+
+  // 6. Fundamental Market Bias
+  fundamentalMarketBias: Array<{
+    asset: string;
+    bias: 'BULLISH' | 'BEARISH' | 'NEUTRAL';
+    conviction: 'HIGH' | 'MODERATE' | 'LOW';
+    primaryDriver: string;
+    realYieldEffect: string;
+    liquidityCondition: string;
+  }>;
+
+  // 7. Asset Reaction
+  assetReactions: {
+    xauusd: {
+      price: number;
+      change24hPct: number;
+      sessionHigh: number;
+      sessionLow: number;
+      primaryCatalyst: string;
+      intermarketLinkage: string; // real yields & USD correlation
+      technicalStructure: string;
+      epistemic_tag: EpistemicTag;
+    };
+    majorIndices: {
+      sp500: { price: number; change24hPct: number; analysis: string };
+      nasdaq: { price: number; change24hPct: number; analysis: string };
+      dow: { price: number; change24hPct: number; analysis: string };
+      breadthAndLeadership: string;
+      epistemic_tag: EpistemicTag;
+    };
+    fxCurrencyStrength: {
+      dxyIndex: { price: number; change24hPct: number; driver: string };
+      topStrongest: string;
+      topWeakest: string;
+      relativeYieldDifferentials: string;
+      ranking: DailyReportCurrencyItem[];
+    };
+    cryptoAnalysis: {
+      btcPrice: number;
+      btcChange24hPct: number;
+      ethPrice: number;
+      ethChange24hPct: number;
+      etfInstitutionalFlow: string;
+      liquidityCorrelation: string;
+      epistemic_tag: EpistemicTag;
+    };
+  };
+
+  // 8. Important Price Action
+  importantPriceAction: Array<{
+    asset: string;
+    sessionObserved: string;
+    pattern: string;
+    structuralObservation: string;
+    volumeOrLiquidityCharacteristic: string;
+  }>;
+
+  // 9. Key Support / Resistance / Liquidity Areas
+  keySupportResistanceLiquidity: Array<{
+    asset: string;
+    currentPrice: number;
+    immediateSupport: string;
+    majorSupport: string;
+    immediateResistance: string;
+    majorResistance: string;
+    liquidityPoolZones: string;
+  }>;
+
+  // 10. Session Recaps
+  sessionRecaps: {
+    asia: {
+      sessionRangeSummary: string;
+      keyCatalystOrHeadline: string;
+      liquidityFlows: string;
+      handoverToLondon: string;
+    };
+    london: {
+      sessionRangeSummary: string;
+      keyCatalystOrHeadline: string;
+      liquidityFlows: string;
+      handoverToNewYork: string;
+    };
+    newYork: {
+      sessionRangeSummary: string;
+      keyCatalystOrHeadline: string;
+      liquidityFlows: string;
+      dayEndSettlement: string;
+    };
+  };
+
+  // 11. Biggest Market Movers
+  biggestMarketMovers: Array<{
+    symbol: string;
+    name: string;
+    price: number;
+    changePct: number;
+    direction: 'SURGE' | 'DUMP' | 'ROTATE';
+    catalystExplanation: string;
+  }>;
+
+  // 12. Catalysts That Actually Moved Price
+  catalystsThatActuallyMovedPrice: MarketImpactRankedEvent[];
+
+  // 13. Important News That Had Little or No Market Impact (No-impact filter!)
+  importantNewsWithLittleOrNoImpact: Array<{
+    headline: string;
+    source: string;
+    expectedImpactByRetail: string;
+    actualMarketReaction: string;
+    whyMarketIgnoredIt: string; // e.g. already priced in, superseded by treasury yields
+  }>;
+
+  // 14. Fundamental vs Price Action Relationship
+  fundamentalVsPriceActionRelationship: Array<{
+    asset: string;
+    fundamentalNarrative: string;
+    actualPriceBehavior: string;
+    alignmentStatus: 'ALIGNED' | 'DIVERGENT' | 'TEMPORARILY_DISCONNECTED';
+    inDepthExplanation: string;
+  }>;
+
+  // 15. What Changed During The Day
+  whatChangedDuringTheDay: Array<{
+    timeframe: string;
+    previousState: string;
+    catalystTrigger: string;
+    newState: string;
+    traderSignificance: string;
+  }>;
+
+  // 16. End-of-Day Market State
+  endOfDayMarketState: {
+    closingTone: string;
+    overnightRiskFactors: string[];
+    liquidityOutlook: string;
+    crossAssetPositioning: string;
+  };
+
+  // 17. Key Takeaways
+  keyTakeaways: string[];
+
+  // 18. Expected vs Actual Learning Module
+  expectedVsActualRecap: ExpectedVsActualItem[];
+
+  // Quick reference pulse
+  marketPulse: DailyReportAssetItem[];
+}
+
+export interface WeeklyMarketReportData {
+  id: string;
+  title: string;
+  weekRange: string;
+  weekNumber: number;
+  year: number;
+  language: 'id' | 'en';
+  generatedAt: string;
+  aggregatedDailyCount: number;
+
+  // 1. Weekly Executive Summary with epistemic tags
+  weeklyExecutiveSummary: EpistemicStatement[];
+
+  // 2. Major Macro Themes
+  majorMacroThemes: Array<{
+    theme: string;
+    narrative: string;
+    persistence: 'EMERGING' | 'ESTABLISHED' | 'WANING';
+    crossAssetImpact: string;
+  }>;
+
+  // 3. Biggest Catalysts
+  biggestCatalysts: MarketImpactRankedEvent[];
+
+  // 4. Economic Data Recap
+  economicDataRecap: Array<{
+    date: string;
+    event_name: string;
+    currency: string;
+    consensus: string;
+    actual: string;
+    surpriseFactor: string;
+    marketRepricing: string;
+  }>;
+
+  // 5. Central Bank / Monetary Policy Developments
+  centralBankDevelopments: Array<{
+    bank: string;
+    weeklyShift: string;
+    forwardGuidance: string;
+    marketPricingImpact: string;
+  }>;
+
+  // 6. Asset Performance
+  assetPerformance: {
+    xauusd: {
+      weeklyOpen: number;
+      weeklyClose: number;
+      changePct: number;
+      weeklyHigh: number;
+      weeklyLow: number;
+      weeklyAnalysis: string;
+      realYieldTransmission: string;
+    };
+    indices: {
+      sp500ChangePct: number;
+      nasdaqChangePct: number;
+      dowChangePct: number;
+      breadthAnalysis: string;
+      sectorRotationSummary: string;
+    };
+    fxCurrencyStrengthChanges: Array<{
+      currency: string;
+      weeklyDelta: number;
+      endOfWeekScore: number;
+      trend: 'STRENGTHENING' | 'WEAKENING' | 'RANGE';
+      primaryMacroDriver: string;
+    }>;
+    cryptoPerformance: {
+      btcWeeklyChangePct: number;
+      ethWeeklyChangePct: number;
+      weeklyNarrative: string;
+      macroLiquidityCorrelation: string;
+    };
+  };
+
+  // 7. Volatility Environment
+  volatilityEnvironment: {
+    vixCurrent: number;
+    vixWeeklyChange: number;
+    volatilityRegime: 'COMPRESSED' | 'NORMAL' | 'EXPANDING' | 'ELEVATED';
+    implicationForIntradayTraders: string;
+  };
+
+  // 8. Market Regime
+  marketRegime: {
+    currentRegime: string;
+    regimeStability: 'STABLE' | 'TRANSITIONING' | 'VOLATILE';
+    daysInCurrentRegime: number;
+    shiftProbability: string;
+    riskAppetiteSummary: string;
+  };
+
+  // 9. Major Price Action Events
+  majorPriceActionEvents: Array<{
+    day: string;
+    asset: string;
+    eventDescription: string;
+    structuralSignificance: string;
+  }>;
+
+  // 10. Fundamental vs Price Action Comparison
+  fundamentalVsPriceActionComparison: Array<{
+    asset: string;
+    fundamentalNarrative: string;
+    weeklyPriceReality: string;
+    relationshipStatus: 'COHERENT' | 'DECOUPLED' | 'OVERSHOT';
+    analyticalLesson: string;
+  }>;
+
+  // 11. Expected Scenario vs Actual Outcome
+  expectedVsActualOutcomes: ExpectedVsActualItem[];
+
+  // 12. Catalysts With Strong Market Impact
+  catalystsWithStrongMarketImpact: Array<{
+    catalyst: string;
+    assetImpacted: string;
+    observedMagnitude: string;
+    transmissionChannel: string;
+    takeaway: string;
+  }>;
+
+  // 13. Catalysts With Weak / No Market Impact
+  catalystsWithWeakOrNoMarketImpact: Array<{
+    catalyst: string;
+    whyIgnored: string;
+    traderLesson: string;
+  }>;
+
+  // 14. Important Changes From Previous Week
+  importantChangesFromPreviousWeek: Array<{
+    metric: string;
+    previousWeekState: string;
+    currentWeekState: string;
+    marketImplication: string;
+  }>;
+
+  // 15. Recurring Market Patterns
+  recurringMarketPatterns: Array<{
+    patternName: string;
+    occurrenceContext: string;
+    historicalConfirmationRate: string;
+    thisWeekEvidence: string;
+  }>;
+
+  // 16. Cross-Asset Relationships
+  crossAssetRelationships: Array<{
+    pairOrRatio: string;
+    historicalCorrelation: string;
+    currentObservedBehavior: string;
+    divergenceOrConfirmation: string;
+  }>;
+
+  // 17. Key Lessons From The Week
+  keyLessonsFromWeek: string[];
+
+  // 18. Next Week Watchlist
+  nextWeekWatchlist: Array<{
+    asset: string;
+    thesis: string;
+    keyCatalystToWatch: string;
+    invalidationTrigger: string;
+  }>;
+
+  // 19. Important Upcoming Events
+  importantUpcomingEvents: Array<{
+    date: string;
+    timeUtc: string;
+    event_name: string;
+    currency: string;
+    expectedImpact: 'HIGH' | 'MODERATE';
+    consensusNote: string;
+  }>;
+
+  // 20. Key Levels To Monitor
+  keyLevelsToMonitor: Array<{
+    asset: string;
+    currentPrice: number;
+    weeklyPivot: string;
+    majorResistance: string;
+    majorSupport: string;
+    liquidityTarget: string;
+  }>;
+}
+
+export interface HistoricalMemoryAnalysis {
+  repeatedCatalysts: Array<{
+    catalystName: string;
+    frequencyCount: number;
+    averageMarketReaction: string;
+    primaryImpactedAssets: string[];
+    typicalOutcome: string;
+  }>;
+  repeatedMarketReactions: Array<{
+    scenario: string;
+    historicalReactions: string[];
+    frequencyScore: number;
+    predictabilityScore: number; // 0-100
+    riskDisclaimer: string;
+  }>;
+  marketRegimeTransitions: Array<{
+    date: string;
+    fromRegime: string;
+    toRegime: string;
+    triggeringCatalyst: string;
+    durationDays: number;
+  }>;
+  recurringCorrelations: Array<{
+    assetA: string;
+    assetB: string;
+    rollingCorrelation30d: number;
+    historicalNorm: number;
+    status: 'ALIGNED' | 'DIVERGING' | 'INVERTED';
+    explanation: string;
+  }>;
+  historicalEconomicEventReactions: Array<{
+    eventType: string;
+    totalSamples: number;
+    hawkishSurpriseReaction: string;
+    dovishSurpriseReaction: string;
+    goldReactionAvg: string;
+    dollarReactionAvg: string;
+  }>;
+  expectationVsActualStats: {
+    totalLoggedScenarios: number;
+    consensusAlignedRatePct: number;
+    marketReversalRatePct: number;
+    mostSurprisingCategory: string;
+  };
+}
+
+export interface ReportArchiveItem {
+  id: string;
+  type: 'DAILY' | 'WEEKLY';
+  dateOrWeek: string;
+  title: string;
+  regime: string;
+  riskScore: number;
+  generatedAt: string;
+}
+
+// ==========================================
+// CENTRAL CONNECTED MARKET INTELLIGENCE SYSTEM
+// Single Source of Truth for All Modules
+// ==========================================
+
+export interface DataQualityReport {
+  score: number; // 0 - 100
+  status: 'OPTIMAL' | 'DEGRADED' | 'STALE';
+  feedCoverage: {
+    pricesCount: number;
+    currencyStrengthCount: number;
+    newsEventsCount: number;
+    economicCalendarCount: number;
+  };
+  freshnessSeconds: number;
+  lastSyncEpoch: number;
+  sourcesVerified: string[];
+}
+
+export type DivergenceType =
+  | 'GOLD_YIELD_DIVERGENCE'
+  | 'GOLD_DXY_DIVERGENCE'
+  | 'EQUITY_YIELD_DIVERGENCE'
+  | 'CARRY_SPREAD_DIVERGENCE'
+  | 'FOREX_STRENGTH_DIVERGENCE'
+  | 'CROSS_ASSET_REGIME_DIVERGENCE';
+
+export interface DetectedMarketDivergence {
+  id: string;
+  type: DivergenceType;
+  severity: 'CRITICAL' | 'WARNING' | 'NOTE';
+  instruments: string[];
+  title: string;
+  observedCondition: string;
+  structuralCause: string;
+  marketImplication: string;
+  actionableContext: string;
+  detectedAt: string;
+}
+
+export interface CanonicalAssetBias {
+  symbol: string;
+  displayName: string;
+  assetType: 'FOREX' | 'COMMODITY' | 'CRYPTO' | 'INDEX' | 'BOND';
+  price: number;
+  change24hPct: number;
+  bias: 'STRONG_BULLISH' | 'BULLISH' | 'NEUTRAL' | 'BEARISH' | 'STRONG_BEARISH';
+  convictionScore: number; // 0 - 100
+  confluenceStatus: 'HIGH_CONVICTION' | 'MODERATE' | 'CAUTION_TRAP' | 'NEUTRAL_CHOP';
+  fundamentalDriver: string;
+  intermarketDriver: string;
+  technicalStructure: string;
+  invalidationTrigger: string;
+  hasActiveDivergence: boolean;
+  divergenceSummary?: string;
+  lastUpdated: string;
+}
+
+export interface CentralMarketContext {
+  id: string;
+  epoch: number;
+  timestamp: string;
+  activeSession: TradingSessionName;
+  sessionStatusText: string;
+
+  // Data Integrity & Synchronization Metadata
+  dataQuality: DataQualityReport;
+
+  // Single Synchronized Macro & Global Risk Regime
+  globalRegime: {
+    regimeId: 'HAWKISH_YIELD_PRESSURE' | 'RISK_ON_EXPANSION' | 'GLOBAL_FLIGHT_TO_SAFETY' | 'DOVISH_LIQUIDITY_EASING' | 'BALANCED_ROTATION';
+    title: string;
+    riskScore: number; // -100 to +100
+    badgeColor: string;
+    dxyBiasVsOpen: 'ABOVE_OPEN' | 'BELOW_OPEN' | 'AT_OPEN';
+    summaryNarrative: string;
+    dominantCatalyst: string;
+  };
+
+  // Synchronized Rates, Yields & Spreads
+  ratesAndYields: {
+    us10yPrice: number;
+    us10yChangePct: number;
+    us10yChangeBps: number;
+    yieldCondition: 'EASING' | 'TIGHTENING' | 'CONSOLIDATING';
+    realYieldEstimate: number;
+    usDeSpread: number;
+    usJpSpread: number;
+  };
+
+  // Synchronized G8 Currency Hierarchy
+  currencyHierarchy: {
+    rankings: Array<{
+      currency: 'USD' | 'EUR' | 'GBP' | 'JPY' | 'AUD' | 'NZD' | 'CAD' | 'CHF';
+      score: number;
+      rank: number;
+      direction: string;
+    }>;
+    strongest: { currency: string; score: number };
+    weakest: { currency: string; score: number };
+    divergenceDelta: number;
+  };
+
+  // Cross-Asset Intermarket Transmissions
+  crossAssetTransmissions: Array<{
+    asset: string;
+    relationshipWithYield: string;
+    expectedBehavior: string;
+    actualBehavior: string;
+    alignmentStatus: 'ALIGNED' | 'DIVERGENT';
+    tacticalNote: string;
+  }>;
+
+  // Detected Inter-Instrument Divergences (No Forced Harmony)
+  divergences: DetectedMarketDivergence[];
+
+  // Single Canonical Asset Bias Registry
+  canonicalBiases: Record<string, CanonicalAssetBias>;
+
+  // Synchronized Catalysts
+  upcomingKeyRelease?: {
+    currency: string;
+    event_name: string;
+    impact: string;
+    date_time_utc: string;
+  };
+  todayCatalysts: TodayCatalyst[];
+}
+

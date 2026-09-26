@@ -23,6 +23,7 @@
  */
 
 import { db } from '../db/database.js';
+import { CentralMarketContextEngine } from './centralMarketContext.js';
 import {
   IntradayAssetBias,
   MarketDirectionBias,
@@ -37,12 +38,13 @@ export class IntradayMarketMapEngine {
   /**
    * Generates the real-time Intraday Market Map for all 13 assets
    */
-  public static getIntradayMarketMap(): IntradayAssetBias[] {
-    const prices = db.getAllMarketPrices();
-    const strengths = db.getCurrencyStrength();
-    const macroEvents = db.getEconomicEvents(40);
+  static async getIntradayMarketMap(): Promise<IntradayAssetBias[]> {
+    const centralContext = await CentralMarketContextEngine.getCentralContext();
+    const prices = await db.getAllMarketPrices();
+    const strengths = await db.getCurrencyStrength();
+    const macroEvents = await db.getEconomicEvents(40);
     const speeches = MacroIntelligenceEngine.getCentralBankSpeeches();
-    const macroContexts = MacroIntelligenceEngine.getCurrencyMacroContext();
+    const macroContexts = await MacroIntelligenceEngine.getCurrencyMacroContext();
 
     const priceMap = new Map<string, MarketPrice>();
     prices.forEach(p => priceMap.set(p.symbol, p));
@@ -63,11 +65,11 @@ export class IntradayMarketMapEngine {
       tvSymbol: string;
       tvUrl?: string;
     }> = [
-      { symbol: 'XAUUSD', displayName: 'Gold / US Dollar', assetType: 'COMMODITY', tvSymbol: 'TVC:GOLD', tvUrl: 'https://www.tradingview.com/chart/?symbol=TVC%3AGOLD' },
+      { symbol: 'XAUUSD', displayName: 'Gold / US Dollar', assetType: 'COMMODITY', tvSymbol: 'OANDA:XAUUSD', tvUrl: 'https://www.tradingview.com/chart/?symbol=OANDA%3AXAUUSD' },
       { symbol: 'BTC', displayName: 'Bitcoin / US Dollar', assetType: 'CRYPTO', tvSymbol: 'BITSTAMP:BTCUSD', tvUrl: 'https://www.tradingview.com/x/zRklu6Fj/' },
-      { symbol: 'US30', displayName: 'Dow Jones 30 Index', assetType: 'INDEX', tvSymbol: 'FOREXCOM:US30', tvUrl: 'https://www.tradingview.com/x/McUWwa6F/' },
-      { symbol: 'US500', displayName: 'S&P 500 Index', assetType: 'INDEX', tvSymbol: 'CAPITALCOM:SPX500', tvUrl: 'https://www.tradingview.com/x/mMOtpRJZ/' },
-      { symbol: 'US100', displayName: 'Nasdaq 100 Index', assetType: 'INDEX', tvSymbol: 'SKILLING:US100', tvUrl: 'https://www.tradingview.com/x/pWHPW2sk/' },
+      { symbol: 'US30', displayName: 'Dow Jones 30 Index', assetType: 'INDEX', tvSymbol: 'OANDA:US30USD', tvUrl: 'https://www.tradingview.com/chart/?symbol=OANDA%3AUS30USD' },
+      { symbol: 'US500', displayName: 'S&P 500 Index', assetType: 'INDEX', tvSymbol: 'OANDA:SPX500USD', tvUrl: 'https://www.tradingview.com/chart/?symbol=OANDA%3ASPX500USD' },
+      { symbol: 'US100', displayName: 'Nasdaq 100 Index', assetType: 'INDEX', tvSymbol: 'OANDA:NAS100USD', tvUrl: 'https://www.tradingview.com/chart/?symbol=OANDA%3ANAS100USD' },
       { symbol: 'US10Y', displayName: 'US 10Y Treasury Yield', assetType: 'BOND', tvSymbol: 'TVC:US10Y', tvUrl: 'https://www.tradingview.com/symbols/TVC-US10Y/' },
       { symbol: 'USD', displayName: 'US Dollar Index (DXY)', assetType: 'FOREX', tvSymbol: 'TVC:DXY', tvUrl: 'https://www.tradingview.com/x/mxhFtDj9/' },
       { symbol: 'EUR', displayName: 'Euro / US Dollar', assetType: 'FOREX', tvSymbol: 'FX:EURUSD', tvUrl: 'https://www.tradingview.com/chart/?symbol=FX%3AEURUSD' },
@@ -416,7 +418,29 @@ export class IntradayMarketMapEngine {
 
       const fundamentalBias = getBiasFromScore(fundamentalScore);
       const priceActionBias = getBiasFromScore(priceActionScore);
-      const overallBias = getBiasFromScore(compositeScore);
+      let overallBias = getBiasFromScore(compositeScore);
+      let directionScore = compositeScore;
+
+      // Sinkronisasi dengan Central Market Context Single Source of Truth
+      const canonical = centralContext.canonicalBiases[target.symbol];
+      if (canonical) {
+        if (canonical.bias.includes('BULLISH')) overallBias = 'BULLISH';
+        else if (canonical.bias.includes('BEARISH')) overallBias = 'BEARISH';
+        else overallBias = 'NEUTRAL';
+        directionScore = canonical.bias.includes('BULLISH')
+          ? Math.max(30, compositeScore)
+          : canonical.bias.includes('BEARISH')
+          ? Math.min(-30, compositeScore)
+          : compositeScore;
+      }
+
+      // Deteksi divergensi otentik dari Central Context (NO FORCED HARMONY)
+      const activeDiv = centralContext.divergences.find(d => d.instruments.includes(target.symbol));
+      if (activeDiv) {
+        conflictingFactors.unshift(
+          `[DIVERGENSI: ${activeDiv.title}] ${activeDiv.observedCondition}. Penyebab: ${activeDiv.structuralCause}`
+        );
+      }
 
       return {
         symbol: target.symbol,
@@ -426,7 +450,7 @@ export class IntradayMarketMapEngine {
         change_24h_pct: change24h,
         sparkline_1h: sparkline,
         overall_bias: overallBias,
-        direction_score: compositeScore,
+        direction_score: directionScore,
         confidence,
         fundamental_bias: fundamentalBias,
         fundamental_score: fundamentalScore,
@@ -450,8 +474,8 @@ export class IntradayMarketMapEngine {
   /**
    * Generates Today's Key Catalysts enriched with real-time surprises & market reaction
    */
-  public static getTodayKeyCatalysts(): TodayCatalyst[] {
-    const macroEvents = db.getEconomicEvents(200);
+  static async getTodayKeyCatalysts(): Promise<TodayCatalyst[]> {
+    const macroEvents = await db.getEconomicEvents(200);
     const now = new Date();
     const nowMs = now.getTime();
     const nowIso = now.toISOString();

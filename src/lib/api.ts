@@ -20,6 +20,13 @@ import {
   HistoricalCurrencyComparison,
   SmtpStatusResponse,
   SmtpTestResponse,
+  MarketAlertPublicConfig,
+  DailyMarketReportData,
+  WeeklyMarketReportData,
+  ExpectedVsActualItem,
+  HistoricalMemoryAnalysis,
+  ReportArchiveItem,
+  CentralMarketContext,
 } from '../types';
 
 export const API_BASE = '/api';
@@ -246,6 +253,33 @@ export const api = {
   refreshEconomicCalendar: () => request<{ success: boolean; count: number }>('/macro/refresh', { method: 'POST' }),
 
   // Intelligence & AI
+  getDailyReport: (lang: 'id' | 'en' = 'id', date?: string) =>
+    request<{ success: boolean; report: DailyMarketReportData; timestamp: string }>(`/intelligence/daily-report?lang=${lang}${date ? `&date=${encodeURIComponent(date)}` : ''}`),
+  generateDailyReport: (lang: 'id' | 'en' = 'id') =>
+    request<{ success: boolean; report: DailyMarketReportData; refreshed: boolean; timestamp: string }>('/intelligence/daily-report/generate', {
+      method: 'POST',
+      body: JSON.stringify({ lang }),
+    }),
+  getWeeklyReport: (lang: 'id' | 'en' = 'id', week?: string) =>
+    request<{ success: boolean; report: WeeklyMarketReportData; timestamp: string }>(`/intelligence/weekly-report?lang=${lang}${week ? `&week=${encodeURIComponent(week)}` : ''}`),
+  generateWeeklyReport: (lang: 'id' | 'en' = 'id') =>
+    request<{ success: boolean; report: WeeklyMarketReportData; refreshed: boolean; timestamp: string }>('/intelligence/weekly-report/generate', {
+      method: 'POST',
+      body: JSON.stringify({ lang }),
+    }),
+  getExpectedVsActual: (category?: string, impact?: string, limit?: number) => {
+    const params = new URLSearchParams();
+    if (category) params.append('category', category);
+    if (impact) params.append('impact', impact);
+    if (limit) params.append('limit', limit.toString());
+    return request<{ success: boolean; items: ExpectedVsActualItem[]; count: number; timestamp: string }>(`/intelligence/expected-vs-actual?${params.toString()}`);
+  },
+  getHistoricalMemory: () =>
+    request<{ success: boolean; analysis: HistoricalMemoryAnalysis; timestamp: string }>('/intelligence/historical-memory'),
+  getReportsArchive: () =>
+    request<{ success: boolean; archive: ReportArchiveItem[]; count: number; timestamp: string }>('/intelligence/reports-archive'),
+  getCentralMarketContext: (refresh = false) =>
+    request<{ success: boolean; context: CentralMarketContext; timestamp: string }>(`/intelligence/central-context${refresh ? '?refresh=true' : ''}`),
   getMarketThemes: () => request<{ themes: MarketTheme[] }>('/intelligence/themes'),
   getCentralBankSpeeches: () => request<{ speeches: CentralBankSpeech[]; count: number }>('/intelligence/central-bank-speeches'),
   getMacroContext: () => request<{ contexts: CurrencyMacroContext[]; count: number }>('/intelligence/macro-context'),
@@ -261,13 +295,17 @@ export const api = {
     method: 'POST',
     body: JSON.stringify(credentials),
   }),
+  firebaseLogin: (payload: { idToken: string }) =>
+    request<{ user: User; token: string; success: boolean }>('/auth/firebase-login', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
   register: (payload: { email: string; password: string; name: string }) => request<{
     success: boolean;
     status: 'pending_verification' | 'verified';
     message: string;
     email: string;
     token?: string;
-    code?: string;
     verificationUrl?: string;
     user: User;
   }>('/auth/register', {
@@ -330,7 +368,7 @@ export const api = {
     method: 'POST',
     body: JSON.stringify({ email }),
   }),
-  resetPassword: (payload: { token?: string; newPassword: string; email?: string; directReset?: boolean }) => request<{
+  resetPassword: (payload: { token: string; newPassword: string }) => request<{
     success: boolean;
     message: string;
     token: string;
@@ -352,15 +390,7 @@ export const api = {
     method: 'POST',
     body: JSON.stringify({ token }),
   }),
-  quickLogin: (email?: string) => request<{
-    success: boolean;
-    message: string;
-    token: string;
-    user: User;
-  }>('/auth/quick-login', {
-    method: 'POST',
-    body: JSON.stringify({ email }),
-  }),
+
 
   // Admin
   getSystemHealth: () => request<any>('/admin/system-health'),
@@ -437,6 +467,13 @@ export const api = {
   }>(`/admin/users/${id}/toggle-verification`, {
     method: 'POST',
   }),
+  syncAdminUsersBatch: (users: Partial<User>[]) => request<{
+    success: boolean;
+    count: number;
+  }>('/admin/users/sync-batch', {
+    method: 'POST',
+    body: JSON.stringify({ users }),
+  }),
   getSources: () => request<{ sources: any[]; count: number }>('/admin/sources'),
   toggleSource: (id: string, is_enabled: boolean) => request<any>(`/admin/sources/${id}`, {
     method: 'PATCH',
@@ -502,5 +539,37 @@ export const api = {
     request<SmtpTestResponse>('/admin/smtp/test', {
       method: 'POST',
       body: JSON.stringify(payload || {}),
+    }),
+
+  // Real-Time Market Bias Alerts (Telegram & WhatsApp)
+  getAlertConfig: () =>
+    request<{ success: boolean; config: MarketAlertPublicConfig }>('/alerts/config'),
+  updateAlertConfig: (payload: Partial<{
+    telegramBotToken: string;
+    telegramChatId: string;
+    whatsappPhone: string;
+    whatsappApiKey: string;
+    enabled: boolean;
+    minConfirmations: number;
+    instruments: string[];
+    cooldownMinutes: number;
+  }>) =>
+    request<{ success: boolean; config: MarketAlertPublicConfig }>('/alerts/config', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  testTelegramAlert: (payload?: { token?: string; chatId?: string }) =>
+    request<{ success: boolean; message: string }>('/alerts/test-telegram', {
+      method: 'POST',
+      body: JSON.stringify(payload || {}),
+    }),
+  testWhatsappAlert: (payload?: { phone?: string; apiKey?: string }) =>
+    request<{ success: boolean; message: string }>('/alerts/test-whatsapp', {
+      method: 'POST',
+      body: JSON.stringify(payload || {}),
+    }),
+  triggerAlertScan: () =>
+    request<{ success: boolean; dispatched_count: number; message: string; alerts: any[] }>('/alerts/scan', {
+      method: 'POST',
     }),
 };

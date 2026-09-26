@@ -8,6 +8,7 @@ import {
   TodayCatalyst,
   ArahMarketTodayData,
   AIAnalysis,
+  CentralMarketContext,
 } from '../types';
 import { api } from '../lib/api';
 import { useSSE } from '../lib/useSSE';
@@ -19,8 +20,9 @@ export function useMarketDataStream(options: {
   autoTriggerConfig: AutoTriggerConfig;
   onNewAlert: (alert: TriggeredNewsAlert) => void;
   markAlertAsSeen: (key: string) => boolean;
+  backgroundSyncIntervalMs?: number;
 }) {
-  const { autoTriggerConfig, onNewAlert, markAlertAsSeen } = options;
+  const { autoTriggerConfig, onNewAlert, markAlertAsSeen, backgroundSyncIntervalMs = 60000 } = options;
 
   const [prices, setPrices] = useState<MarketPrice[]>([]);
   const [strengths, setStrengths] = useState<CurrencyStrength[]>([]);
@@ -31,9 +33,12 @@ export function useMarketDataStream(options: {
   const [intradayMap, setIntradayMap] = useState<IntradayAssetBias[]>([]);
   const [todayCatalysts, setTodayCatalysts] = useState<TodayCatalyst[]>([]);
   const [arahMarketData, setArahMarketData] = useState<ArahMarketTodayData | null>(null);
+  const [centralContext, setCentralContext] = useState<CentralMarketContext | null>(null);
 
   const [initialLoading, setInitialLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isBackgroundSyncing, setIsBackgroundSyncing] = useState(false);
+  const [lastBackgroundSync, setLastBackgroundSync] = useState<Date>(new Date());
   const [isRefreshingPrices, setIsRefreshingPrices] = useState(false);
   const [isRefreshingCS, setIsRefreshingCS] = useState(false);
   const [isRefreshingMacro, setIsRefreshingMacro] = useState(false);
@@ -53,16 +58,35 @@ export function useMarketDataStream(options: {
     }, 1200); // 1.2s batching
   }, []);
 
+  // Debounced Arah Market recalculation to immediately reflect bullish/bearish price shifts
+  const arahDebounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const triggerDebouncedArahMarketRefresh = useCallback(() => {
+    if (arahDebounceTimerRef.current) return;
+    arahDebounceTimerRef.current = setTimeout(() => {
+      arahDebounceTimerRef.current = null;
+      api.getArahMarketToday()
+        .then(res => {
+          if (res?.data) setArahMarketData(res.data);
+        })
+        .catch(() => {});
+    }, 1200); // 1.2s batching
+  }, []);
+
   // Real-time SSE listener
   const { status: sseStatus } = useSSE({
     enabled: true,
     onMarketPrices: (updatedPrices: MarketPrice[]) => {
       setPrices(updatedPrices);
       triggerDebouncedIntradayRefresh();
+      triggerDebouncedArahMarketRefresh();
     },
     onCurrencyStrength: (updatedStrengths: CurrencyStrength[]) => {
       setStrengths(updatedStrengths);
       triggerDebouncedIntradayRefresh();
+      triggerDebouncedArahMarketRefresh();
+    },
+    onArahMarket: (data: ArahMarketTodayData) => {
+      if (data) setArahMarketData(data);
     },
     onNewsIngested: (data: any) => {
       if (data?.eventId) {
@@ -121,7 +145,7 @@ export function useMarketDataStream(options: {
   const loadInitialData = useCallback(async () => {
     try {
       setInitialLoading(true);
-      const [mktRes, curRes, evtRes, calRes, sesRes, mapRes, catRes, arahRes] = await Promise.allSettled([
+      const [mktRes, curRes, evtRes, calRes, sesRes, mapRes, catRes, arahRes, ctxRes] = await Promise.allSettled([
         api.getMarkets(),
         api.getCurrencyStrength(),
         api.getEvents(40),
@@ -130,6 +154,7 @@ export function useMarketDataStream(options: {
         api.getIntradayMarketMap(),
         api.getTodayCatalysts(),
         api.getArahMarketToday(),
+        api.getCentralMarketContext(),
       ]);
 
       if (mktRes.status === 'fulfilled') setPrices(mktRes.value.prices);
@@ -140,6 +165,7 @@ export function useMarketDataStream(options: {
       if (mapRes.status === 'fulfilled') setIntradayMap(mapRes.value.market_map);
       if (catRes.status === 'fulfilled') setTodayCatalysts(catRes.value.catalysts);
       if (arahRes.status === 'fulfilled' && arahRes.value?.data) setArahMarketData(arahRes.value.data);
+      if (ctxRes.status === 'fulfilled' && ctxRes.value?.context) setCentralContext(ctxRes.value.context);
     } catch (err) {
       console.warn('Initialization notice:', err);
     } finally {
@@ -152,24 +178,100 @@ export function useMarketDataStream(options: {
     try {
       setIsSyncing(true);
       await api.runGlobalIngest();
-      const [eRes, cRes, mRes, mapRes, catRes] = await Promise.allSettled([
+      const [eRes, cRes, mRes, mapRes, catRes, arahRes, ctxRes] = await Promise.allSettled([
         api.getEvents(40),
         api.getCurrencyStrength(),
         api.getMarkets(),
         api.getIntradayMarketMap(),
         api.getTodayCatalysts(),
+        api.getArahMarketToday(),
+        api.getCentralMarketContext(true),
       ]);
       if (eRes.status === 'fulfilled') setEvents(eRes.value.events);
       if (cRes.status === 'fulfilled') setStrengths(cRes.value.currency_strength);
       if (mRes.status === 'fulfilled') setPrices(mRes.value.prices);
       if (mapRes.status === 'fulfilled') setIntradayMap(mapRes.value.market_map);
       if (catRes.status === 'fulfilled') setTodayCatalysts(catRes.value.catalysts);
+      if (arahRes.status === 'fulfilled' && arahRes.value?.data) setArahMarketData(arahRes.value.data);
+      if (ctxRes.status === 'fulfilled' && ctxRes.value?.context) setCentralContext(ctxRes.value.context);
     } catch (err) {
       console.error('Manual sync notice:', err);
     } finally {
       setIsSyncing(false);
     }
   }, []);
+
+  // Background sync function for silent, non-blocking polling across all market feeds
+  const triggerBackgroundSync = useCallback(async () => {
+    try {
+      setIsBackgroundSyncing(true);
+      const [mktRes, curRes, evtRes, calRes, mapRes, catRes, arahRes, ctxRes] = await Promise.allSettled([
+        api.getMarkets(),
+        api.getCurrencyStrength(),
+        api.getEvents(40),
+        api.getEconomicCalendar(200),
+        api.getIntradayMarketMap(),
+        api.getTodayCatalysts(),
+        api.getArahMarketToday(),
+        api.getCentralMarketContext(),
+      ]);
+
+      if (mktRes.status === 'fulfilled' && mktRes.value?.prices) setPrices(mktRes.value.prices);
+      if (curRes.status === 'fulfilled' && curRes.value?.currency_strength) setStrengths(curRes.value.currency_strength);
+      if (evtRes.status === 'fulfilled' && evtRes.value?.events) setEvents(evtRes.value.events);
+      if (calRes.status === 'fulfilled' && calRes.value?.calendar) setCalendar(calRes.value.calendar);
+      if (mapRes.status === 'fulfilled' && mapRes.value?.market_map) setIntradayMap(mapRes.value.market_map);
+      if (catRes.status === 'fulfilled' && catRes.value?.catalysts) setTodayCatalysts(catRes.value.catalysts);
+      if (arahRes.status === 'fulfilled' && arahRes.value?.data) setArahMarketData(arahRes.value.data);
+      if (ctxRes.status === 'fulfilled' && ctxRes.value?.context) setCentralContext(ctxRes.value.context);
+
+      setLastBackgroundSync(new Date());
+    } catch (err) {
+      console.warn('[DataStream] Background sync notice:', err);
+    } finally {
+      setIsBackgroundSyncing(false);
+    }
+  }, []);
+
+  // Automated 60-second background sync polling and window focus reactivity
+  useEffect(() => {
+    // 1. High-frequency Arah Market heartbeat (every 15s) for instant session reactivity
+    const arahHeartbeatInterval = setInterval(() => {
+      api.getArahMarketToday()
+        .then(res => {
+          if (res?.data) setArahMarketData(res.data);
+        })
+        .catch(() => {});
+    }, 15000);
+
+    // 2. Comprehensive 60-second background sync for all market data streams
+    const periodicSyncInterval = setInterval(() => {
+      triggerBackgroundSync();
+    }, backgroundSyncIntervalMs);
+
+    // 3. Tab visibility and focus listener: if tab becomes visible after 60s idle, sync immediately
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        triggerBackgroundSync();
+      }
+    };
+
+    const handleWindowFocus = () => {
+      triggerBackgroundSync();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleWindowFocus);
+
+    return () => {
+      clearInterval(arahHeartbeatInterval);
+      clearInterval(periodicSyncInterval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleWindowFocus);
+      if (intradayDebounceTimerRef.current) clearTimeout(intradayDebounceTimerRef.current);
+      if (arahDebounceTimerRef.current) clearTimeout(arahDebounceTimerRef.current);
+    };
+  }, [backgroundSyncIntervalMs, triggerBackgroundSync]);
 
   // Individual refreshed actions
   const refreshPrices = useCallback(async () => {
@@ -265,11 +367,15 @@ export function useMarketDataStream(options: {
     setTodayCatalysts,
     arahMarketData,
     setArahMarketData,
+    centralContext,
+    setCentralContext,
 
     // Status
     sseStatus,
     initialLoading,
     isSyncing,
+    isBackgroundSyncing,
+    lastBackgroundSync,
     isRefreshingPrices,
     isRefreshingCS,
     isRefreshingMacro,
@@ -280,6 +386,7 @@ export function useMarketDataStream(options: {
     // Actions
     loadInitialData,
     triggerGlobalSync,
+    triggerBackgroundSync,
     refreshPrices,
     refreshCurrencyStrength,
     refreshIntradayMap,

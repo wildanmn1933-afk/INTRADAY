@@ -2,57 +2,120 @@
 
 @layer base {
   :root {
-    --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-display: 'Space Grotesk', 'Inter', sans-serif;
+    --font-mono: 'IBM Plex Mono', 'JetBrains Mono', monospace;
 
-    /* shadcn/ui Slate Dark Theme tokens */
-    --background: 224 71% 4%;
-    --foreground: 210 40% 98%;
-    --card: 222 47% 7%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222 47% 7%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 188 95% 43%;
-    --primary-foreground: 222 47% 5%;
-    --secondary: 217 33% 13%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217 33% 13%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 217 33% 15%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217 33% 16%;
-    --input: 217 33% 16%;
-    --ring: 188 95% 43%;
-    --radius: 0.5rem;
-    
-    /* Linear Pro Terminal Design System Tokens */
-    --linear-bg-canvas: #08090d;
-    --linear-bg-sidebar: #0b0d14;
-    --linear-bg-card: #0f121b;
-    --linear-bg-card-subtle: #0a0c13;
-    --linear-bg-hover: #151824;
-    --linear-border-hairline: rgba(255, 255, 255, 0.08);
-    --linear-border-strong: rgba(255, 255, 255, 0.14);
-    --linear-border-cyan: rgba(6, 182, 212, 0.45);
-    --linear-accent-cyan: #06b6d4;
-    --linear-accent-emerald: #10b981;
+    /* Light Theme (Frosted Executive Mist & Smoked Glass) */
+    --bg-canvas: #F4F5F7;
+    --bg-section-alt: rgba(0, 0, 0, 0.035);
+    --bg-surface: rgba(255, 255, 255, 0.82);
+    --bg-surface-elevated: rgba(255, 255, 255, 0.94);
+    --bg-sidebar-base: #F4F5F7;
+    --bg-sidebar: rgba(244, 245, 247, 0.88);
+    --bg-header-base: #F4F5F7;
+    --bg-header: rgba(244, 245, 247, 0.88);
+    --bg-dark-primary: #121214;
+    --bg-dark-secondary: #1F1F23;
+    --text-primary: #111827;
+    --text-secondary: #4B5563;
+    --text-muted: #8E95A2;
+
+    --border-subtle: rgba(17, 24, 39, 0.08);
+    --border-strong: rgba(17, 24, 39, 0.16);
+    --border-hairline: rgba(17, 24, 39, 0.04);
+
+    --active-bg: rgba(17, 24, 39, 0.06);
+    --active-text: #111827;
+    --active-border: rgba(17, 24, 39, 0.14);
+
+    --bullish: #15803D;
+    --bullish-bg: rgba(21, 128, 61, 0.08);
+    --bullish-border: rgba(21, 128, 61, 0.3);
+    --bearish: #DC2626;
+    --bearish-bg: rgba(220, 38, 38, 0.08);
+    --bearish-border: rgba(220, 38, 38, 0.3);
+    --warning: #D97706;
+    --warning-bg: rgba(217, 119, 6, 0.1);
+    --warning-border: rgba(217, 119, 6, 0.32);
+
+    /* Elegant Titanium Slate Accent */
+    --accent: #1E293B;
+    --accent-contrast: #FFFFFF;
+    --accent-subtle: rgba(30, 41, 59, 0.07);
+    --accent-border: rgba(30, 41, 59, 0.18);
+    --accent-glow: 0 4px 14px -4px rgba(30, 41, 59, 0.18);
+    --accent-strong: #0F172A;
+    --warning-strong: #B45309;
+
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: 8px;
+  }
+
+  html.dark {
+    /* Dark Theme (Signature Frosted Smoked Glass & Titanium Slate) */
+    --bg-canvas: #0B0C0E;
+    --bg-section-alt: rgba(255, 255, 255, 0.035);
+    --bg-surface: rgba(20, 22, 27, 0.72);
+    --bg-surface-elevated: rgba(28, 31, 38, 0.82);
+    --bg-sidebar-base: #0B0C0E;
+    --bg-sidebar: rgba(14, 15, 18, 0.82);
+    --bg-header-base: #0B0C0E;
+    --bg-header: rgba(14, 15, 18, 0.82);
+    --bg-dark-primary: #0B0C0E;
+    --bg-dark-secondary: #131418;
+    --text-primary: #F3F4F6;
+    --text-secondary: #9CA3AF;
+    --text-muted: #6B7280;
+
+    --border-subtle: rgba(255, 255, 255, 0.08);
+    --border-strong: rgba(255, 255, 255, 0.16);
+    --border-hairline: rgba(255, 255, 255, 0.045);
+
+    --active-bg: rgba(255, 255, 255, 0.08);
+    --active-text: #FFFFFF;
+    --active-border: rgba(255, 255, 255, 0.18);
+
+    --bullish: #22C55E;
+    --bullish-bg: rgba(34, 197, 94, 0.15);
+    --bullish-border: rgba(34, 197, 94, 0.35);
+    --bearish: #EF4444;
+    --bearish-bg: rgba(239, 68, 68, 0.15);
+    --bearish-border: rgba(239, 68, 68, 0.35);
+    --warning: #F59E0B;
+    --warning-bg: rgba(245, 158, 11, 0.15);
+    --warning-border: rgba(245, 158, 11, 0.35);
+
+    /* Elegant Polished Titanium Accent */
+    --accent: #E2E8F0;
+    --accent-contrast: #090A0D;
+    --accent-subtle: rgba(255, 255, 255, 0.08);
+    --accent-border: rgba(255, 255, 255, 0.18);
+    --accent-glow: 0 4px 20px -4px rgba(255, 255, 255, 0.14);
+    --accent-strong: #FFFFFF;
+    --warning-strong: var(--warning);
   }
 
   body {
     font-family: var(--font-sans);
-    background-color: #08090d; /* Linear obsidian dark canvas */
-    color: #f1f5f9; /* high-contrast clean typography */
+    background-color: var(--bg-canvas);
+    color: var(--text-primary);
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    transition: background-color 150ms ease, color 150ms ease;
   }
 
-  /* Linear Pro Custom Subtle Scrollbars */
+  /* Professional Monospace Data Numerals */
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Technical Precision Scrollbars */
   ::-webkit-scrollbar {
-    width: 5px;
-    height: 5px;
+    width: 6px;
+    height: 6px;
   }
 
   ::-webkit-scrollbar-track {
@@ -60,56 +123,438 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 9999px;
+    background: var(--border-subtle);
+    border-radius: 2px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.22);
+    background: var(--text-muted);
   }
 }
 
-/* Linear Pro Terminal Design System Utility Classes */
-.linear-card {
-  background-color: #0d1018;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
-  border-radius: 0.75rem;
+/* The ticker strip and similar rails scroll horizontally on phones. Hiding the
+   bar there is deliberate, but it shipped without a definition, so nothing was
+   hidden and no scroll hint existed either. Keep it scrollable and add a hint. */
+@layer utilities {
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .scroll-hint-x {
+    background-image: none;
+  }
+
+  @media (max-width: 639px) {
+    .scroll-hint-x {
+      background-image: linear-gradient(to right, transparent, var(--bg-surface));
+      background-repeat: no-repeat;
+      background-position: right center;
+      background-size: 22px 100%;
+    }
+  }
 }
 
-.linear-card-elevated {
-  background-color: #111420;
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 0 4px 12px rgba(0, 0, 0, 0.4);
-  border-radius: 0.75rem;
+/* Typography Hierarchy Classes (Swiss Editorial System) */
+.font-display {
+  font-family: var(--font-display);
 }
 
-.linear-card-subtle {
-  background-color: #090b11;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 0.625rem;
+.headline-display {
+  font-family: var(--font-display);
+  font-size: clamp(2.25rem, 4.5vw, 3.75rem);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: 1.1;
 }
 
-.linear-border-glow-cyan {
-  border-color: rgba(6, 182, 212, 0.5);
-  box-shadow: 0 0 16px -2px rgba(6, 182, 212, 0.15), inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
+.headline-h1 {
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 3.2vw, 2.25rem);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
 }
 
-.linear-badge {
+.headline-h2 {
+  font-family: var(--font-display);
+  font-size: clamp(1.2rem, 2.2vw, 1.6rem);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.25;
+}
+
+.headline-h3 {
+  font-family: var(--font-sans);
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.35;
+}
+
+/* Used by the workspace views for page and panel titles. Callers set the size
+   and colour with utilities, so this only supplies the typeface and weight.
+   Without it the heading inherited Tailwind's preflight reset (body size,
+   weight 400) and read as ordinary copy instead of a title. */
+.section-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+}
+
+.metadata-label {
   font-family: var(--font-mono);
-  font-size: 0.625rem;
-  letter-spacing: 0.03em;
-  padding: 0.125rem 0.375rem;
-  border-radius: 0.25rem;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.04);
+  font-size: 0.6875rem; /* 11px */
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
-/* No scrollbar utility */
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
+/* Institutional Terminal Surfaces & Structural Frames (Frosted Smoked Glass) */
+.terminal-panel {
+  background-color: var(--bg-surface);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.12);
 }
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+
+.terminal-header,
+#arah-market-header {
+  background-color: var(--bg-header);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
+
+.terminal-sidebar,
+#arah-market-sidebar {
+  background-color: var(--bg-sidebar);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.terminal-panel-elevated {
+  background-color: var(--bg-surface-elevated);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  box-shadow: 0 8px 30px -4px rgba(0, 0, 0, 0.2);
+}
+
+.terminal-panel-alt {
+  background-color: var(--bg-section-alt);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+}
+
+/* Nested panels stay flat only where a section frame would double up with its
+   own children. Views opt in with --flush; a blanket rule also flattened sibling
+   cards, which removed the frames those cards need. */
+.terminal-panel--flush {
+  background-color: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+.terminal-panel--flush > .terminal-panel,
+.terminal-panel--flush > .terminal-panel-alt,
+.terminal-panel--flush > .terminal-panel-elevated {
+  border-color: transparent;
+}
+
+/* Interactive Filter & Tab State (Harmonious contrast, replaces stark B&W invert) */
+.active-pill {
+  background-color: var(--active-bg);
+  color: var(--active-text);
+  border: 1px solid var(--active-border);
+  font-weight: 600;
+}
+
+/* Primary Action Buttons (Frosted Titanium / Crisp Contrast) */
+.btn-primary-institutional {
+  background-color: var(--accent);
+  color: var(--accent-contrast);
+  border: 1px solid transparent;
+  font-weight: 600;
+  box-shadow: var(--accent-glow);
+  transition: opacity 120ms ease, transform 120ms ease, box-shadow 160ms ease;
+}
+.btn-primary-institutional:hover {
+  opacity: 0.92;
+  transform: translateY(-0.5px);
+}
+
+/* Grid & Hairline Separators */
+.terminal-divider {
+  border-color: var(--border-subtle);
+}
+
+.terminal-divider-strong {
+  border-color: var(--border-strong);
+}
+
+/* Editorial Table System */
+.terminal-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.terminal-table th {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+
+.terminal-table td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--border-hairline);
+  font-size: 0.8125rem;
+  color: var(--text-primary);
+}
+
+.terminal-table tr:hover td {
+  background-color: var(--bg-section-alt);
+}
+
+/* Bullish / Bearish / Warning Tags (Neo-Brutalist 2px radius, no candy pills) */
+.badge-bullish {
+  background-color: var(--bullish-bg);
+  color: var(--bullish);
+  border: 1px solid var(--bullish-border);
+  font-family: var(--font-mono);
+  font-weight: 600;
+  border-radius: 2px;
+}
+
+.badge-bearish {
+  background-color: var(--bearish-bg);
+  color: var(--bearish);
+  border: 1px solid var(--bearish-border);
+  font-family: var(--font-mono);
+  font-weight: 600;
+  border-radius: 2px;
+}
+
+.badge-warning {
+  background-color: var(--warning-bg);
+  /* Amber at 3.19:1 against a light fill is too low for a 9px label, so the
+     text is darkened to the 700 step. Applies to the badge only; the raw
+     --warning token also backs solid buttons that need a dark-on-light pair. */
+  color: #B45309;
+  border: 1px solid var(--warning-border);
+  font-family: var(--font-mono);
+  font-weight: 600;
+  border-radius: 2px;
+}
+
+html.dark .badge-warning {
+  color: var(--warning);
+}
+
+.badge-neutral {
+  background-color: var(--bg-section-alt);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-subtle);
+  font-family: var(--font-mono);
+  font-weight: 500;
+  border-radius: 2px;
+}
+
+/* The accent chip carries the brand hue rather than a semantic one. It was a
+   solid fill, which made it the loudest element on a row of otherwise quiet
+   badges, so it now shares their low-alpha treatment. The accent text is
+   darkened so it holds its contrast against that near-white fill. */
+.badge-accent {
+  background-color: var(--accent-subtle);
+  color: var(--accent-strong);
+  border: 1px solid var(--accent-border);
+  font-family: var(--font-mono);
+  font-weight: 600;
+  border-radius: 2px;
+}
+
+/* A near-white fill would be wrong here, so the dark theme tints toward the
+   surface instead and lets the accent itself carry the text. */
+html.dark .badge-accent {
+  background-color: var(--accent-subtle);
+  color: var(--accent);
+  border: 1px solid var(--accent-border);
+}
+
+/* ============================================================
+   INTERACTION & ACCESSIBILITY LAYER
+   ============================================================ */
+
+:root {
+  --shadow-raised: 0 2px 8px -2px rgba(9, 9, 11, 0.08), 0 1px 3px rgba(9, 9, 11, 0.05);
+  --shadow-overlay: 0 18px 48px -12px rgba(9, 9, 11, 0.16), 0 4px 14px -4px rgba(9, 9, 11, 0.08);
+  --focus-ring: color-mix(in srgb, var(--accent) 65%, transparent);
+}
+
+html.dark {
+  --shadow-raised: 0 2px 10px -2px rgba(0, 0, 0, 0.55), 0 1px 3px rgba(0, 0, 0, 0.35);
+  --shadow-overlay: 0 20px 56px -12px rgba(0, 0, 0, 0.7), 0 4px 16px -4px rgba(0, 0, 0, 0.45);
+}
+
+/* Visible focus for every keyboard-reachable control. */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 1px;
+  border-radius: var(--radius-sm);
+}
+
+/* Opt-in tactile press feedback. Kept off bare <button> so it cannot
+   fight motion elements that animate their own transforms. */
+.press:active {
+  transform: translateY(0.5px);
+}
+
+/* Respect the user's motion preference. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ============================================================
+   LOADING STATES
+   ============================================================ */
+
+.skeleton {
+  background-color: var(--bg-section-alt);
+  border-radius: var(--radius-sm);
+  position: relative;
+  overflow: hidden;
+}
+
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--text-muted) 14%, transparent),
+    transparent
+  );
+  transform: translateX(-100%);
+  animation: skeleton-sweep 1.4s ease-in-out infinite;
+}
+
+@keyframes skeleton-sweep {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* ============================================================
+   DATA TABLE DENSITY
+   ============================================================ */
+
+.terminal-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.terminal-table--compact th,
+.terminal-table--compact td {
+  padding-top: 0.375rem;
+  padding-bottom: 0.375rem;
+}
+
+/* Numeric cells stay aligned regardless of sign or magnitude. */
+.num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+.num-pos {
+  color: var(--bullish);
+}
+
+.num-neg {
+  color: var(--bearish);
+}
+
+/* ============================================================
+   SECTION RHYTHM
+   ============================================================ */
+
+.rule {
+  border-top: 1px solid var(--border-subtle);
+}
+
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-hairline);
+}
+
+/* Raised surfaces are reserved for overlays; cards stay flat. */
+.surface-raised {
+  box-shadow: var(--shadow-raised);
+}
+
+.surface-overlay {
+  box-shadow: var(--shadow-overlay);
+}
+
+/* ============================================================
+   3D ISOMETRIC FLOATING UI ANIMATIONS
+   ============================================================ */
+
+.preserve-3d {
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+}
+
+@keyframes floatSlow {
+  0%, 100% {
+    transform: translateZ(110px) translateY(0px);
+  }
+  50% {
+    transform: translateZ(110px) translateY(-8px);
+  }
+}
+
+@keyframes floatDelayed {
+  0%, 100% {
+    transform: translateZ(95px) translateY(-5px);
+  }
+  50% {
+    transform: translateZ(95px) translateY(5px);
+  }
+}
+
+.animate-float-slow {
+  animation: floatSlow 5s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: floatDelayed 6s ease-in-out infinite;
+}
+
+

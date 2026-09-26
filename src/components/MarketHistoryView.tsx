@@ -20,7 +20,6 @@ import {
   Filter,
   Sliders,
   Scale,
-  Save,
   Sparkles,
   ArrowUpRight,
   ArrowDownRight,
@@ -28,6 +27,7 @@ import {
   CalendarDays,
 } from 'lucide-react';
 import { api } from '../lib/api';
+import { PageHeader } from './shared/PageHeader';
 import {
   DailyMarketSnapshot,
   MarketMemoryInsight,
@@ -49,7 +49,6 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
   const [historicalEvents, setHistoricalEvents] = useState<MarketEvent[]>([]);
   const [historicalMacro, setHistoricalMacro] = useState<EconomicEvent[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [compareDate, setCompareDate] = useState<string | null>('2026-09-19');
   const [compareSnapshot, setCompareSnapshot] = useState<DailyMarketSnapshot | null>(null);
   const [isCompareMode, setIsCompareMode] = useState<boolean>(false);
@@ -132,27 +131,6 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
       .catch(err => console.error('[History] Error fetching compare detail:', err));
   }, [compareDate, isCompareMode]);
 
-  const handleGenerateSnapshot = async () => {
-    setIsGenerating(true);
-    setStatusMessage('Compiling daily market snapshot from all real feeds...');
-    try {
-      const res = await api.generateDailySnapshot(selectedDate);
-      if (res.success && res.snapshot) {
-        setActiveSnapshot(res.snapshot);
-        // Refresh snapshots list
-        const updated = await api.getDailySnapshots('ALL', undefined, 30);
-        setSnapshots(updated.snapshots);
-        setStatusMessage(`Daily snapshot for ${selectedDate} saved permanently to database.`);
-        setTimeout(() => setStatusMessage(null), 4000);
-      }
-    } catch (err: any) {
-      setStatusMessage(`Error saving snapshot: ${err?.message || 'Failed'}`);
-      setTimeout(() => setStatusMessage(null), 4000);
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
   // 14 Target assets
   const target14Keys = [
     'XAUUSD',
@@ -224,64 +202,61 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
   const getBiasBadge = (bias: string) => {
     switch (bias) {
       case 'BULLISH':
-        return 'bg-emerald-950/70 text-emerald-300 border-emerald-800/80';
+        return 'badge-bullish';
       case 'BEARISH':
-        return 'bg-rose-950/70 text-rose-300 border-rose-800/80';
+        return 'badge-bearish';
       case 'MIXED':
-        return 'bg-purple-950/70 text-purple-300 border-purple-800/80';
+        return 'badge-warning';
       default:
-        return 'bg-slate-900 text-slate-300 border-slate-800';
+        return 'badge-neutral';
     }
   };
 
   const getMeterColor = (score: number) => {
-    if (score >= 7.0) return 'from-emerald-600 to-emerald-400';
-    if (score >= 5.5) return 'from-emerald-700 to-teal-500';
-    if (score >= 4.5) return 'from-cyan-700 to-cyan-500';
-    if (score >= 3.0) return 'from-amber-600 to-rose-500';
-    return 'from-rose-700 to-rose-500';
+    if (score >= 7.0) return 'var(--bullish)';
+    if (score >= 5.5) return 'var(--bullish)';
+    if (score >= 4.5) return 'var(--accent)';
+    if (score >= 3.0) return 'var(--warning)';
+    return 'var(--bearish)';
   };
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="space-y-4 pb-12 font-sans">
       {/* 1. ARCHITECTURAL PIPELINE BANNER: NEWS → MACRO → CS → REACTION → AI → BIAS → HISTORY */}
-      <div className="bg-slate-950 border border-slate-800/90 rounded-xl p-4 shadow-sm">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800/80 pb-3 mb-3">
-          <div>
-            <div className="flex items-center gap-2">
-              <div className="p-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/30 text-indigo-400">
-                <Database className="w-4 h-4" />
-              </div>
-              <h1 className="text-sm font-mono font-bold text-slate-100 tracking-wide uppercase">
-                MARKET INTELLIGENCE ARCHITECTURE & PERMANENT MEMORY
-              </h1>
+      <PageHeader
+        eyebrow="RESEARCH · HISTORICAL DATA"
+        title="Market intelligence architecture"
+        description="Continuous multi-session archive · Zero simulated loss · Institutional persistence dossier."
+        actions={
+          <>
+            <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-md bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-[11px] font-mono text-[var(--text-secondary)]">
+              <span className="w-2 h-2 rounded-full bg-[var(--bullish)] animate-pulse" />
+              <span className="font-semibold text-[var(--text-primary)]">AUTO-ARCHIVE ACTIVE</span>
+              <span className="text-[var(--text-muted)]">·</span>
+              <span className="text-[var(--text-muted)]">OPEN → CLOSE (04:00 WIB)</span>
             </div>
-            <p className="text-xs text-slate-400 mt-1 font-mono">
-              Interconnected continuous workflow: Telemetry never overwritten &bull; Historical comparison &bull; Permanent multi-session dossier.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleGenerateSnapshot}
-              disabled={isGenerating}
-              className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-mono text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer disabled:opacity-50"
-            >
-              <Save className={`w-3.5 h-3.5 ${isGenerating ? 'animate-spin' : ''}`} />
-              <span>{isGenerating ? 'Capturing...' : 'Snapshot Current Day'}</span>
-            </button>
             <button
               onClick={loadInitialData}
               disabled={isLoading}
-              className="p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white transition cursor-pointer disabled:opacity-50"
+              className="h-8 w-8 rounded-md bg-[var(--bg-surface)] hover:bg-[var(--bg-section-alt)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition cursor-pointer disabled:opacity-50 flex items-center justify-center"
               title="Reload memory database"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-cyan-400' : ''}`} />
+              <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-[var(--accent)]' : ''}`} />
             </button>
-          </div>
-        </div>
+          </>
+        }
+      />
 
+      <div className="terminal-panel p-4 space-y-3">
         {/* Pipeline Step Visualizer */}
+        <div className="section-head flex-wrap gap-y-2">
+          <span className="metadata-label text-[10px] text-[var(--text-muted)]">
+            Memory pipeline
+          </span>
+          <span className="metadata-label text-[9.5px] text-[var(--text-muted)]">
+            Step 7 · permanent memory
+          </span>
+        </div>
         <div className="overflow-x-auto pb-1">
           <div className="flex items-center min-w-[760px] text-[11px] font-mono">
             {[
@@ -290,22 +265,22 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
               { step: '3. CURRENCY STRENGTH', desc: 'G8 Real Flow' },
               { step: '4. REACTION', desc: 'Price Action' },
               { step: '5. AI ANALYSIS', desc: 'Grounded Synth' },
-              { step: '6. BIAS', desc: '13 Assets' },
+              { step: '6. BIAS', desc: '14 Core Assets' },
               { step: '7. HISTORY', desc: 'Permanent Memory', active: true },
             ].map((node, i, arr) => (
               <React.Fragment key={node.step}>
                 <div
                   className={`px-2.5 py-1.5 rounded border ${
                     node.active
-                      ? 'bg-indigo-950/70 border-indigo-500/60 text-indigo-300 font-bold'
-                      : 'bg-slate-900/60 border-slate-800 text-slate-400'
+                      ? 'bg-[var(--active-bg)] text-[var(--active-text)] border-[var(--active-border)] font-bold shadow-xs'
+                      : 'bg-[var(--bg-surface)] border-[var(--border-subtle)] text-[var(--text-secondary)]'
                   }`}
                 >
                   <div>{node.step}</div>
-                  <div className="text-[9px] text-slate-500">{node.desc}</div>
+                  <div className={`text-[9px] ${node.active ? 'opacity-80' : 'text-[var(--text-muted)]'}`}>{node.desc}</div>
                 </div>
                 {i < arr.length - 1 && (
-                  <ArrowRight className="w-3.5 h-3.5 text-slate-600 mx-1 shrink-0" />
+                  <ArrowRight className="w-3.5 h-3.5 text-[var(--text-muted)] mx-1 shrink-0" />
                 )}
               </React.Fragment>
             ))}
@@ -314,19 +289,19 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
       </div>
 
       {statusMessage && (
-        <div className="p-3 bg-indigo-950/60 border border-indigo-800/80 rounded-lg text-xs font-mono text-indigo-300 flex items-center gap-2 animate-fade-in">
-          <Sparkles className="w-4 h-4 text-indigo-400" />
+        <div className="p-3 bg-[var(--bg-section-alt)] border border-[var(--border-subtle)] rounded text-xs font-mono text-[var(--text-primary)] flex items-center gap-2">
+          <Sparkles className="w-4 h-4 text-[var(--accent)]" />
           <span>{statusMessage}</span>
         </div>
       )}
 
       {/* 2. DATE SELECTOR & COMPARISON CONTROLS */}
-      <div className="bg-slate-950 border border-slate-800/90 rounded-xl p-4">
+      <div className="terminal-panel p-4">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           {/* Quick Date Presets */}
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-mono text-slate-400 font-semibold flex items-center gap-1.5 mr-1">
-              <CalendarDays className="w-3.5 h-3.5 text-cyan-400" />
+          <div className="flex flex-wrap items-center gap-2 font-mono">
+            <span className="metadata-label text-xs text-[var(--text-muted)] flex items-center gap-1.5 mr-1">
+              <CalendarDays className="w-3.5 h-3.5 text-[var(--accent)]" />
               ARCHIVE DATE:
             </span>
 
@@ -336,10 +311,10 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
                 <button
                   key={s.date}
                   onClick={() => setSelectedDate(s.date)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-mono font-medium border transition cursor-pointer ${
+                  className={`px-3 py-1.5 rounded text-xs font-mono font-medium border transition cursor-pointer ${
                     isSelected
-                      ? 'bg-cyan-500/20 border-cyan-500 text-cyan-300 font-bold shadow-xs'
-                      : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                      ? 'bg-[var(--active-bg)] text-[var(--active-text)] border-[var(--active-border)] font-bold shadow-xs'
+                      : 'bg-[var(--bg-surface)] border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                   }`}
                 >
                   {s.date === '2026-09-20'
@@ -352,38 +327,38 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
             })}
 
             {/* Custom Date Input */}
-            <div className="flex items-center gap-1.5 bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1 text-xs font-mono text-slate-300">
-              <span className="text-[10px] text-slate-500">CUSTOM:</span>
+            <div className="flex items-center gap-1.5 bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded px-2.5 py-1 text-xs font-mono text-[var(--text-primary)]">
+              <span className="metadata-label text-[10px] text-[var(--text-muted)]">CUSTOM:</span>
               <input
                 type="date"
                 value={selectedDate}
                 onChange={e => e.target.value && setSelectedDate(e.target.value)}
-                className="bg-transparent border-none text-xs text-slate-200 focus:outline-hidden font-mono cursor-pointer"
+                className="bg-transparent border-none text-xs text-[var(--text-primary)] focus:outline-hidden font-mono cursor-pointer"
               />
             </div>
           </div>
 
           {/* Compare Toggle */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 font-mono">
             <button
               onClick={() => setIsCompareMode(!isCompareMode)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-mono font-medium border transition cursor-pointer flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 rounded text-xs font-mono font-medium border transition cursor-pointer flex items-center gap-1.5 ${
                 isCompareMode
-                  ? 'bg-purple-950/70 border-purple-500 text-purple-300 font-bold'
-                  : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                  ? 'bg-[var(--active-bg)] text-[var(--active-text)] border-[var(--active-border)] font-bold shadow-xs'
+                  : 'bg-[var(--bg-surface)] border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
               }`}
             >
               <Scale className="w-3.5 h-3.5" />
-              <span>{isCompareMode ? 'Exit Compare Mode' : 'Compare Two Dates'}</span>
+              <span>{isCompareMode ? 'EXIT COMPARE' : 'COMPARE DATES'}</span>
             </button>
 
             {isCompareMode && (
-              <div className="flex items-center gap-2 bg-slate-900/90 border border-purple-500/40 rounded-lg px-2.5 py-1 text-xs font-mono text-purple-300">
-                <span className="text-[10px] text-slate-400">VS:</span>
+              <div className="flex items-center gap-2 bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded px-2.5 py-1 text-xs font-mono text-[var(--text-primary)]">
+                <span className="metadata-label text-[10px] text-[var(--text-muted)]">VS:</span>
                 <select
                   value={compareDate || ''}
                   onChange={e => setCompareDate(e.target.value)}
-                  className="bg-slate-950 border border-slate-800 rounded px-2 py-0.5 text-xs text-slate-200 focus:outline-hidden font-mono cursor-pointer"
+                  className="bg-[var(--bg-section-alt)] border border-[var(--border-subtle)] rounded px-2 py-0.5 text-xs text-[var(--text-primary)] focus:outline-hidden font-mono cursor-pointer"
                 >
                   {snapshots
                     .filter(s => s.date !== selectedDate)
@@ -401,15 +376,15 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
 
       {/* 3. GROUNDED MARKET MEMORY INSIGHTS */}
       {memoryInsights.length > 0 && (
-        <div className="bg-slate-950 border border-slate-800/90 rounded-xl p-4">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-800/80 mb-3">
+        <div className="terminal-panel p-4">
+          <div className="flex items-center justify-between pb-3 border-b mb-3" style={{ borderColor: 'var(--border-subtle)' }}>
             <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-cyan-400" />
-              <h2 className="text-xs font-mono font-bold text-slate-200 uppercase tracking-wider">
+              <Sparkles className="w-4 h-4 text-[var(--accent)]" />
+              <h2 className="section-title text-xs text-[var(--text-primary)]">
                 MARKET MEMORY INSIGHTS (DERIVED FROM STORED HISTORY)
               </h2>
             </div>
-            <span className="text-[10px] font-mono text-slate-500">
+            <span className="text-[10px] font-mono text-[var(--text-muted)]">
               Multi-Session Persistent Intelligence &bull; Zero Guesswork
             </span>
           </div>
@@ -418,23 +393,23 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
             {memoryInsights.map(item => (
               <div
                 key={item.id}
-                className="p-3 rounded-lg bg-slate-900/60 border border-slate-800/80 hover:border-slate-700 transition"
+                className="p-3 rounded bg-[var(--bg-section-alt)] border border-[var(--border-subtle)] space-y-1.5"
               >
-                <div className="flex items-center justify-between text-[10px] font-mono mb-1.5">
-                  <span className="px-1.5 py-0.5 rounded bg-cyan-950/60 border border-cyan-800/60 text-cyan-300 font-bold uppercase">
+                <div className="flex items-center justify-between text-[10px] font-mono">
+                  <span className="badge-neutral text-[9px] font-bold uppercase">
                     {item.type}
                   </span>
-                  <span className="text-slate-400 font-bold">{item.metric}</span>
+                  <span className="text-[var(--text-secondary)] font-bold">{item.metric}</span>
                 </div>
-                <h3 className="text-xs font-semibold text-slate-100 mb-1 leading-snug">
+                <h3 className="text-xs font-semibold text-[var(--text-primary)] leading-snug">
                   {item.title}
                 </h3>
-                <p className="text-[11px] text-slate-400 leading-relaxed line-clamp-3">
+                <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed line-clamp-3 font-sans">
                   {item.description}
                 </p>
-                <div className="mt-2 pt-2 border-t border-slate-800/60 text-[10px] font-mono text-slate-500 flex items-center justify-between">
+                <div className="pt-2 border-t text-[10px] font-mono text-[var(--text-muted)] flex items-center justify-between" style={{ borderColor: 'var(--border-hairline)' }}>
                   <span>Confidence: {item.confidence}%</span>
-                  <span className="text-emerald-400 flex items-center gap-1">
+                  <span className="text-[var(--bullish)] flex items-center gap-1">
                     <CheckCircle2 className="w-2.5 h-2.5" />
                     Verified
                   </span>
@@ -446,26 +421,26 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
       )}
 
       {/* 4. CURRENCY STRENGTH HISTORICAL COMPARISON TABLE (Today vs Yesterday vs 3D vs 7D) */}
-      <div className="bg-slate-950 border border-slate-800/90 rounded-xl p-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-800/80 mb-3.5 gap-2">
+      <div className="terminal-panel p-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b mb-3.5 gap-2" style={{ borderColor: 'var(--border-subtle)' }}>
           <div>
             <div className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-emerald-400" />
-              <h2 className="text-xs font-mono font-bold text-slate-200 uppercase tracking-wider">
+              <TrendingUp className="w-4 h-4 text-[var(--accent)]" />
+              <h2 className="section-title text-xs text-[var(--text-primary)]">
                 HISTORICAL CURRENCY STRENGTH COMPARISON (G8)
               </h2>
             </div>
-            <p className="text-[10px] font-mono text-slate-500 mt-0.5">
+            <p className="text-[10px] font-mono text-[var(--text-secondary)] mt-0.5">
               Today vs Yesterday vs 3 Days vs 7 Days &bull; Grounded in historical interval database
             </p>
           </div>
-          <div className="flex items-center gap-1.5 text-[10px] font-mono text-slate-400">
+          <div className="flex items-center gap-1.5 text-[10px] font-mono text-[var(--text-muted)]">
             <span>Benchmark:</span>
             <a
               href="https://currency-strength.com/en/"
               target="_blank"
               rel="noreferrer"
-              className="text-cyan-400 hover:underline flex items-center gap-0.5"
+              className="text-[var(--accent)] hover:underline flex items-center gap-0.5"
             >
               <span>currency-strength.com</span>
               <ExternalLink className="w-2.5 h-2.5" />
@@ -476,7 +451,7 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs font-mono">
             <thead>
-              <tr className="border-b border-slate-800/80 text-[11px] text-slate-400 font-bold uppercase">
+              <tr className="border-b text-[10px] text-[var(--text-muted)] font-bold uppercase" style={{ borderColor: 'var(--border-subtle)' }}>
                 <th className="py-2 px-3">Currency</th>
                 <th className="py-2 px-3">Today Score</th>
                 <th className="py-2 px-3">Yesterday</th>
@@ -486,37 +461,40 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
                 <th className="py-2 px-3">Macro Flow Trend</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-850">
+            <tbody className="divide-y" style={{ borderColor: 'var(--border-hairline)' }}>
               {currencyComparisons.map(item => {
                 const isStrengthening = item.trend === 'STRENGTHENING';
                 const isWeakening = item.trend === 'WEAKENING';
 
                 return (
-                  <tr key={item.currency} className="hover:bg-slate-900/50 transition">
+                  <tr key={item.currency} className="hover:bg-[var(--bg-section-alt)] transition">
                     <td className="py-2.5 px-3">
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-slate-100 text-sm">{item.currency}</span>
+                        <span className="font-bold text-[var(--text-primary)] text-sm">{item.currency}</span>
                       </div>
                     </td>
                     <td className="py-2.5 px-3">
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-slate-200 text-sm tabular-nums">
+                        <span className="font-bold text-[var(--text-primary)] text-sm tabular-nums">
                           {item.today_score.toFixed(2)}
                         </span>
-                        <div className="w-16 h-1.5 bg-slate-900 rounded-full overflow-hidden">
+                        <div className="w-16 h-1.5 bg-[var(--bg-surface)] rounded-xs overflow-hidden border border-[var(--border-hairline)]">
                           <div
-                            className={`h-full rounded-full bg-gradient-to-r ${getMeterColor(item.today_score)}`}
-                            style={{ width: `${Math.min(100, (item.today_score / 10) * 100)}%` }}
+                            className="h-full rounded-xs transition-all duration-300"
+                            style={{
+                              width: `${Math.min(100, (item.today_score / 10) * 100)}%`,
+                              backgroundColor: getMeterColor(item.today_score)
+                            }}
                           />
                         </div>
                       </div>
                     </td>
                     <td className="py-2.5 px-3 tabular-nums">
-                      <div className="text-slate-300">
+                      <div className="text-[var(--text-secondary)]">
                         {item.yesterday_score.toFixed(2)}
                         <span
                           className={`ml-1.5 text-[10px] ${
-                            item.delta_yesterday >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                            item.delta_yesterday >= 0 ? 'text-[var(--bullish)]' : 'text-[var(--bearish)]'
                           }`}
                         >
                           ({item.delta_yesterday >= 0 ? '+' : ''}{item.delta_yesterday.toFixed(2)})
@@ -524,11 +502,11 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
                       </div>
                     </td>
                     <td className="py-2.5 px-3 tabular-nums">
-                      <div className="text-slate-400">
+                      <div className="text-[var(--text-secondary)]">
                         {item.three_day_score.toFixed(2)}
                         <span
                           className={`ml-1.5 text-[10px] ${
-                            item.delta_3d >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                            item.delta_3d >= 0 ? 'text-[var(--bullish)]' : 'text-[var(--bearish)]'
                           }`}
                         >
                           ({item.delta_3d >= 0 ? '+' : ''}{item.delta_3d.toFixed(2)})
@@ -536,11 +514,11 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
                       </div>
                     </td>
                     <td className="py-2.5 px-3 tabular-nums">
-                      <div className="text-slate-400">
+                      <div className="text-[var(--text-secondary)]">
                         {item.seven_day_score.toFixed(2)}
                         <span
                           className={`ml-1.5 text-[10px] ${
-                            item.delta_7d >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                            item.delta_7d >= 0 ? 'text-[var(--bullish)]' : 'text-[var(--bearish)]'
                           }`}
                         >
                           ({item.delta_7d >= 0 ? '+' : ''}{item.delta_7d.toFixed(2)})
@@ -549,10 +527,8 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
                     </td>
                     <td className="py-2.5 px-3 tabular-nums">
                       <span
-                        className={`font-bold px-2 py-0.5 rounded text-[11px] border ${
-                          item.delta_7d >= 0
-                            ? 'bg-emerald-950/60 text-emerald-300 border-emerald-800/60'
-                            : 'bg-rose-950/60 text-rose-300 border-rose-800/60'
+                        className={`font-bold px-2 py-0.5 rounded text-[11px] ${
+                          item.delta_7d >= 0 ? 'badge-bullish' : 'badge-bearish'
                         }`}
                       >
                         {item.delta_7d >= 0 ? '+' : ''}{item.delta_7d.toFixed(2)}
@@ -560,20 +536,20 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
                     </td>
                     <td className="py-2.5 px-3">
                       <span
-                        className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${
+                        className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${
                           isStrengthening
-                            ? 'bg-emerald-950/60 text-emerald-300 border-emerald-800/60'
+                            ? 'badge-bullish'
                             : isWeakening
-                            ? 'bg-rose-950/60 text-rose-300 border-rose-800/60'
-                            : 'bg-slate-900 text-slate-400 border-slate-800'
+                            ? 'badge-bearish'
+                            : 'badge-neutral'
                         }`}
                       >
                         {isStrengthening ? (
-                          <ArrowUpRight className="w-3 h-3 text-emerald-400" />
+                          <ArrowUpRight className="w-3 h-3" />
                         ) : isWeakening ? (
-                          <ArrowDownRight className="w-3 h-3 text-rose-400" />
+                          <ArrowDownRight className="w-3 h-3" />
                         ) : (
-                          <Minus className="w-3 h-3 text-slate-500" />
+                          <Minus className="w-3 h-3 text-[var(--text-muted)]" />
                         )}
                         {item.trend}
                       </span>
@@ -588,26 +564,26 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
 
       {/* 5. SIDE-BY-SIDE COMPARISON (IF COMPARE MODE ACTIVE) */}
       {isCompareMode && activeSnapshot && compareSnapshot && (
-        <div className="bg-slate-950 border border-purple-500/50 rounded-xl p-4">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-800/80 mb-3.5">
+        <div className="terminal-panel p-4">
+          <div className="flex items-center justify-between pb-3 border-b mb-3.5" style={{ borderColor: 'var(--border-subtle)' }}>
             <div className="flex items-center gap-2">
-              <Scale className="w-4 h-4 text-purple-400" />
-              <h2 className="text-xs font-mono font-bold text-purple-200 uppercase tracking-wider">
+              <Scale className="w-4 h-4 text-[var(--accent)]" />
+              <h2 className="section-title text-xs text-[var(--text-primary)]">
                 SIDE-BY-SIDE HISTORICAL COMPARISON: {activeSnapshot.date} VS {compareSnapshot.date}
               </h2>
             </div>
-            <span className="text-[10px] font-mono text-purple-400 bg-purple-950/60 px-2 py-0.5 rounded border border-purple-800/60">
+            <span className="badge-neutral text-[10px] font-mono">
               Delta Analysis
             </span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Day A */}
-            <div className="p-3 bg-slate-900/60 border border-slate-800 rounded-lg">
-              <div className="text-xs font-mono font-bold text-cyan-400 mb-2">
+            <div className="p-3 bg-[var(--bg-section-alt)] border border-[var(--border-subtle)] rounded space-y-2">
+              <div className="text-xs font-mono font-bold text-[var(--text-primary)]">
                 DAY A: {activeSnapshot.date}
               </div>
-              <div className="text-xs text-slate-300 mb-3 leading-relaxed">
+              <div className="text-xs text-[var(--text-secondary)] leading-relaxed font-sans">
                 {activeSnapshot.ai_summary}
               </div>
               <div className="space-y-1.5 text-xs font-mono">
@@ -615,12 +591,12 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
                   const a = activeSnapshot.market_biases[sym];
                   if (!a) return null;
                   return (
-                    <div key={sym} className="flex items-center justify-between py-1 border-b border-slate-800/60">
-                      <span className="font-bold text-slate-200">{sym}</span>
-                      <span className={`px-1.5 py-0.2 rounded text-[10px] border ${getBiasBadge(a.bias)}`}>
+                    <div key={sym} className="flex items-center justify-between py-1 border-b" style={{ borderColor: 'var(--border-hairline)' }}>
+                      <span className="font-bold text-[var(--text-primary)]">{sym}</span>
+                      <span className={`px-1.5 py-0.2 rounded text-[10px] ${getBiasBadge(a.bias)}`}>
                         {a.bias}
                       </span>
-                      <span className="text-slate-300">{formatAssetPriceStr(sym, a.price)}</span>
+                      <span className="text-[var(--text-secondary)] tabular-nums">{formatAssetPriceStr(sym, a.price)}</span>
                     </div>
                   );
                 })}
@@ -628,11 +604,11 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
             </div>
 
             {/* Day B */}
-            <div className="p-3 bg-slate-900/60 border border-slate-800 rounded-lg">
-              <div className="text-xs font-mono font-bold text-purple-400 mb-2">
+            <div className="p-3 bg-[var(--bg-section-alt)] border border-[var(--border-subtle)] rounded space-y-2">
+              <div className="text-xs font-mono font-bold text-[var(--text-primary)]">
                 DAY B: {compareSnapshot.date}
               </div>
-              <div className="text-xs text-slate-300 mb-3 leading-relaxed">
+              <div className="text-xs text-[var(--text-secondary)] leading-relaxed font-sans">
                 {compareSnapshot.ai_summary}
               </div>
               <div className="space-y-1.5 text-xs font-mono">
@@ -640,12 +616,12 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
                   const b = compareSnapshot.market_biases[sym];
                   if (!b) return null;
                   return (
-                    <div key={sym} className="flex items-center justify-between py-1 border-b border-slate-800/60">
-                      <span className="font-bold text-slate-200">{sym}</span>
-                      <span className={`px-1.5 py-0.2 rounded text-[10px] border ${getBiasBadge(b.bias)}`}>
+                    <div key={sym} className="flex items-center justify-between py-1 border-b" style={{ borderColor: 'var(--border-hairline)' }}>
+                      <span className="font-bold text-[var(--text-primary)]">{sym}</span>
+                      <span className={`px-1.5 py-0.2 rounded text-[10px] ${getBiasBadge(b.bias)}`}>
                         {b.bias}
                       </span>
-                      <span className="text-slate-300">{formatAssetPriceStr(sym, b.price)}</span>
+                      <span className="text-[var(--text-secondary)] tabular-nums">{formatAssetPriceStr(sym, b.price)}</span>
                     </div>
                   );
                 })}
@@ -655,24 +631,24 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
         </div>
       )}
 
-      {/* 6. DAILY MARKET SNAPSHOT DOSSIER (THE 13 CORE ASSETS) */}
+      {/* 6. DAILY MARKET SNAPSHOT DOSSIER (THE 14 CORE ASSETS) */}
       {activeSnapshot && (
-        <div className="bg-slate-950 border border-slate-800/90 rounded-xl p-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-800/80 mb-4 gap-3">
+        <div className="terminal-panel p-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b mb-4 gap-3" style={{ borderColor: 'var(--border-subtle)' }}>
             <div>
               <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-cyan-400" />
-                <h2 className="text-sm font-mono font-bold text-slate-100 tracking-wide uppercase">
+                <Calendar className="w-4 h-4 text-[var(--accent)]" />
+                <h2 className="section-title text-xs sm:text-sm text-[var(--text-primary)]">
                   {activeSnapshot.title || `DAILY MARKET SNAPSHOT: ${activeSnapshot.date}`}
                 </h2>
               </div>
-              <p className="text-xs text-slate-400 font-mono mt-1">
+              <p className="text-xs text-[var(--text-secondary)] font-mono mt-1">
                 Archived dossier for all 14 core markets &bull; Saved permanently in relational database
               </p>
             </div>
 
             {/* Asset Filter Pills */}
-            <div className="flex flex-wrap items-center gap-1.5">
+            <div className="flex flex-wrap items-center gap-1.5 font-mono">
               {[
                 { id: 'ALL', label: 'All 14 Assets' },
                 { id: 'METALS_CRYPTO', label: 'XAUUSD & BTC' },
@@ -683,10 +659,10 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
                 <button
                   key={f.id}
                   onClick={() => setActiveFilter(f.id as any)}
-                  className={`px-2.5 py-1 rounded text-xs font-mono transition cursor-pointer border ${
+                  className={`px-2.5 py-1 rounded text-xs transition cursor-pointer border ${
                     activeFilter === f.id
-                      ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40 font-bold'
-                      : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-slate-200'
+                      ? 'bg-[var(--active-bg)] text-[var(--active-text)] border-[var(--active-border)] font-bold shadow-xs'
+                      : 'bg-[var(--bg-surface)] text-[var(--text-secondary)] border-[var(--border-subtle)] hover:text-[var(--text-primary)]'
                   }`}
                 >
                   {f.label}
@@ -696,20 +672,20 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
           </div>
 
           {/* AI Grounded Daily Summary Banner */}
-          <div className="p-3.5 rounded-lg bg-slate-900/60 border border-slate-800/80 mb-4">
-            <div className="flex items-center gap-2 mb-1 text-xs font-mono font-bold text-slate-200">
-              <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+          <div className="p-3.5 rounded bg-[var(--bg-section-alt)] border border-[var(--border-subtle)] mb-4">
+            <div className="flex items-center gap-2 mb-1 text-xs font-mono font-bold text-[var(--text-primary)]">
+              <Sparkles className="w-3.5 h-3.5 text-[var(--accent)]" />
               <span>AI MACRO SYNTHESIS FOR {activeSnapshot.date}:</span>
             </div>
-            <p className="text-xs text-slate-300 leading-relaxed mb-2 font-mono">
+            <p className="text-xs text-[var(--text-secondary)] leading-relaxed mb-2 font-mono">
               {activeSnapshot.ai_summary}
             </p>
-            <div className="text-[11px] text-slate-400 leading-relaxed italic border-t border-slate-800/60 pt-2">
+            <div className="text-[11px] text-[var(--text-muted)] leading-relaxed italic border-t pt-2" style={{ borderColor: 'var(--border-hairline)' }}>
               "{activeSnapshot.market_reaction_summary}"
             </div>
           </div>
 
-          {/* 13 Markets Grid */}
+          {/* 14 Markets Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {filteredAssets.map(sym => {
               const item = activeSnapshot.market_biases[sym];
@@ -722,29 +698,29 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
               return (
                 <div
                   key={sym}
-                  className="p-3.5 rounded-lg bg-slate-900/70 hover:bg-slate-900 border border-slate-800 hover:border-slate-700 transition flex flex-col justify-between"
+                  className="p-3.5 rounded bg-[var(--bg-surface)] hover:bg-[var(--bg-section-alt)] border border-[var(--border-subtle)] transition flex flex-col justify-between"
                 >
                   <div>
                     {/* Header: Symbol + Bias */}
-                    <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center justify-between mb-2 font-mono">
                       <div>
-                        <span className="text-sm font-mono font-bold text-slate-100">{sym}</span>
-                        <div className="text-[10px] font-mono text-slate-400">{getAssetDisplayName(sym)}</div>
+                        <span className="text-sm font-bold text-[var(--text-primary)]">{sym}</span>
+                        <div className="text-[10px] text-[var(--text-muted)]">{getAssetDisplayName(sym)}</div>
                       </div>
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold border uppercase tracking-wider ${getBiasBadge(item.bias)}`}>
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${getBiasBadge(item.bias)}`}>
                         {item.bias} ({item.score > 0 ? `+${item.score}` : item.score})
                       </span>
                     </div>
 
                     {/* Price & Change */}
-                    <div className="flex items-baseline justify-between py-2 border-y border-slate-800/60 mb-2 font-mono">
+                    <div className="flex items-baseline justify-between py-2 border-y mb-2 font-mono" style={{ borderColor: 'var(--border-hairline)' }}>
                       <div>
-                        <span className="text-xs text-slate-500 mr-1.5">Price:</span>
-                        <span className="text-base font-bold text-slate-100 tabular-nums">
+                        <span className="text-xs text-[var(--text-muted)] mr-1.5">Price:</span>
+                        <span className="text-base font-bold text-[var(--text-primary)] tabular-nums">
                           {formatAssetPriceStr(sym, item.price)}
                         </span>
                       </div>
-                      <div className={`text-xs font-bold flex items-center gap-0.5 ${chg >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                      <div className={`text-xs font-bold flex items-center gap-0.5 tabular-nums ${chg >= 0 ? 'text-[var(--bullish)]' : 'text-[var(--bearish)]'}`}>
                         {chg >= 0 ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
                         <span>{chg >= 0 ? `+${chg.toFixed(2)}%` : `${chg.toFixed(2)}%`}</span>
                       </div>
@@ -752,13 +728,13 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
 
                     {/* Strength & Major Catalyst */}
                     <div className="space-y-1.5 text-[11px] font-mono">
-                      <div className="flex items-center justify-between text-slate-400">
-                        <span className="text-slate-500">Strength Rating:</span>
-                        <span className="text-slate-200 font-semibold">{item.strength_label || 'Neutral'}</span>
+                      <div className="flex items-center justify-between text-[var(--text-secondary)]">
+                        <span className="text-[var(--text-muted)]">Strength Rating:</span>
+                        <span className="text-[var(--text-primary)] font-semibold">{item.strength_label || 'Neutral'}</span>
                       </div>
-                      <div className="text-slate-300 leading-snug">
-                        <span className="text-slate-500 text-[10px] uppercase block">Major Catalyst:</span>
-                        <p className="text-slate-300 text-xs mt-0.5 line-clamp-2">
+                      <div>
+                        <span className="metadata-label text-[10px] text-[var(--text-muted)] block">Major Catalyst:</span>
+                        <p className="text-[var(--text-secondary)] text-xs mt-0.5 line-clamp-2 font-sans">
                           {item.major_catalyst || 'Digestive consolidation and macro cross-flows.'}
                         </p>
                       </div>
@@ -766,12 +742,12 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
                   </div>
 
                   {/* Footer with Chart Link & Timestamp */}
-                  <div className="mt-3 pt-2 border-t border-slate-800/60 flex items-center justify-between text-[10px] font-mono text-slate-500">
+                  <div className="mt-3 pt-2 border-t flex items-center justify-between text-[10px] font-mono text-[var(--text-muted)]" style={{ borderColor: 'var(--border-hairline)' }}>
                     <span>Updated: {new Date(item.last_updated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                     {onOpenChart && (
                       <button
                         onClick={() => onOpenChart(sym)}
-                        className="text-cyan-400 hover:text-cyan-300 flex items-center gap-1 cursor-pointer"
+                        className="text-[var(--accent)] hover:underline flex items-center gap-1 cursor-pointer"
                       >
                         <span>Chart</span>
                         <ExternalLink className="w-2.5 h-2.5" />
@@ -785,15 +761,15 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
 
           {/* Currency Strength Ranking for this Day */}
           {activeSnapshot.currency_strength && activeSnapshot.currency_strength.length > 0 && (
-            <div className="mt-6 pt-4 border-t border-slate-800/80">
+            <div className="mt-5 pt-4 border-t" style={{ borderColor: 'var(--border-subtle)' }}>
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-cyan-400" />
-                  <h3 className="text-xs font-mono font-bold text-slate-200 uppercase tracking-wider">
+                  <TrendingUp className="w-4 h-4 text-[var(--accent)]" />
+                  <h3 className="section-title text-xs text-[var(--text-primary)]">
                     CURRENCY STRENGTH RANKING ON {activeSnapshot.date}
                   </h3>
                 </div>
-                <span className="text-[10px] font-mono text-slate-500">
+                <span className="text-[10px] font-mono text-[var(--text-muted)]">
                   Relative Capital Flow Hierarchy
                 </span>
               </div>
@@ -802,15 +778,18 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
                 {activeSnapshot.currency_strength.map(c => (
                   <div
                     key={c.currency}
-                    className="p-2.5 rounded bg-slate-900/60 border border-slate-800 text-center font-mono"
+                    className="p-2.5 rounded bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-center font-mono"
                   >
-                    <div className="text-[10px] text-slate-500 font-bold">#{c.rank}</div>
-                    <div className="text-sm font-bold text-slate-100 my-0.5">{c.currency}</div>
-                    <div className="text-xs text-cyan-400 font-bold">{c.score.toFixed(1)}/10</div>
-                    <div className="mt-1.5 h-1.5 w-full bg-slate-950 rounded-full overflow-hidden">
+                    <div className="text-[10px] text-[var(--text-muted)] font-bold">#{c.rank}</div>
+                    <div className="text-sm font-bold text-[var(--text-primary)] my-0.5">{c.currency}</div>
+                    <div className="text-xs text-[var(--accent)] font-bold tabular-nums">{c.score.toFixed(1)}/10</div>
+                    <div className="mt-1.5 h-1.5 w-full bg-[var(--bg-section-alt)] rounded-xs overflow-hidden border border-[var(--border-hairline)]">
                       <div
-                        className={`h-full rounded-full bg-gradient-to-r ${getMeterColor(c.score)}`}
-                        style={{ width: `${Math.min(100, (c.score / 10) * 100)}%` }}
+                        className="h-full rounded-xs transition-all duration-300"
+                        style={{
+                          width: `${Math.min(100, (c.score / 10) * 100)}%`,
+                          backgroundColor: getMeterColor(c.score)
+                        }}
                       />
                     </div>
                   </div>
@@ -820,52 +799,52 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
           )}
 
           {/* Grounded AI Breakdown: Why, Risks, Context */}
-          <div className="mt-6 pt-4 border-t border-slate-800/80 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="mt-5 pt-4 border-t grid grid-cols-1 md:grid-cols-3 gap-4 font-mono text-xs" style={{ borderColor: 'var(--border-subtle)' }}>
             {/* Why Market Moved */}
-            <div className="p-3 bg-slate-900/50 border border-slate-800 rounded-lg">
-              <div className="text-xs font-mono font-bold text-emerald-400 mb-2 flex items-center gap-1.5">
+            <div className="p-3 bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded space-y-2">
+              <div className="font-bold text-[var(--bullish)] flex items-center gap-1.5 metadata-label text-xs">
                 <CheckCircle2 className="w-3.5 h-3.5" />
                 <span>WHY THE MARKET MOVED (EVIDENCE)</span>
               </div>
-              <ul className="space-y-1.5 text-xs text-slate-300 font-mono">
+              <ul className="space-y-1.5 text-xs text-[var(--text-secondary)]">
                 {activeSnapshot.ai_why?.map((w, idx) => (
                   <li key={idx} className="flex items-start gap-1.5">
-                    <span className="text-emerald-500 mt-0.5">&bull;</span>
+                    <span className="text-[var(--bullish)] mt-0.5">&bull;</span>
                     <span className="leading-snug">{w}</span>
                   </li>
-                )) || <li className="text-slate-500">Historical evidence recorded.</li>}
+                )) || <li className="text-[var(--text-muted)]">Historical evidence recorded.</li>}
               </ul>
             </div>
 
             {/* Identified Risks */}
-            <div className="p-3 bg-slate-900/50 border border-slate-800 rounded-lg">
-              <div className="text-xs font-mono font-bold text-amber-400 mb-2 flex items-center gap-1.5">
+            <div className="p-3 bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded space-y-2">
+              <div className="font-bold text-[var(--warning)] flex items-center gap-1.5 metadata-label text-xs">
                 <AlertCircle className="w-3.5 h-3.5" />
                 <span>IDENTIFIED RISKS & INVALIDATIONS</span>
               </div>
-              <ul className="space-y-1.5 text-xs text-slate-300 font-mono">
+              <ul className="space-y-1.5 text-xs text-[var(--text-secondary)]">
                 {activeSnapshot.ai_risk?.map((r, idx) => (
                   <li key={idx} className="flex items-start gap-1.5">
-                    <span className="text-amber-500 mt-0.5">&bull;</span>
+                    <span className="text-[var(--warning)] mt-0.5">&bull;</span>
                     <span className="leading-snug">{r}</span>
                   </li>
-                )) || <li className="text-slate-500">Normal session volatility conditions.</li>}
+                )) || <li className="text-[var(--text-muted)]">Normal session volatility conditions.</li>}
               </ul>
             </div>
 
             {/* Historical Context */}
-            <div className="p-3 bg-slate-900/50 border border-slate-800 rounded-lg">
-              <div className="text-xs font-mono font-bold text-indigo-400 mb-2 flex items-center gap-1.5">
-                <History className="w-3.5 h-3.5" />
+            <div className="p-3 bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded space-y-2">
+              <div className="font-bold text-[var(--text-primary)] flex items-center gap-1.5 metadata-label text-xs">
+                <History className="w-3.5 h-3.5 text-[var(--accent)]" />
                 <span>HISTORICAL MEMORY & CONTINUITY</span>
               </div>
-              <ul className="space-y-1.5 text-xs text-slate-300 font-mono">
+              <ul className="space-y-1.5 text-xs text-[var(--text-secondary)]">
                 {activeSnapshot.historical_insights?.map((h, idx) => (
                   <li key={idx} className="flex items-start gap-1.5">
-                    <span className="text-indigo-400 mt-0.5">&bull;</span>
+                    <span className="text-[var(--accent)] mt-0.5">&bull;</span>
                     <span className="leading-snug">{h}</span>
                   </li>
-                )) || <li className="text-slate-500">Persistent memory tracking active.</li>}
+                )) || <li className="text-[var(--text-muted)]">Persistent memory tracking active.</li>}
               </ul>
             </div>
           </div>

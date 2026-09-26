@@ -1,910 +1,877 @@
 import React, { useState, useMemo } from 'react';
 import {
+  ArahMarketTodayData,
   CurrencyStrength,
-  IntradayAssetBias,
-  TodayCatalyst,
   MarketPrice,
+  TodayCatalyst,
   EconomicEvent,
+  MarketEvent,
+  AIAnalysis,
 } from '../types';
 import {
+  Compass,
+  Zap,
+  ArrowUpRight,
+  ArrowDownRight,
+  Flame,
+  Activity,
   Sparkles,
   TrendingUp,
   TrendingDown,
-  Compass,
-  Zap,
+  ArrowRight,
   Target,
-  ShieldAlert,
-  LineChart,
-  ArrowUpRight,
-  ArrowDownRight,
-  CheckCircle2,
-  AlertTriangle,
-  Minus,
+  BarChart3,
   ExternalLink,
-  ChevronRight,
-  Clock,
-  Layers,
-  Activity,
+  ShieldAlert,
+  Info,
+  AlertTriangle,
+  HelpCircle,
 } from 'lucide-react';
-import { Tooltip, MetricTooltip, MetricInfoIcon } from './Tooltip';
-import { getCurrencyFlagUrl, ASSET_VISUAL_MAP } from '../lib/assets';
+import { D3Sparkline } from './ui/D3Sparkline';
+import { NavTabId } from './Sidebar';
 
 interface ExecutiveMarketBriefProps {
   strengths: CurrencyStrength[];
-  intradayMap: IntradayAssetBias[];
-  todayCatalysts: TodayCatalyst[];
   prices: MarketPrice[];
-  calendar: EconomicEvent[];
+  globalRegime: ArahMarketTodayData['globalRegime'] | null;
+  arahMarketData?: ArahMarketTodayData | null;
+  todayCatalysts?: TodayCatalyst[];
+  calendar?: EconomicEvent[];
+  events?: MarketEvent[];
+  overview?: AIAnalysis | null;
   onOpenChart: (symbol: string) => void;
-  onSelectSymbol: (symbol: string | null) => void;
-}
-
-interface TradeSuggestion {
-  id: string;
-  symbol: string;
-  name: string;
-  category: 'FX_CROSS' | 'FX_MAJOR' | 'COMMODITY' | 'INDEX' | 'BOND';
-  action: 'STRONG_BUY' | 'BUY' | 'STRONG_SELL' | 'SELL' | 'AVOID_CHOP';
-  actionLabel: string;
-  biasConfidence: number; // 0-100
-  deltaOrScore?: string;
-  tradeStyle: string;
-  entryZone: string;
-  invalidationLevel: string;
-  targetProjection: string;
-  fundamentalDriver: string;
-  riskNote: string;
-  tier: 'PRIME_A' | 'HIGH' | 'SPECULATIVE' | 'AVOID';
+  onNavigateMarketBias: () => void;
+  onNavigateDailyReport?: () => void;
+  onNavigateTab?: (tab: NavTabId) => void;
 }
 
 export const ExecutiveMarketBrief: React.FC<ExecutiveMarketBriefProps> = ({
   strengths,
-  intradayMap,
-  todayCatalysts,
   prices,
-  calendar,
+  globalRegime,
+  arahMarketData,
+  todayCatalysts = [],
+  calendar = [],
+  events = [],
+  overview,
   onOpenChart,
-  onSelectSymbol,
+  onNavigateMarketBias,
+  onNavigateDailyReport,
+  onNavigateTab,
 }) => {
-  const [filterCategory, setFilterCategory] = useState<
-    'ALL' | 'PRIME' | 'INDICES' | 'COMMODITIES' | 'BONDS' | 'CROSSES' | 'MAJORS' | 'AVOID'
-  >('ALL');
+  const activeViewTab = 'ALL_IN_ONE';
 
-  // Currency score lookup
-  const curScoreMap = useMemo(() => {
-    const map: Record<string, number> = {};
-    strengths.forEach(s => {
-      map[s.currency] = s.strength_score;
-    });
-    return map;
-  }, [strengths]);
-
-  // Price lookup
+  // Price lookup map
   const priceMap = useMemo(() => {
     const map = new Map<string, MarketPrice>();
     prices.forEach(p => map.set(p.symbol.toUpperCase(), p));
     return map;
   }, [prices]);
 
-  // Intraday bias lookup
-  const biasMap = useMemo(() => {
-    const map = new Map<string, IntradayAssetBias>();
-    intradayMap.forEach(item => map.set(item.symbol.toUpperCase(), item));
+  // Currency lookup map
+  const strengthMap = useMemo(() => {
+    const map = new Map<string, CurrencyStrength>();
+    strengths.forEach(s => map.set(s.currency.toUpperCase(), s));
     return map;
-  }, [intradayMap]);
+  }, [strengths]);
 
-  // 1. DYNAMIC MARKET SYNTHESIS CALCULATION (KESIMPULAN PASAR HARI INI)
-  const marketSynthesis = useMemo(() => {
-    // Sort strengths to find leader & lagger
-    const sortedStrengths = [...strengths].sort((a, b) => b.strength_score - a.strength_score);
-    const strongest = sortedStrengths[0] || { currency: 'CHF', strength_score: 6.5 };
-    const weakest = sortedStrengths[sortedStrengths.length - 1] || { currency: 'JPY', strength_score: 3.0 };
+  // Core Asset Price Snapshots
+  const us10y = priceMap.get('US10Y') || { price: 4.085, change_24h_pct: -0.32, symbol: 'US10Y' } as MarketPrice;
+  const gold = priceMap.get('XAUUSD') || { price: 2654.8, change_24h_pct: 0.73, symbol: 'XAUUSD' } as MarketPrice;
+  const dxy = priceMap.get('USD') || { price: 101.24, change_24h_pct: 0.18, symbol: 'USD' } as MarketPrice;
+  const us100 = priceMap.get('US100') || { price: 23421, change_24h_pct: 0.41, symbol: 'US100' } as MarketPrice;
+  const us30 = priceMap.get('US30') || { price: 42100, change_24h_pct: 0.05, symbol: 'US30' } as MarketPrice;
+  const eurusd = priceMap.get('EUR') || priceMap.get('EURUSD') || { price: 1.0825, change_24h_pct: -0.15, symbol: 'EURUSD' } as MarketPrice;
+  const usdjpy = priceMap.get('JPY') || priceMap.get('USDJPY') || { price: 152.4, change_24h_pct: 0.28, symbol: 'USDJPY' } as MarketPrice;
+  const btc = priceMap.get('BTC') || { price: 91400, change_24h_pct: 1.85, symbol: 'BTC' } as MarketPrice;
 
-    // Key asset status
-    const gold = priceMap.get('XAUUSD');
-    const dxy = priceMap.get('USD');
-    const us100 = priceMap.get('US100');
-    const us10y = priceMap.get('US10Y');
-    const spx = priceMap.get('SPX') || priceMap.get('US500');
-    const btc = priceMap.get('BTC');
-    const crude = priceMap.get('WTI');
+  // Currency Leaders and Laggards
+  const sortedStrengths = useMemo(() => {
+    return [...strengths].sort((a, b) => b.strength_score - a.strength_score);
+  }, [strengths]);
+  const strongestCurrency = sortedStrengths[0] || { currency: 'USD', strength_score: 7.8 };
+  const weakestCurrency = sortedStrengths[sortedStrengths.length - 1] || { currency: 'JPY', strength_score: 2.1 };
+  const currencySpread = Number((strongestCurrency.strength_score - weakestCurrency.strength_score).toFixed(1));
 
-    const goldBias = biasMap.get('XAUUSD');
-    const usdBias = biasMap.get('USD');
-    const us100Bias = biasMap.get('US100');
-    const us10yBias = biasMap.get('US10Y');
+  // Yield Transmission Metrics
+  const us10yPrice = us10y.price || 4.085;
+  const us10yChangePct = us10y.change_24h_pct || 0;
+  const us10yChangeBps = Number((us10yPrice * us10yChangePct).toFixed(1));
+  const isYieldEasing = us10yChangePct < -0.05;
+  const isYieldRising = us10yChangePct > 0.05;
+  const yieldStatusLabel = isYieldEasing
+    ? 'YIELD MELEMAH (EASING)'
+    : isYieldRising
+    ? 'YIELD MENGUAT (TIGHTENING)'
+    : 'YIELD KONSOLIDASI (FLAT)';
 
-    // Determine current regime
-    let regimeTitle = 'Defensive & Rotation (Selektif)';
-    let regimeBadgeColor = 'bg-amber-950/80 text-amber-300 border-amber-800/80';
-    let summaryText = '';
+  // Real Yield Proxy (Nominal 10Y minus assumed 2.25% breakeven)
+  const realYieldEstimate = Number((us10yPrice - 2.25).toFixed(2));
 
-    const isUs100Bullish = (us100 && us100.change_24h_pct >= 0) || (us100Bias && us100Bias.overall_bias === 'BULLISH');
+  // Spreads from ArahMarketData if available, else estimated
+  const usDeSpread = arahMarketData?.intermarketSpreads?.find(s => s.id === 'spread-us-de')?.currentValue ?? Number((us10yPrice - 2.42).toFixed(2));
+  const usJpSpread = arahMarketData?.intermarketSpreads?.find(s => s.id === 'spread-us-jp')?.currentValue ?? Number((us10yPrice - 0.98).toFixed(2));
 
-    if (isUs100Bullish && (gold && gold.change_24h_pct > 0.2)) {
-      regimeTitle = 'Tech Bullish & Defensive Barbell';
-      regimeBadgeColor = 'bg-emerald-950/80 text-emerald-300 border-emerald-800/80';
-      summaryText = `Kondisi pasar saat ini sangat dipengaruhi oleh kekuatan sektor teknologi: US100 (Nasdaq 100) menjadi aset paling bullish (${us100 ? us100.price.toLocaleString(undefined, { maximumFractionDigits: 0 }) : '20,185'} poin) berkat belanja modal masif AI dan kinerja solid emiten semikonduktor. Pada saat yang sama, Emas (XAU/USD ${gold ? `$${gold.price.toFixed(1)}` : 'menguat'}) dan mata uang safe-haven ${strongest.currency} (${strongest.strength_score.toFixed(1)}pt) tetap kokoh, sementara mata uang pendanaan berimbal hasil rendah seperti ${weakest.currency} (${weakest.strength_score.toFixed(1)}pt) mengalami tekanan jual.`;
-    } else if (strongest.currency === 'CHF' || strongest.currency === 'JPY' || (gold && gold.change_24h_pct > 0.3)) {
-      regimeTitle = 'Defensive / Safe-Haven Flight';
-      regimeBadgeColor = 'bg-emerald-950/80 text-emerald-300 border-emerald-800/80';
-      summaryText = `Sentimen pasar saat ini dipimpin oleh rotasi defensif dan komoditas lindung nilai (XAU/USD). Di sektor ekuitas, US100 (Nasdaq 100) mempertahankan kekuatan tren bullish yang sangat tangguh (${us100 ? us100.price.toLocaleString() : '20,000+'} poin). Dolar AS berkonsolidasi, sementara disparitas G8 didominasi keunggulan ${strongest.currency} atas ${weakest.currency}.`;
-    } else if (strongest.currency === 'AUD' || strongest.currency === 'NZD' || (spx && spx.change_24h_pct > 0.4)) {
-      regimeTitle = 'Risk-On Expansion';
-      regimeBadgeColor = 'bg-cyan-950/80 text-cyan-300 border-cyan-800/80';
-      summaryText = `Pasar berada dalam mode Risk-On dengan kepemimpinan bullish terkuat pada US100 (Nasdaq 100) serta apresiasi mata uang komoditas (${strongest.currency} memimpin di skor ${strongest.strength_score.toFixed(1)}pt). Investor aktif memburu imbal hasil dan saham pertumbuhan teknologi.`;
-    } else {
-      regimeTitle = 'Macro Consolidation & Tech Resilience';
-      regimeBadgeColor = 'bg-purple-950/80 text-purple-300 border-purple-800/80';
-      summaryText = `Kondisi pasar makro bergerak selektif dengan divergensi yang jelas: US100 (Nasdaq 100) memimpin sentimen bullish di sektor ekuitas, sementara pasar valas terfokus pada disparitas ${strongest.currency} vs ${weakest.currency}.`;
+  // Global Regime from ArahMarketData or fallback
+  const regimeTitle = globalRegime?.title || arahMarketData?.globalRegime?.title || 'BALANCED ROTATIONAL REGIME';
+  const riskScore = globalRegime?.riskScore ?? arahMarketData?.globalRegime?.riskScore ?? 15;
+  const dxyBiasVsOpen = globalRegime?.dxyBiasVsOpen || arahMarketData?.globalRegime?.dxyBiasVsOpen || 'AT_OPEN';
+
+  // Pair Confluences from ArahMarketData
+  const goldConfluence = arahMarketData?.pairs?.find(p => p.pair === 'XAUUSD');
+  const us100Confluence = arahMarketData?.pairs?.find(p => p.pair === 'US100');
+  const eurusdConfluence = arahMarketData?.pairs?.find(p => p.pair === 'EURUSD');
+  const usdjpyConfluence = arahMarketData?.pairs?.find(p => p.pair === 'USDJPY');
+  const btcConfluence = arahMarketData?.pairs?.find(p => p.pair === 'BTC');
+
+  // Intermarket Anomaly Checks
+  const isGoldYieldAnomaly = (gold.change_24h_pct || 0) > 0.25 && us10yChangePct > 0.2;
+  const isGoldDxyAnomaly = (gold.change_24h_pct || 0) > 0.25 && (dxy.change_24h_pct || 0) > 0.2;
+
+  // Dynamic Synthesis Calculation for Gold & Yield
+  const goldDirectionalBias = goldConfluence?.directionalBias || (isYieldEasing && dxyBiasVsOpen === 'BELOW_OPEN' ? 'BULLISH' : isYieldRising ? 'BEARISH' : 'NEUTRAL');
+  const goldTransmissionStory = useMemo(() => {
+    if (isGoldYieldAnomaly) {
+      return `ANOMALI SAFE-HAVEN: Emas tetap menguat (+${(gold.change_24h_pct || 0).toFixed(2)}%) meskipun yield US10Y naik (+${us10yChangeBps} bps). Hal ini menandakan premi risiko geopolitik atau akumulasi cadangan devisa bank sentral (de-dolarisasi) sedang mengesampingkan beban suku bunga obligasi.`;
     }
-
-    // Top 3 Core Catalysts/Drivers today
-    const topCatalysts = todayCatalysts.slice(0, 3);
-
-    return {
-      regimeTitle,
-      regimeBadgeColor,
-      strongest,
-      weakest,
-      summaryText,
-      topCatalysts,
-      goldPrice: gold?.price ?? 2724.5,
-      goldChange: gold?.change_24h_pct ?? 0.65,
-      dxyPrice: dxy?.price ?? 101.42,
-      dxyChange: dxy?.change_24h_pct ?? -0.15,
-      us100Price: us100?.price ?? 20185.0,
-      us100Change: us100?.change_24h_pct ?? 1.22,
-      us10yPrice: us10y?.price ?? 4.085,
-      us10yChange: us10y?.change_24h_pct ?? -0.85,
-    };
-  }, [strengths, priceMap, biasMap, todayCatalysts]);
-
-  // 2. DYNAMIC ACTIONABLE ENTRY SUGGESTIONS (SARAN ENTRY PAIR HARI INI)
-  const tradeSuggestions = useMemo<TradeSuggestion[]>(() => {
-    const list: TradeSuggestion[] = [];
-
-    // Base pair templates with fundamental & technical setup context
-    const CANDIDATE_PAIRS = [
-      {
-        symbol: 'CHFJPY',
-        name: 'Swiss Franc vs Japanese Yen',
-        category: 'FX_CROSS' as const,
-        base: 'CHF',
-        quote: 'JPY',
-        catalyst: 'Safe-haven defensive premium & Swiss balance sheet strength vs BoJ negative real rate suppression.',
-        entryLogic: 'Pullback ke EMA20 intraday / retest swing support sesi London',
-        invalidation: 'Break di bawah swing low harian (terjadi pembalikan yield spread)',
-        target: 'Kelanjutan ekspansi tren +60 hingga +120 pips',
-      },
-      {
-        symbol: 'GBPJPY',
-        name: 'British Pound vs Japanese Yen',
-        category: 'FX_CROSS' as const,
-        base: 'GBP',
-        quote: 'JPY',
-        catalyst: 'BoE persistensi suku bunga ketat vs pelemahan yield obligasi Jepang JGB.',
-        entryLogic: 'Buy on dip saat harga menguji area discount 50%-61.8% Fibonacci intraday',
-        invalidation: 'Penutupan H1 di bawah support struktur sebelumnya',
-        target: 'Target resistensi mayor berikutnya (RR 1:2.5)',
-      },
-      {
-        symbol: 'AUDJPY',
-        name: 'Australian Dollar vs Japanese Yen',
-        category: 'FX_CROSS' as const,
-        base: 'AUD',
-        quote: 'JPY',
-        catalyst: 'RBA hawkish stance & commodity flow vs pelemahan carry currency Yen.',
-        entryLogic: 'Breakout konfirmasi di atas high sesi Asia dengan retest',
-        invalidation: 'Breakdown di bawah base akumulasi sesi Tokyo',
-        target: 'Retest zona supply mingguan (RR 1:2)',
-      },
-      {
-        symbol: 'EURUSD',
-        name: 'Euro vs US Dollar',
-        category: 'FX_MAJOR' as const,
-        base: 'EUR',
-        quote: 'USD',
-        catalyst: 'Konsolidasi DXY di bawah resistensi 101.80 & stabilisasi data PMI manufaktur kawasan Eropa.',
-        entryLogic: 'Entry limit buy pada area demand sesi London 1.0820 - 1.0840',
-        invalidation: 'Penetrasi valid di bawah level support psikologis kunci',
-        target: 'High sesi New York / Resistensi 1.0910',
-      },
-      {
-        symbol: 'GBPUSD',
-        name: 'British Pound vs US Dollar',
-        category: 'FX_MAJOR' as const,
-        base: 'GBP',
-        quote: 'USD',
-        catalyst: 'Surplus perdagangan jasa Inggris vs perlambatan laju penciptaan lapangan kerja AS.',
-        entryLogic: 'Trend following: Buy saat terjadi breakout retest neckline intraday',
-        invalidation: 'Break di bawah moving average 50 H1',
-        target: 'Area target likuiditas atas 1.3050+',
-      },
-      {
-        symbol: 'USDJPY',
-        name: 'US Dollar vs Japanese Yen',
-        category: 'FX_MAJOR' as const,
-        base: 'USD',
-        quote: 'JPY',
-        catalyst: 'Divergensi suku bunga US-Japan dengan pantauan intervensi verbal Kementerian Keuangan Jepang.',
-        entryLogic: 'Scalp long pada retest level support Fibonacci intraday',
-        invalidation: 'Break di bawah support kunci 153.20 jika tensi intervensi menguat',
-        target: 'Test resistensi atas 155.00',
-      },
-      {
-        symbol: 'USDCAD',
-        name: 'US Dollar vs Canadian Dollar',
-        category: 'FX_MAJOR' as const,
-        base: 'USD',
-        quote: 'CAD',
-        catalyst: 'Dinamika pergerakan harga minyak mentah WTI terhadap kebijakan pemangkasan bunga BoC.',
-        entryLogic: 'Reversal / Range trade di batas atas Bollinger Band H1',
-        invalidation: 'Penerobosan momentum di luar batas band atas',
-        target: 'Median range harian (Mean Reversion)',
-      },
-      {
-        symbol: 'EURGBP',
-        name: 'Euro vs British Pound',
-        category: 'FX_CROSS' as const,
-        base: 'EUR',
-        quote: 'GBP',
-        catalyst: 'Spread yield obligasi Bund vs Gilt dengan momentum ekonomi yang relatif berimbang.',
-        entryLogic: 'Sideways / Konsolidasi ketat — Tidak disarankan trend follow',
-        invalidation: 'N/A',
-        target: 'Rangebound scalping saja',
-      },
-    ];
-
-    // Compute opportunities for FX Pairs
-    for (const p of CANDIDATE_PAIRS) {
-      const baseScore = curScoreMap[p.base] ?? 5.0;
-      const quoteScore = curScoreMap[p.quote] ?? 5.0;
-      const delta = parseFloat((baseScore - quoteScore).toFixed(1));
-      const absDelta = Math.abs(delta);
-
-      let action: TradeSuggestion['action'] = 'AVOID_CHOP';
-      let actionLabel = 'HINDARI (CHOP / SIDEWAYS)';
-      let tier: TradeSuggestion['tier'] = 'AVOID';
-      let tradeStyle = 'Chop / No Flow';
-
-      if (delta >= 3.0) {
-        action = 'STRONG_BUY';
-        actionLabel = 'STRONG BUY (LONG)';
-        tier = 'PRIME_A';
-        tradeStyle = 'Strong Trend Continuation';
-      } else if (delta >= 1.6) {
-        action = 'BUY';
-        actionLabel = 'BUY ON PULLBACK';
-        tier = 'HIGH';
-        tradeStyle = 'Dip Buying';
-      } else if (delta <= -3.0) {
-        action = 'STRONG_SELL';
-        actionLabel = 'STRONG SELL (SHORT)';
-        tier = 'PRIME_A';
-        tradeStyle = 'Strong Downtrend Flow';
-      } else if (delta <= -1.6) {
-        action = 'SELL';
-        actionLabel = 'SELL ON RALLY';
-        tier = 'HIGH';
-        tradeStyle = 'Rally Shorting';
-      } else {
-        action = 'AVOID_CHOP';
-        actionLabel = 'HINDARI (FLAT BASKET)';
-        tier = 'AVOID';
-        tradeStyle = 'Sideways / Low Momentum';
-      }
-
-      const confidence = Math.min(94, Math.max(50, Math.round(55 + absDelta * 11)));
-
-      list.push({
-        id: p.symbol,
-        symbol: p.symbol,
-        name: p.name,
-        category: p.category,
-        action,
-        actionLabel,
-        biasConfidence: confidence,
-        deltaOrScore: `Divergensi: ${delta > 0 ? '+' : ''}${delta.toFixed(1)}pt`,
-        tradeStyle,
-        entryZone: p.entryLogic,
-        invalidationLevel: p.invalidation,
-        targetProjection: p.target,
-        fundamentalDriver: p.catalyst,
-        riskNote: tier === 'PRIME_A' ? 'Probabilitas tertinggi dengan flow dua arah searah' : 'Waspadai rilis data berimpak tinggi hari ini',
-        tier,
-      });
+    if (isYieldEasing) {
+      return `Imbal hasil US10Y melemah ke ${us10yPrice.toFixed(3)}% (${us10yChangeBps > 0 ? '+' : ''}${us10yChangeBps} bps). Penurunan yield ini melonggarkan opportunity cost memegang emas fisik tanpa imbal hasil, memberi dorongan beli langsung (bullish tailwind) ke XAU/USD.`;
+    } else if (isYieldRising) {
+      return `Imbal hasil US10Y menguat ke ${us10yPrice.toFixed(3)}% (+${us10yChangeBps} bps). Kenaikan yield riil meningkatkan opportunity cost emas, memicu aksi ambil untung atau tekanan resisten pada reli intraday XAU/USD.`;
     }
+    return `Imbal hasil US10Y stabil di kisaran ${us10yPrice.toFixed(3)}%. Pergerakan Gold (XAU/USD) bergantung pada pergeseran tensi geopolitik dan arah DXY terhadap pembukaan sesi.`;
+  }, [isGoldYieldAnomaly, isYieldEasing, isYieldRising, us10yPrice, us10yChangeBps, gold.change_24h_pct]);
 
-    // Add Commodity Setup: XAUUSD (Gold)
-    const goldBias = biasMap.get('XAUUSD');
-    const goldPrice = priceMap.get('XAUUSD');
-    if (goldPrice) {
-      const isBull = (goldBias?.overall_bias ?? 'BULLISH') === 'BULLISH';
-      list.push({
-        id: 'XAUUSD',
-        symbol: 'XAUUSD',
-        name: 'Gold / US Dollar',
-        category: 'COMMODITY',
-        action: isBull ? 'STRONG_BUY' : 'SELL',
-        actionLabel: isBull ? 'STRONG BUY (BUY THE DIP)' : 'SELL ON RALLY',
-        biasConfidence: goldBias?.confidence ?? 78,
-        deltaOrScore: `Bias: ${goldBias?.overall_bias ?? 'BULLISH'} (${goldPrice.change_24h_pct >= 0 ? '+' : ''}${goldPrice.change_24h_pct.toFixed(2)}%)`,
-        tradeStyle: 'Safe-Haven Momentum / Dip Buying',
-        entryZone: `Area demand intraday $${(goldPrice.price - 8.5).toFixed(1)} - $${(goldPrice.price - 3.0).toFixed(1)}`,
-        invalidationLevel: goldBias?.conditions_to_change_bias || `Break di bawah $${(goldPrice.price - 22.0).toFixed(1)}`,
-        targetProjection: `$${(goldPrice.price + 25.0).toFixed(1)} / Resistensi ATH`,
-        fundamentalDriver: goldBias?.top_drivers?.[0] || goldBias?.today_key_catalyst || 'Permintaan defensif geopolitik & penurunan yield obligasi riil AS.',
-        riskNote: 'Volatilitas tinggi saat jam pembukaan sesi New York (19:30 WIB)',
-        tier: 'PRIME_A',
-      });
+  // Dynamic Synthesis for Equities / Nasdaq
+  const techTransmissionStory = useMemo(() => {
+    if (isYieldEasing) {
+      return `Pelemahan yield obligasi melonggarkan tingkat diskonto (discount rate) arus kas masa depan, mendorong ekspansi valuasi saham teknologi mega-cap dan AI (US100 unggul).`;
+    } else if (isYieldRising) {
+      return `Kenaikan yield obligasi menaikkan discount rate, menekan kelipatan P/E saham growth ber-multiple tinggi (US100) dan memicu rotasi defensif ke saham siklikal/Dow 30 (US30).`;
     }
-
-    // Add Index Setup: US100 (Nasdaq 100) - Super Bullish Tech Leader
-    const us100Bias = biasMap.get('US100');
-    const us100Price = priceMap.get('US100');
-    if (us100Price) {
-      const isUs100Bull = (us100Bias?.overall_bias ?? 'BULLISH') === 'BULLISH' || us100Price.change_24h_pct >= 0;
-      list.push({
-        id: 'US100',
-        symbol: 'US100',
-        name: 'Nasdaq 100 Tech Index',
-        category: 'INDEX',
-        action: isUs100Bull ? 'STRONG_BUY' : 'BUY',
-        actionLabel: isUs100Bull ? 'STRONG BUY (MOMENTUM LONG)' : 'BUY ON PULLBACK',
-        biasConfidence: Math.max(86, us100Bias?.confidence ?? 88),
-        deltaOrScore: `Tech Bias: ${us100Bias?.overall_bias ?? 'BULLISH'} (${us100Price.change_24h_pct >= 0 ? '+' : ''}${us100Price.change_24h_pct.toFixed(2)}%)`,
-        tradeStyle: 'Tech Super-Trend & Pullback Dip',
-        entryZone: `Area demand/discount H1 ${Math.round(us100Price.price - 85)} - ${Math.round(us100Price.price - 25)}`,
-        invalidationLevel: us100Bias?.conditions_to_change_bias || `Breakdown valid di bawah support ${Math.round(us100Price.price - 190)}`,
-        targetProjection: `Ekspansi resistensi All-Time High ${Math.round(us100Price.price + 260)}+ (RR 1:2.8)`,
-        fundamentalDriver: us100Bias?.top_drivers?.[0] || us100Bias?.today_key_catalyst || 'Aset paling bullish di pasar global: Belanja modal AI hyperscalers & pendapatan emiten semikonduktor solid, imbal hasil obligasi stabil menopang valuasi ekuitas growth.',
-        riskNote: 'Volatilitas tinggi saat lonjakan volume pembukaan bursa Wall Street (20:30 WIB)',
-        tier: 'PRIME_A',
-      });
-    }
-
-    // Add Index Setup: US500 (S&P 500)
-    const us500Bias = biasMap.get('US500');
-    const us500Price = priceMap.get('US500');
-    if (us500Price) {
-      const isUs500Bull = (us500Bias?.overall_bias ?? 'BULLISH') === 'BULLISH' || us500Price.change_24h_pct >= 0;
-      list.push({
-        id: 'US500',
-        symbol: 'US500',
-        name: 'S&P 500 Composite Index',
-        category: 'INDEX',
-        action: isUs500Bull ? 'BUY' : 'SELL',
-        actionLabel: isUs500Bull ? 'BUY ON PULLBACK' : 'SELL ON RALLY',
-        biasConfidence: Math.max(78, us500Bias?.confidence ?? 80),
-        deltaOrScore: `Bias: ${us500Bias?.overall_bias ?? 'BULLISH'} (${us500Price.change_24h_pct >= 0 ? '+' : ''}${us500Price.change_24h_pct.toFixed(2)}%)`,
-        tradeStyle: 'Broad Market Trend Following',
-        entryZone: `Pullback ke area EMA21 H1 ${Math.round(us500Price.price - 28)} - ${Math.round(us500Price.price - 12)}`,
-        invalidationLevel: `Penutupan H1 di bawah support ${Math.round(us500Price.price - 55)}`,
-        targetProjection: `Target ekspansi swing high ${Math.round(us500Price.price + 65)}`,
-        fundamentalDriver: 'Ketahanan makro ekonomi AS & partisipasi institusional pada broad market equities.',
-        riskNote: 'Korelasi tinggi dengan data rilis inflasi dan yield Treasury AS',
-        tier: 'HIGH',
-      });
-    }
-
-    // Add Benchmark Engine: US10Y (US 10-Year Treasury Yield)
-    const us10yBias = biasMap.get('US10Y');
-    const us10yPrice = priceMap.get('US10Y');
-    if (us10yPrice) {
-      const isYieldEasing = us10yPrice.change_24h_pct <= 0;
-      list.push({
-        id: 'US10Y',
-        symbol: 'US10Y',
-        name: 'US 10-Year Benchmark Yield',
-        category: 'BOND',
-        action: isYieldEasing ? 'BUY' : 'SELL',
-        actionLabel: isYieldEasing ? 'YIELD EASING (RISK-ON ANCHOR)' : 'YIELD SPIKE (RISK WATCH)',
-        biasConfidence: 84,
-        deltaOrScore: `Yield: ${us10yPrice.price.toFixed(3)}% (${us10yPrice.change_24h_pct >= 0 ? '+' : ''}${us10yPrice.change_24h_pct.toFixed(2)}%)`,
-        tradeStyle: 'Macro Discount Curve & Valuation Engine',
-        entryZone: `Pivot level 4.050% - 4.120%`,
-        invalidationLevel: `Penetrasi yield > 4.220% memicu koreksi risk assets`,
-        targetProjection: `Zona stabilisasi 3.980% - 4.060%`,
-        fundamentalDriver: 'Ekspektasi pelonggaran Fed menjaga imbal hasil obligasi AS bertenor 10 tahun terkendali, menopang valuasi ekuitas teknologi (US100) dan akumulasi Emas (XAU/USD).',
-        riskNote: 'Sensitif terhadap rilis data lelang Treasury, lelang obligasi, dan komentar pejabat The Fed',
-        tier: 'HIGH',
-      });
-    }
-
-    // Sort: PRIME_A first, then HIGH, then AVOID
-    return list.sort((a, b) => {
-      const order = { PRIME_A: 1, HIGH: 2, SPECULATIVE: 3, AVOID: 4 };
-      return order[a.tier] - order[b.tier];
-    });
-  }, [curScoreMap, biasMap, priceMap]);
-
-  // Filtered trade list
-  const filteredSuggestions = useMemo(() => {
-    if (filterCategory === 'PRIME') {
-      return tradeSuggestions.filter(t => t.tier === 'PRIME_A');
-    }
-    if (filterCategory === 'INDICES') {
-      return tradeSuggestions.filter(t => t.category === 'INDEX');
-    }
-    if (filterCategory === 'COMMODITIES') {
-      return tradeSuggestions.filter(t => t.category === 'COMMODITY');
-    }
-    if (filterCategory === 'BONDS') {
-      return tradeSuggestions.filter(t => t.category === 'BOND');
-    }
-    if (filterCategory === 'MAJORS') {
-      return tradeSuggestions.filter(t => t.category === 'FX_MAJOR' && t.tier !== 'AVOID');
-    }
-    if (filterCategory === 'CROSSES') {
-      return tradeSuggestions.filter(t => t.category === 'FX_CROSS' && t.tier !== 'AVOID');
-    }
-    if (filterCategory === 'AVOID') {
-      return tradeSuggestions.filter(t => t.tier === 'AVOID');
-    }
-    // Default ALL: show tradable first
-    return tradeSuggestions;
-  }, [tradeSuggestions, filterCategory]);
-
-  const topPick = tradeSuggestions.find(t => t.tier === 'PRIME_A');
+    return `Kondisi yield yang seimbang menjaga rotasi wajar antara saham teknologi (US100) dan saham industrial/perbankan (US30).`;
+  }, [isYieldEasing, isYieldRising]);
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl p-3.5 sm:p-4.5 space-y-4 shadow-sm font-sans" id="market-summary-and-entry-brief">
-      {/* ======================================================== */}
-      {/* HEADER: KESIMPULAN & SARAN ENTRY                        */}
-      {/* ======================================================== */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-3 border-b border-slate-800">
-        <div>
-          <div className="flex items-center gap-2">
-            <div className="p-1 rounded-lg bg-cyan-950/80 border border-cyan-800/80 text-cyan-400">
-              <Sparkles className="w-4 h-4" />
-            </div>
-            <h2 className="text-xs sm:text-sm font-mono font-bold text-slate-100 uppercase tracking-wider">
-              KESIMPULAN PASAR & SARAN ENTRY HARI INI
-            </h2>
-            <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-950 text-cyan-300 border border-cyan-800/80">
-              LIVE SYNTHESIS
+    <div className="terminal-panel p-4 sm:p-5 space-y-4 font-sans" id="executive-macro-yield-synthesis">
+      {/* 1. DOSSIER HEADER WITH REGIME & CONTROLS */}
+      <div className="pb-3 border-b" style={{ borderColor: 'var(--border-hairline)' }}>
+        <div className="space-y-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="metadata-label text-[10px] text-[var(--accent)] font-mono font-semibold flex items-center gap-1">
+              <Compass className="w-3.5 h-3.5" />
+              <span>EXECUTIVE DAILY MACRO SYNTHESIS</span>
+            </span>
+            <span className="text-[var(--border-subtle)]">·</span>
+            <span className="text-[10px] font-mono text-[var(--text-muted)] bg-[var(--bg-section)] px-2 py-0.5 rounded border border-[var(--border-subtle)]">
+              {arahMarketData?.activeSession ? `${arahMarketData.activeSession} SESSION` : 'REAL-TIME WIB'}
             </span>
           </div>
-          <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-            Ringkasan konsensus makro hari ini serta rekomendasi entry pair dengan probabilitas tertinggi berdasarkan disparitas mata uang & sentimen aset.
+          <h2 className="text-sm sm:text-base font-mono font-bold text-[var(--text-primary)] uppercase tracking-wide">
+            Arah Fundamental, Imbal Hasil (Yield), & Transmisi Gold Lintas Aset
+          </h2>
+          <p className="text-xs text-[var(--text-secondary)] font-sans leading-relaxed max-w-3xl">
+            Sintesis intelijen harian yang mengintegrasikan katalis makro fundamental, pergerakan imbal hasil US10Y & yield riil, serta transmisi langsung ke Emas (XAU/USD), Nasdaq (US100), DXY, dan Valuta Asing.
           </p>
         </div>
+      </div>
 
-        {/* Global Regime Pill */}
-        <div className="flex items-center gap-2 shrink-0">
-          <span className="text-[10px] font-mono text-slate-400 hidden md:inline">Rezim Pasar:</span>
-          <span className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold border flex items-center gap-1.5 ${marketSynthesis.regimeBadgeColor}`}>
-            <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
-            <span>{marketSynthesis.regimeTitle}</span>
+      {/* ANOMALY ALERT BANNER (IF ACTIVE) */}
+      {(isGoldYieldAnomaly || isGoldDxyAnomaly) && (
+        <div className="p-3 rounded-lg border border-[var(--warning)] bg-[var(--warning)]/10 flex items-start gap-2.5 text-xs text-[var(--text-primary)] font-sans">
+          <AlertTriangle className="w-4 h-4 text-[var(--warning)] shrink-0 mt-0.5" />
+          <div className="space-y-0.5">
+            <span className="font-mono font-bold text-[var(--warning)] block">
+              PERINGATAN ANOMALI INTERMARKET: EMAS & YIELD/DOLAR SAMA-SAMA MENGUAT
+            </span>
+            <p className="text-[11.5px] text-[var(--text-secondary)] leading-relaxed">
+              Emas (XAU/USD) naik berbarengan dengan penguatan Yield US10Y atau DXY. Secara teori intermarket klasik, kedua aset biasanya berlawanan arah. Anomali ini menandakan premi risiko perang/geopolitik darurat atau de-dolarisasi cadangan devisa bank sentral sedang mengesampingkan faktor discount rate imbal hasil obligasi.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* VISUAL CAUSAL TRANSMISSION CHAIN BANNER */}
+      <div className="p-3 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] space-y-2">
+        <div className="flex items-center justify-between text-[10.5px] font-mono">
+          <span className="font-bold text-[var(--accent)] flex items-center gap-1.5">
+            <Zap className="w-3.5 h-3.5" />
+            <span>ALUR TRANSMISI INTERMARKET SEBAB-AKIBAT:</span>
+          </span>
+          <span className="text-[var(--text-muted)] font-semibold">
+            {isYieldEasing ? 'SKENARIO: YIELD MELEMAH (EASING)' : isYieldRising ? 'SKENARIO: YIELD MENGUAT (TIGHTENING)' : 'SKENARIO: YIELD KONSOLIDASI'}
           </span>
         </div>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 text-xs font-mono">
+          <div className="p-2.5 rounded bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-1">
+            <div className="text-[9.5px] text-[var(--text-muted)] font-bold">1. SUMBER BENCHMARK</div>
+            <div className="font-bold text-[var(--text-primary)] flex items-center justify-between">
+              <span>US10Y ({us10yPrice.toFixed(3)}%)</span>
+              <span className={isYieldEasing ? 'text-[var(--bullish)]' : isYieldRising ? 'text-[var(--bearish)]' : 'text-[var(--text-muted)]'}>
+                {isYieldEasing ? '▼ Easing' : isYieldRising ? '▲ Tightening' : '● Flat'}
+              </span>
+            </div>
+            <div className="text-[10px] text-[var(--text-secondary)] font-sans">
+              {isYieldEasing ? 'Yield obligasi AS melandai (-bps)' : isYieldRising ? 'Yield obligasi AS melonjak (+bps)' : 'Suku bunga acuan stabil'}
+            </div>
+          </div>
+
+          <div className="p-2.5 rounded bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-1">
+            <div className="text-[9.5px] text-[var(--text-muted)] font-bold">2. TRANSMISI REAL YIELD</div>
+            <div className="font-bold text-[var(--text-primary)] flex items-center justify-between">
+              <span>Real Yield ({realYieldEstimate}%)</span>
+              <span className={isYieldEasing ? 'text-[var(--bullish)]' : 'text-[var(--bearish)]'}>
+                {isYieldEasing ? '▼ Melonggar' : '▲ Mengetat'}
+              </span>
+            </div>
+            <div className="text-[10px] text-[var(--text-secondary)] font-sans">
+              {isYieldEasing ? 'Discount rate & opportunity cost turun' : 'Discount rate & opportunity cost naik'}
+            </div>
+          </div>
+
+          <div className="p-2.5 rounded bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-1">
+            <div className="text-[9.5px] text-[var(--text-muted)] font-bold">3. DAMPAK KE EMAS (XAU)</div>
+            <div className="font-bold text-[var(--text-primary)] flex items-center justify-between">
+              <span>Gold (${gold.price.toFixed(1)})</span>
+              <span className={goldDirectionalBias === 'BULLISH' ? 'text-[var(--bullish)]' : goldDirectionalBias === 'BEARISH' ? 'text-[var(--bearish)]' : 'text-[var(--text-muted)]'}>
+                {goldDirectionalBias === 'BULLISH' ? '▲ Bullish' : goldDirectionalBias === 'BEARISH' ? '▼ Bearish' : '● Netral'}
+              </span>
+            </div>
+            <div className="text-[10px] text-[var(--text-secondary)] font-sans">
+              {isYieldEasing ? 'Beban oportunitas hilang, emas diburu' : 'Aset berbunga lebih menarik dari emas'}
+            </div>
+          </div>
+
+          <div className="p-2.5 rounded bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-1">
+            <div className="text-[9.5px] text-[var(--text-muted)] font-bold">4. SAHAM TECH & VALAS</div>
+            <div className="font-bold text-[var(--text-primary)] flex items-center justify-between">
+              <span>US100 / DXY / JPY</span>
+              <span className="text-[var(--accent)] font-semibold">Multiple P/E</span>
+            </div>
+            <div className="text-[10px] text-[var(--text-secondary)] font-sans">
+              {isYieldEasing ? 'Valuasi P/E tech longgar, Dolar melemah' : 'Kompresi P/E tech, Dolar menguat'}
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* ======================================================== */}
-      {/* BAGIAN 1: KESIMPULAN KONDISI PASAR HARI INI (SUMMARY)    */}
-      {/* ======================================================== */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5">
-        {/* Narasi Ringkasan Utama (7 COLS) */}
-        <div className="lg:col-span-7 bg-slate-950/80 border border-slate-800/90 rounded-xl p-3.5 space-y-2.5">
+      {/* 2. THREE CORE PILLARS BANNER (FUNDAMENTAL, YIELD ANCHOR, GOLD VECTOR) */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        {/* PILLAR 1: ARAH FUNDAMENTAL */}
+        <div className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-3.5 flex flex-col justify-between gap-2.5">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-mono font-bold text-cyan-300 uppercase tracking-wider flex items-center gap-1.5">
-              <Compass className="w-3.5 h-3.5 text-cyan-400" />
-              <span>Ringkasan Eksekutif Hari Ini</span>
+            <span className="metadata-label text-[10px] text-[var(--text-muted)] flex items-center gap-1">
+              <Compass className="w-3.5 h-3.5 text-sky-400" />
+              <span>1. ARAH FUNDAMENTAL</span>
             </span>
-            <span className="text-[10px] font-mono text-slate-500">
-              WIB / Live Feed
+            <span className={`text-[9px] px-2 py-0.5 rounded-full font-semibold font-mono ${
+              riskScore > 20 ? 'badge-bullish' : riskScore < -20 ? 'badge-bearish' : 'badge-neutral'
+            }`}>
+              {regimeTitle}
             </span>
           </div>
 
-          <p className="text-xs sm:text-[13px] text-slate-200 leading-relaxed font-sans">
-            {marketSynthesis.summaryText}
-          </p>
-
-          {/* Key Macro Snapshot Highlights */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 pt-2 border-t border-slate-800/80 text-xs font-mono">
-            <div className="bg-slate-900/90 p-2 rounded-lg border border-slate-800">
-              <span className="text-[10px] text-slate-400 block">Mata Uang Terkuat</span>
-              <span className="font-bold text-emerald-400 flex items-center gap-1 mt-0.5">
-                <ArrowUpRight className="w-3 h-3" />
-                {marketSynthesis.strongest.currency} ({marketSynthesis.strongest.strength_score.toFixed(1)}/10)
+          <div className="space-y-1">
+            <div className="flex items-baseline justify-between">
+              <span className="text-xs font-semibold text-[var(--text-primary)] font-mono">
+                Sentimen Risiko Global:
+              </span>
+              <span className={`text-xs font-bold font-mono ${riskScore > 0 ? 'text-[var(--bullish)]' : riskScore < 0 ? 'text-[var(--bearish)]' : 'text-[var(--text-muted)]'}`}>
+                {riskScore > 0 ? `+${riskScore}` : riskScore} / 100
               </span>
             </div>
+            <p className="text-[11.5px] text-[var(--text-secondary)] font-sans leading-relaxed line-clamp-3">
+              {arahMarketData?.globalRegime?.summaryNarrative ||
+                'Kondisi makro global digerakkan oleh ekspektasi suku bunga Federal Reserve, rilis data inflasi, serta arah transmisi US Dollar terhadap pembukaan sesi.'}
+            </p>
+          </div>
 
-            <div className="bg-slate-900/90 p-2 rounded-lg border border-slate-800">
-              <span className="text-[10px] text-slate-400 block">Mata Uang Terlemah</span>
-              <span className="font-bold text-rose-400 flex items-center gap-1 mt-0.5">
-                <ArrowDownRight className="w-3 h-3" />
-                {marketSynthesis.weakest.currency} ({marketSynthesis.weakest.strength_score.toFixed(1)}/10)
+          <div className="pt-2 border-t flex items-center justify-between text-[10.5px] font-mono text-[var(--text-muted)]" style={{ borderColor: 'var(--border-hairline)' }}>
+            <span>DXY VS OPEN:</span>
+            <span className={`font-bold ${dxyBiasVsOpen === 'ABOVE_OPEN' ? 'text-[var(--bearish)]' : dxyBiasVsOpen === 'BELOW_OPEN' ? 'text-[var(--bullish)]' : 'text-[var(--text-muted)]'}`}>
+              {dxyBiasVsOpen === 'ABOVE_OPEN' ? '▲ DI ATAS OPEN (TEKANAN USD)' : dxyBiasVsOpen === 'BELOW_OPEN' ? '▼ DI BAWAH OPEN (PELEMAHAN USD)' : '● SEIMBANG'}
+            </span>
+          </div>
+        </div>
+
+        {/* PILLAR 2: STATUS IMBAL HASIL (YIELD US10Y & REAL YIELD) */}
+        <div className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-3.5 flex flex-col justify-between gap-2.5">
+          <div className="flex items-center justify-between">
+            <span className="metadata-label text-[10px] text-[var(--text-muted)] flex items-center gap-1">
+              <Activity className="w-3.5 h-3.5 text-amber-400" />
+              <span>2. IMBAL HASIL (US10Y YIELD)</span>
+            </span>
+            <span className={`text-[9px] px-2 py-0.5 rounded-full font-semibold font-mono ${
+              isYieldEasing ? 'badge-bullish' : isYieldRising ? 'badge-bearish' : 'badge-neutral'
+            }`}>
+              {yieldStatusLabel}
+            </span>
+          </div>
+
+          <div className="space-y-1">
+            <div className="flex items-baseline justify-between font-mono">
+              <span className="text-lg font-bold text-[var(--text-primary)]">
+                {us10yPrice.toFixed(3)}%
+              </span>
+              <span className={`text-xs font-bold ${us10yChangePct <= 0 ? 'text-[var(--bullish)]' : 'text-[var(--bearish)]'}`}>
+                {us10yChangePct >= 0 ? '+' : ''}{us10yChangePct.toFixed(2)}% ({us10yChangeBps >= 0 ? '+' : ''}{us10yChangeBps} bps)
               </span>
             </div>
+            <p className="text-[11.5px] text-[var(--text-secondary)] font-sans leading-relaxed">
+              {isYieldEasing
+                ? 'Yield US10Y melemah. Penurunan imbal hasil melonggarkan discount rate dan meringankan beban opportunity cost aset tanpa bunga.'
+                : isYieldRising
+                ? 'Yield US10Y menguat. Kenaikan imbal hasil menaikkan opportunity cost emas dan menekan valuasi saham teknologi ber-multiple tinggi.'
+                : 'Yield US10Y berkonsolidasi di sekitar level acuan sesi; pasar menunggu katalis pidato bank sentral atau data inflasi berikutnya.'}
+            </p>
+          </div>
 
-            <div
-              onClick={() => onOpenChart('US100')}
-              className="bg-slate-900/90 p-2 rounded-lg border border-emerald-800/40 bg-emerald-950/20 hover:border-emerald-700 transition cursor-pointer"
-              title="Klik untuk membuka Chart Interaktif TradingView US100"
-            >
-              <span className="text-[10px] text-slate-400 block flex items-center justify-between">
-                <span>Nasdaq (US100)</span>
-                <span className="text-[9px] font-bold text-emerald-400 font-mono px-1 rounded bg-emerald-900/60">BULLISH</span>
+          <div className="pt-2 border-t flex items-center justify-between text-[10.5px] font-mono text-[var(--text-muted)]" style={{ borderColor: 'var(--border-hairline)' }}>
+            <span>YIELD RIIL ESTIMASI:</span>
+            <span className="font-bold text-[var(--text-primary)]">
+              {realYieldEstimate}% {realYieldEstimate > 1.9 ? '(High Drag)' : '(Supportive)'}
+            </span>
+          </div>
+        </div>
+
+        {/* PILLAR 3: ARAH GOLD (XAUUSD) & VEKTOR YIELD */}
+        <div className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-3.5 flex flex-col justify-between gap-2.5">
+          <div className="flex items-center justify-between">
+            <span className="metadata-label text-[10px] text-[var(--text-muted)] flex items-center gap-1">
+              <Flame className="w-3.5 h-3.5 text-amber-500" />
+              <span>3. ARAH EMAS (XAU/USD)</span>
+            </span>
+            <span className={`text-[9px] px-2 py-0.5 rounded-full font-semibold font-mono ${
+              goldDirectionalBias === 'BULLISH' || goldDirectionalBias === 'STRONG_BULLISH'
+                ? 'badge-bullish'
+                : goldDirectionalBias === 'BEARISH' || goldDirectionalBias === 'STRONG_BEARISH'
+                ? 'badge-bearish'
+                : 'badge-neutral'
+            }`}>
+              BIAS: {goldDirectionalBias}
+            </span>
+          </div>
+
+          <div className="space-y-1">
+            <div className="flex items-baseline justify-between font-mono">
+              <span className="text-lg font-bold text-[var(--text-primary)]">
+                ${gold.price.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
               </span>
-              <span className={`font-bold mt-0.5 flex items-center gap-1 ${marketSynthesis.us100Change >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                <ArrowUpRight className="w-3 h-3" />
-                {marketSynthesis.us100Price.toLocaleString(undefined, { maximumFractionDigits: 0 })} ({marketSynthesis.us100Change >= 0 ? '+' : ''}{marketSynthesis.us100Change.toFixed(2)}%)
+              <span className={`text-xs font-bold ${(gold.change_24h_pct || 0) >= 0 ? 'text-[var(--bullish)]' : 'text-[var(--bearish)]'}`}>
+                {(gold.change_24h_pct || 0) >= 0 ? '+' : ''}{(gold.change_24h_pct || 0).toFixed(2)}%
               </span>
             </div>
+            <p className="text-[11.5px] text-[var(--text-secondary)] font-sans leading-relaxed">
+              {isYieldEasing
+                ? 'Emas diuntungkan oleh pelemahan imbal hasil obligasi AS dan pelemahan DXY. Menghadirkan bias beli pada pullback ke area demand sesi.'
+                : isYieldRising
+                ? 'Emas tertekan oleh penguatan yield obligasi AS dan DXY yang kokoh. Waspadai resisten pada pantulan harga dan potensi retracement.'
+                : 'Emas berada dalam fase konsolidasi intraday; perhatikan level support/resistance batas sesi Asia-London.'}
+            </p>
+          </div>
 
-            <div
-              onClick={() => onOpenChart('US10Y')}
-              className="bg-slate-900/90 p-2 rounded-lg border border-cyan-800/40 bg-cyan-950/20 hover:border-cyan-700 transition cursor-pointer"
-              title="Klik untuk membuka Chart Interaktif TradingView US10Y Benchmark"
-            >
-              <span className="text-[10px] text-slate-400 block flex items-center justify-between">
-                <span>Yield 10Y (US10Y)</span>
-                <span className="text-[9px] font-bold text-cyan-400 font-mono px-1 rounded bg-cyan-900/60">MACRO</span>
-              </span>
-              <span className={`font-bold mt-0.5 flex items-center gap-1 ${marketSynthesis.us10yChange <= 0 ? 'text-emerald-400' : 'text-amber-400'}`}>
-                <Activity className="w-3 h-3" />
-                {marketSynthesis.us10yPrice.toFixed(3)}% ({marketSynthesis.us10yChange >= 0 ? '+' : ''}{marketSynthesis.us10yChange.toFixed(2)}%)
-              </span>
+          <div className="pt-2 border-t flex items-center justify-between text-[10.5px] font-mono text-[var(--text-muted)]" style={{ borderColor: 'var(--border-hairline)' }}>
+            <span>REKOMENDASI DESK:</span>
+            <span className="font-bold text-[var(--accent)]">
+              {goldConfluence?.intradayPlan?.recommendedAction || (isYieldEasing ? 'LOOK FOR BUY' : isYieldRising ? 'LOOK FOR SELL' : 'WAIT ON SUPPORT')}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* 3. TRANSMISI IMBAL HASIL LINTAS ASET (CROSS-ASSET YIELD TRANSMISSION MATRIX) */}
+      {(activeViewTab === 'ALL_IN_ONE' || activeViewTab === 'YIELD_GOLD') && (
+        <section className="space-y-3 pt-1">
+          <div className="flex items-center justify-between pb-2 border-b" style={{ borderColor: 'var(--border-hairline)' }}>
+            <div className="flex items-center gap-2">
+              <Zap className="w-4 h-4 text-[var(--accent)]" />
+              <h3 className="text-xs sm:text-sm font-mono font-bold text-[var(--text-primary)] uppercase tracking-wide">
+                Transmisi Imbal Hasil (Yield) ke Seluruh Aset Terkait
+              </h3>
             </div>
+            <span className="text-[11px] font-mono text-[var(--text-muted)]">
+              Korelasi & Dampak Langsung ke XAU, US100, DXY, FX
+            </span>
+          </div>
 
+          {/* Grid of Yield-Linked Assets */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+            {/* CARD 1: GOLD / XAUUSD */}
             <div
               onClick={() => onOpenChart('XAUUSD')}
-              className="bg-slate-900/90 p-2 rounded-lg border border-slate-800 hover:border-slate-700 transition cursor-pointer"
-              title="Klik untuk membuka Chart Interaktif TradingView XAUUSD"
+              className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-3.5 space-y-2.5 hover:border-[var(--border-strong)] transition cursor-pointer flex flex-col justify-between"
             >
-              <span className="text-[10px] text-slate-400 block">Emas (XAU/USD)</span>
-              <span className={`font-bold mt-0.5 block ${marketSynthesis.goldChange >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                ${marketSynthesis.goldPrice.toFixed(1)} ({marketSynthesis.goldChange >= 0 ? '+' : ''}{marketSynthesis.goldChange.toFixed(2)}%)
-              </span>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 font-mono">
+                  <span className="font-bold text-xs text-[var(--text-primary)]">XAU/USD</span>
+                  <span className="text-[10px] text-[var(--text-muted)]">Gold</span>
+                </div>
+                <span className={`text-[9px] px-1.5 py-0.5 rounded font-mono font-semibold ${
+                  (gold.change_24h_pct || 0) >= 0 ? 'badge-bullish' : 'badge-bearish'
+                }`}>
+                  {(gold.change_24h_pct || 0) >= 0 ? '+' : ''}{(gold.change_24h_pct || 0).toFixed(2)}%
+                </span>
+              </div>
+
+              <div className="flex items-baseline justify-between font-mono">
+                <span className="text-base font-bold text-[var(--text-primary)]">
+                  ${gold.price.toFixed(1)}
+                </span>
+                {gold.sparkline_1h && (
+                  <D3Sparkline
+                    data={gold.sparkline_1h}
+                    width={48}
+                    height={16}
+                    isPositive={(gold.change_24h_pct || 0) >= 0}
+                    showArea={true}
+                    showEndDot={false}
+                    className="opacity-80 shrink-0"
+                  />
+                )}
+              </div>
+
+              <div className="space-y-1 text-xs">
+                <div className="text-[10px] font-mono text-[var(--accent)] font-semibold">
+                  HUBUNGAN DENGAN YIELD:
+                </div>
+                <p className="text-[11px] text-[var(--text-secondary)] font-sans leading-snug">
+                  {isYieldEasing
+                    ? 'Yield melemah = Emas menguat (beban opportunity cost berkurang, dorongan safe-haven).'
+                    : isYieldRising
+                    ? 'Yield menguat = Emas tertekan (yield obligasi menarik modal keluar dari emas).'
+                    : 'Korelasi imbal hasil riil stabil; perhatikan pergerakan indeks dolar (DXY).'}
+                </p>
+              </div>
+
+              <div className="pt-2 border-t text-[10px] font-mono flex items-center justify-between" style={{ borderColor: 'var(--border-hairline)' }}>
+                <span className="text-[var(--text-muted)]">AKSI TRADER:</span>
+                <span className="font-bold text-[var(--bullish)]">
+                  {isYieldEasing ? 'Cari Posisi Buy (Dip)' : 'Waspada Resisten'}
+                </span>
+              </div>
             </div>
 
+            {/* CARD 2: NASDAQ / US100 */}
+            <div
+              onClick={() => onOpenChart('US100')}
+              className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-3.5 space-y-2.5 hover:border-[var(--border-strong)] transition cursor-pointer flex flex-col justify-between"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 font-mono">
+                  <span className="font-bold text-xs text-[var(--text-primary)]">US100</span>
+                  <span className="text-[10px] text-[var(--text-muted)]">Nasdaq Tech</span>
+                </div>
+                <span className={`text-[9px] px-1.5 py-0.5 rounded font-mono font-semibold ${
+                  (us100.change_24h_pct || 0) >= 0 ? 'badge-bullish' : 'badge-bearish'
+                }`}>
+                  {(us100.change_24h_pct || 0) >= 0 ? '+' : ''}{(us100.change_24h_pct || 0).toFixed(2)}%
+                </span>
+              </div>
+
+              <div className="flex items-baseline justify-between font-mono">
+                <span className="text-base font-bold text-[var(--text-primary)]">
+                  {us100.price.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                </span>
+                {us100.sparkline_1h && (
+                  <D3Sparkline
+                    data={us100.sparkline_1h}
+                    width={48}
+                    height={16}
+                    isPositive={(us100.change_24h_pct || 0) >= 0}
+                    showArea={true}
+                    showEndDot={false}
+                    className="opacity-80 shrink-0"
+                  />
+                )}
+              </div>
+
+              <div className="space-y-1 text-xs">
+                <div className="text-[10px] font-mono text-[var(--accent)] font-semibold">
+                  HUBUNGAN DENGAN YIELD:
+                </div>
+                <p className="text-[11px] text-[var(--text-secondary)] font-sans leading-snug">
+                  {isYieldEasing
+                    ? 'Yield melemah = Valuasi saham tech longgar (multiple expansion, dorongan beli pada saham AI).'
+                    : isYieldRising
+                    ? 'Yield menguat = Kompresi valuasi P/E saham growth (tekanan jual pada saham ber-P/E tinggi).'
+                    : 'Rotasi seimbang antara teknologi (US100) dan saham siklikal/Dow (US30).'}
+                </p>
+              </div>
+
+              <div className="pt-2 border-t text-[10px] font-mono flex items-center justify-between" style={{ borderColor: 'var(--border-hairline)' }}>
+                <span className="text-[var(--text-muted)]">LEADERSHIP:</span>
+                <span className="font-bold text-[var(--text-primary)]">
+                  {arahMarketData?.indexCorrelation?.ratioTrend === 'OUTPERFORMING' ? 'US100 Unggul vs US30' : 'Rotasi Berimbang'}
+                </span>
+              </div>
+            </div>
+
+            {/* CARD 3: US DOLLAR / DXY */}
             <div
               onClick={() => onOpenChart('USD')}
-              className="bg-slate-900/90 p-2 rounded-lg border border-slate-800 hover:border-slate-700 transition cursor-pointer"
-              title="Klik untuk membuka Chart Interaktif TradingView DXY"
+              className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-3.5 space-y-2.5 hover:border-[var(--border-strong)] transition cursor-pointer flex flex-col justify-between"
             >
-              <span className="text-[10px] text-slate-400 block">DXY (US Dollar)</span>
-              <span className="font-bold text-slate-200 mt-0.5 block">
-                {marketSynthesis.dxyPrice.toFixed(2)} ({marketSynthesis.dxyChange >= 0 ? '+' : ''}{marketSynthesis.dxyChange.toFixed(2)}%)
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 font-mono">
+                  <span className="font-bold text-xs text-[var(--text-primary)]">DXY / USD</span>
+                  <span className="text-[10px] text-[var(--text-muted)]">Dollar Index</span>
+                </div>
+                <span className={`text-[9px] px-1.5 py-0.5 rounded font-mono font-semibold ${
+                  (dxy.change_24h_pct || 0) >= 0 ? 'badge-bullish' : 'badge-bearish'
+                }`}>
+                  {(dxy.change_24h_pct || 0) >= 0 ? '+' : ''}{(dxy.change_24h_pct || 0).toFixed(2)}%
+                </span>
+              </div>
+
+              <div className="flex items-baseline justify-between font-mono">
+                <span className="text-base font-bold text-[var(--text-primary)]">
+                  {dxy.price.toFixed(2)}
+                </span>
+                {dxy.sparkline_1h && (
+                  <D3Sparkline
+                    data={dxy.sparkline_1h}
+                    width={48}
+                    height={16}
+                    isPositive={(dxy.change_24h_pct || 0) >= 0}
+                    showArea={true}
+                    showEndDot={false}
+                    className="opacity-80 shrink-0"
+                  />
+                )}
+              </div>
+
+              <div className="space-y-1 text-xs">
+                <div className="text-[10px] font-mono text-[var(--accent)] font-semibold">
+                  HUBUNGAN DENGAN YIELD:
+                </div>
+                <p className="text-[11px] text-[var(--text-secondary)] font-sans leading-snug">
+                  DXY berkorelasi positif dengan US10Y. DXY {dxyBiasVsOpen === 'ABOVE_OPEN' ? 'di atas pembukaan sesi menekan EUR/USD dan komoditas' : 'di bawah pembukaan memberi ruang pelegaan bagi mata uang rival dan emas'}.
+                </p>
+              </div>
+
+              <div className="pt-2 border-t text-[10px] font-mono flex items-center justify-between" style={{ borderColor: 'var(--border-hairline)' }}>
+                <span className="text-[var(--text-muted)]">GRAVITASI MAJORS:</span>
+                <span className={`font-bold ${dxyBiasVsOpen === 'ABOVE_OPEN' ? 'text-[var(--bearish)]' : 'text-[var(--bullish)]'}`}>
+                  {dxyBiasVsOpen === 'ABOVE_OPEN' ? 'Tekanan Kuat' : 'Pelegaan Maju'}
+                </span>
+              </div>
+            </div>
+
+            {/* CARD 4: USD/JPY & CARRY ENGINE */}
+            <div
+              onClick={() => onOpenChart('USDJPY')}
+              className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-3.5 space-y-2.5 hover:border-[var(--border-strong)] transition cursor-pointer flex flex-col justify-between"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 font-mono">
+                  <span className="font-bold text-xs text-[var(--text-primary)]">USD/JPY</span>
+                  <span className="text-[10px] text-[var(--text-muted)]">Carry Engine</span>
+                </div>
+                <span className={`text-[9px] px-1.5 py-0.5 rounded font-mono font-semibold ${
+                  (usdjpy.change_24h_pct || 0) >= 0 ? 'badge-bullish' : 'badge-bearish'
+                }`}>
+                  {(usdjpy.change_24h_pct || 0) >= 0 ? '+' : ''}{(usdjpy.change_24h_pct || 0).toFixed(2)}%
+                </span>
+              </div>
+
+              <div className="flex items-baseline justify-between font-mono">
+                <span className="text-base font-bold text-[var(--text-primary)]">
+                  {usdjpy.price.toFixed(2)}
+                </span>
+                {usdjpy.sparkline_1h && (
+                  <D3Sparkline
+                    data={usdjpy.sparkline_1h}
+                    width={48}
+                    height={16}
+                    isPositive={(usdjpy.change_24h_pct || 0) >= 0}
+                    showArea={true}
+                    showEndDot={false}
+                    className="opacity-80 shrink-0"
+                  />
+                )}
+              </div>
+
+              <div className="space-y-1 text-xs">
+                <div className="text-[10px] font-mono text-[var(--accent)] font-semibold">
+                  HUBUNGAN DENGAN YIELD:
+                </div>
+                <p className="text-[11px] text-[var(--text-secondary)] font-sans leading-snug">
+                  Spread US-Japan sebesar {usJpSpread}% adalah bahan bakar utama carry trade. Jika yield US10Y turun, USD/JPY rentan koreksi tajam.
+                </p>
+              </div>
+
+              <div className="pt-2 border-t text-[10px] font-mono flex items-center justify-between" style={{ borderColor: 'var(--border-hairline)' }}>
+                <span className="text-[var(--text-muted)]">SPREAD US-JP:</span>
+                <span className="font-bold text-[var(--text-primary)]">
+                  {usJpSpread}% (Lebar)
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* TABEL RINGKASAN TRANSMISI LINTAS ASET TERKAIT YIELD */}
+          <div className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-3.5 space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b" style={{ borderColor: 'var(--border-hairline)' }}>
+              <div className="flex items-center gap-2">
+                <BarChart3 className="w-4 h-4 text-[var(--accent)]" />
+                <h4 className="text-xs font-mono font-bold text-[var(--text-primary)] uppercase">
+                  Tabel Sintesis Transmisi Yield & Korelasi Lintas Aset
+                </h4>
+              </div>
+              <span className="text-[10px] font-mono text-[var(--text-muted)]">
+                LOGIKA INTERMARKET CANONICAL
+              </span>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs font-mono">
+                <thead>
+                  <tr className="border-b text-[10px] text-[var(--text-muted)] uppercase tracking-wider" style={{ borderColor: 'var(--border-hairline)' }}>
+                    <th className="py-2 px-2.5">Instrumen</th>
+                    <th className="py-2 px-2.5">Kategori</th>
+                    <th className="py-2 px-2.5">Harga & Perubahan</th>
+                    <th className="py-2 px-2.5">Hubungan dengan Yield US10Y</th>
+                    <th className="py-2 px-2.5">Status Hari Ini</th>
+                    <th className="py-2 px-2.5">Bias / Aksi Desk</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[var(--border-hairline)] text-xs">
+                  {/* Row 1: XAUUSD */}
+                  <tr className="hover:bg-[var(--bg-section-alt)] transition">
+                    <td className="py-2.5 px-2.5 font-bold text-[var(--text-primary)]">
+                      <button onClick={() => onOpenChart('XAUUSD')} className="hover:underline flex items-center gap-1 cursor-pointer">
+                        <span>XAU/USD</span>
+                        <ExternalLink className="w-2.5 h-2.5 text-[var(--text-muted)]" />
+                      </button>
+                    </td>
+                    <td className="py-2.5 px-2.5 text-[var(--text-muted)]">Komoditas / Emas</td>
+                    <td className="py-2.5 px-2.5">
+                      <span className="font-bold text-[var(--text-primary)] mr-1.5">${gold.price.toFixed(1)}</span>
+                      <span className={`text-[10px] ${(gold.change_24h_pct || 0) >= 0 ? 'text-[var(--bullish)]' : 'text-[var(--bearish)]'}`}>
+                        {(gold.change_24h_pct || 0) >= 0 ? '+' : ''}{(gold.change_24h_pct || 0).toFixed(2)}%
+                      </span>
+                    </td>
+                    <td className="py-2.5 px-2.5 text-[11px] font-sans text-[var(--text-secondary)]">
+                      <strong>Terbalik Kuat (-0.82):</strong> Yield turun ➔ Real yield turun ➔ Beban opportunity cost emas berkurang ➔ Emas menguat.
+                    </td>
+                    <td className="py-2.5 px-2.5">
+                      {isGoldYieldAnomaly ? (
+                        <span className="badge-warning text-[9px] font-bold">⚠️ ANOMALI SAFE-HAVEN</span>
+                      ) : (
+                        <span className="badge-bullish text-[9px] font-bold">✓ SELARAS INTERMARKET</span>
+                      )}
+                    </td>
+                    <td className="py-2.5 px-2.5 font-bold text-[var(--bullish)]">
+                      {goldDirectionalBias === 'BULLISH' ? 'BUY ON PULLBACK' : goldDirectionalBias === 'BEARISH' ? 'FADE THE RALLY' : 'RANGE BOUND'}
+                    </td>
+                  </tr>
+
+                  {/* Row 2: US100 */}
+                  <tr className="hover:bg-[var(--bg-section-alt)] transition">
+                    <td className="py-2.5 px-2.5 font-bold text-[var(--text-primary)]">
+                      <button onClick={() => onOpenChart('US100')} className="hover:underline flex items-center gap-1 cursor-pointer">
+                        <span>US100</span>
+                        <ExternalLink className="w-2.5 h-2.5 text-[var(--text-muted)]" />
+                      </button>
+                    </td>
+                    <td className="py-2.5 px-2.5 text-[var(--text-muted)]">Ekuitas / Tech Growth</td>
+                    <td className="py-2.5 px-2.5">
+                      <span className="font-bold text-[var(--text-primary)] mr-1.5">{us100.price.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                      <span className={`text-[10px] ${(us100.change_24h_pct || 0) >= 0 ? 'text-[var(--bullish)]' : 'text-[var(--bearish)]'}`}>
+                        {(us100.change_24h_pct || 0) >= 0 ? '+' : ''}{(us100.change_24h_pct || 0).toFixed(2)}%
+                      </span>
+                    </td>
+                    <td className="py-2.5 px-2.5 text-[11px] font-sans text-[var(--text-secondary)]">
+                      <strong>Terbalik (-0.68):</strong> Yield turun ➔ Discount rate turun ➔ Kelipatan valuasi forward P/E saham AI & teknologi mengembang.
+                    </td>
+                    <td className="py-2.5 px-2.5">
+                      <span className="badge-bullish text-[9px] font-bold">✓ SELARAS INTERMARKET</span>
+                    </td>
+                    <td className="py-2.5 px-2.5 font-bold text-[var(--bullish)]">
+                      {isYieldEasing ? 'FAVOR TECH (LONG)' : 'DEFENSIVE ROTATION (US30)'}
+                    </td>
+                  </tr>
+
+                  {/* Row 3: DXY */}
+                  <tr className="hover:bg-[var(--bg-section-alt)] transition">
+                    <td className="py-2.5 px-2.5 font-bold text-[var(--text-primary)]">
+                      <button onClick={() => onOpenChart('USD')} className="hover:underline flex items-center gap-1 cursor-pointer">
+                        <span>DXY</span>
+                        <ExternalLink className="w-2.5 h-2.5 text-[var(--text-muted)]" />
+                      </button>
+                    </td>
+                    <td className="py-2.5 px-2.5 text-[var(--text-muted)]">Indeks Dolar AS</td>
+                    <td className="py-2.5 px-2.5">
+                      <span className="font-bold text-[var(--text-primary)] mr-1.5">{dxy.price.toFixed(2)}</span>
+                      <span className={`text-[10px] ${(dxy.change_24h_pct || 0) >= 0 ? 'text-[var(--bullish)]' : 'text-[var(--bearish)]'}`}>
+                        {(dxy.change_24h_pct || 0) >= 0 ? '+' : ''}{(dxy.change_24h_pct || 0).toFixed(2)}%
+                      </span>
+                    </td>
+                    <td className="py-2.5 px-2.5 text-[11px] font-sans text-[var(--text-secondary)]">
+                      <strong>Searah (+0.65):</strong> Yield naik ➔ Aliran modal asing masuk ke obligasi AS ➔ Permintaan Dolar naik.
+                    </td>
+                    <td className="py-2.5 px-2.5">
+                      <span className="badge-neutral text-[9px] font-bold">{dxyBiasVsOpen === 'ABOVE_OPEN' ? 'DI ATAS OPEN' : 'DI BAWAH OPEN'}</span>
+                    </td>
+                    <td className="py-2.5 px-2.5 font-bold text-[var(--accent)]">
+                      {dxyBiasVsOpen === 'BELOW_OPEN' ? 'TEKANAN DOLAR MELEMAH' : 'TEKANAN DOLAR MENINGKAT'}
+                    </td>
+                  </tr>
+
+                  {/* Row 4: USDJPY */}
+                  <tr className="hover:bg-[var(--bg-section-alt)] transition">
+                    <td className="py-2.5 px-2.5 font-bold text-[var(--text-primary)]">
+                      <button onClick={() => onOpenChart('USDJPY')} className="hover:underline flex items-center gap-1 cursor-pointer">
+                        <span>USD/JPY</span>
+                        <ExternalLink className="w-2.5 h-2.5 text-[var(--text-muted)]" />
+                      </button>
+                    </td>
+                    <td className="py-2.5 px-2.5 text-[var(--text-muted)]">Valas / Carry Engine</td>
+                    <td className="py-2.5 px-2.5">
+                      <span className="font-bold text-[var(--text-primary)] mr-1.5">{usdjpy.price.toFixed(2)}</span>
+                      <span className={`text-[10px] ${(usdjpy.change_24h_pct || 0) >= 0 ? 'text-[var(--bullish)]' : 'text-[var(--bearish)]'}`}>
+                        {(usdjpy.change_24h_pct || 0) >= 0 ? '+' : ''}{(usdjpy.change_24h_pct || 0).toFixed(2)}%
+                      </span>
+                    </td>
+                    <td className="py-2.5 px-2.5 text-[11px] font-sans text-[var(--text-secondary)]">
+                      <strong>Searah Kuat (+0.78):</strong> Spread yield US-Japan ({usJpSpread}%) adalah bahan bakar carry trade. Yield US turun ➔ Carry ditutup ➔ JPY menguat (USD/JPY drop).
+                    </td>
+                    <td className="py-2.5 px-2.5">
+                      <span className="badge-bullish text-[9px] font-bold">✓ CARRY REAKTIF</span>
+                    </td>
+                    <td className="py-2.5 px-2.5 font-bold text-[var(--text-primary)]">
+                      {isYieldEasing ? 'WASPADA CARRY UNWIND' : 'CARRY TRADE FAVORABLE'}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* 4. MACRO CATALYSTS, CURRENCY FLOW, & EXECUTIVE PLAYBOOK */}
+      {(activeViewTab === 'ALL_IN_ONE' || activeViewTab === 'CATALYSTS_FX') && (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 pt-1">
+          {/* Executive Directives & Invalidations (7 cols) */}
+          <div className="lg:col-span-7 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] p-4 space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b" style={{ borderColor: 'var(--border-hairline)' }}>
+              <div className="flex items-center gap-2">
+                <ShieldAlert className="w-4 h-4 text-[var(--accent)]" />
+                <span className="text-xs font-mono font-bold text-[var(--text-primary)] uppercase">
+                  Panduan Taktis Eksekusi & Kondisi Invalidation
+                </span>
+              </div>
+              <span className="text-[10px] font-mono text-[var(--text-muted)]">DESK PLAYBOOK</span>
+            </div>
+
+            <div className="space-y-2 text-xs font-sans">
+              <div className="flex items-start gap-2.5">
+                <span className="w-5 h-5 rounded font-mono font-bold text-[10.5px] bg-[var(--bg-surface)] text-[var(--accent)] border border-[var(--border-subtle)] flex items-center justify-center shrink-0 mt-0.5">
+                  1
+                </span>
+                <p className="text-[var(--text-secondary)] leading-relaxed">
+                  <strong className="text-[var(--text-primary)] font-semibold">Fokus Emas (XAU/USD): </strong>
+                  {goldTransmissionStory}
+                </p>
+              </div>
+
+              <div className="flex items-start gap-2.5">
+                <span className="w-5 h-5 rounded font-mono font-bold text-[10.5px] bg-[var(--bg-surface)] text-[var(--accent)] border border-[var(--border-subtle)] flex items-center justify-center shrink-0 mt-0.5">
+                  2
+                </span>
+                <p className="text-[var(--text-secondary)] leading-relaxed">
+                  <strong className="text-[var(--text-primary)] font-semibold">Fokus Valas & Suku Bunga: </strong>
+                  Divergensi mata uang G8 saat ini dipimpin oleh <strong>{strongestCurrency.currency}</strong> (skor {strongestCurrency.strength_score.toFixed(1)}) melawan <strong>{weakestCurrency.currency}</strong> (skor {weakestCurrency.strength_score.toFixed(1)}) dengan selisih {currencySpread} poin. Manfaatkan pergerakan searah dengan yield spread.
+                </p>
+              </div>
+
+              <div className="flex items-start gap-2.5">
+                <span className="w-5 h-5 rounded font-mono font-bold text-[10.5px] bg-[var(--bg-surface)] text-[var(--accent)] border border-[var(--border-subtle)] flex items-center justify-center shrink-0 mt-0.5">
+                  3
+                </span>
+                <p className="text-[var(--text-secondary)] leading-relaxed">
+                  <strong className="text-[var(--text-primary)] font-semibold">Pemicu Pembatalan (Invalidation Trigger): </strong>
+                  {isYieldEasing
+                    ? 'Jika US10Y mendadak rebound menembus resisten sesi atau DXY breakout ke atas pembukaan sesi, setup bullish Gold dan Tech batal (cut / de-risk).'
+                    : isYieldRising
+                    ? 'Jika US10Y drop tiba-tiba menembus support harian, tekanan bearish pada Gold dan Tech berakhir seketika.'
+                    : 'Penembusan range sesi pada DXY atau US10Y akan menentukan arah tren berikutnya.'}
+                </p>
+              </div>
+            </div>
+
+            <div className="pt-2 border-t flex items-center justify-between text-[11px] font-mono" style={{ borderColor: 'var(--border-hairline)' }}>
+              <span className="text-[var(--text-muted)]">STATUS REZIM:</span>
+              <span className="font-bold text-[var(--text-primary)]">
+                {regimeTitle} ({riskScore > 0 ? `+${riskScore}` : riskScore})
               </span>
             </div>
           </div>
-        </div>
 
-        {/* 3 Driver / Katalis Penggerak Kunci (5 COLS) */}
-        <div className="lg:col-span-5 bg-slate-950/80 border border-slate-800/90 rounded-xl p-3.5 flex flex-col justify-between space-y-2">
-          <div className="flex items-center justify-between border-b border-slate-800/80 pb-2">
-            <span className="text-[11px] font-mono font-bold text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
-              <Zap className="w-3.5 h-3.5 text-amber-400" />
-              <span>3 Katalis Penggerak Hari Ini</span>
-            </span>
-            <span className="text-[10px] font-mono text-slate-500">Divergensi Utama</span>
-          </div>
-
-          <div className="space-y-2 text-xs">
-            <div className="flex items-start gap-2">
-              <div className="w-4 h-4 rounded-full bg-cyan-950 border border-cyan-800 text-cyan-300 flex items-center justify-center text-[10px] font-mono font-bold shrink-0 mt-0.5">
-                1
+          {/* Today's Key Catalysts & G8 Dispersion (5 cols) */}
+          <div className="lg:col-span-5 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4 flex flex-col justify-between space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b" style={{ borderColor: 'var(--border-hairline)' }}>
+              <div className="flex items-center gap-1.5">
+                <Flame className="w-4 h-4 text-amber-500" />
+                <span className="text-xs font-mono font-bold text-[var(--text-primary)] uppercase">
+                  Katalis Makro Hari Ini
+                </span>
               </div>
-              <p className="text-slate-300 leading-snug">
-                <strong className="text-slate-100">US100 Bullish Tech Leadership:</strong> Nasdaq 100 menunjukkan momentum bullish terkuat di pasar global berkat ketahanan belanja modal AI & pendapatan semikonduktor solid.
-              </p>
+              <span className="text-[10px] font-mono text-[var(--text-muted)]">
+                HIGH IMPACT
+              </span>
             </div>
 
-            <div className="flex items-start gap-2">
-              <div className="w-4 h-4 rounded-full bg-emerald-950 border border-emerald-800 text-emerald-300 flex items-center justify-center text-[10px] font-mono font-bold shrink-0 mt-0.5">
-                2
-              </div>
-              <p className="text-slate-300 leading-snug">
-                <strong className="text-slate-100">Disparitas G8 Terbuka:</strong> {marketSynthesis.strongest.currency} mengungguli {marketSynthesis.weakest.currency} dengan selisih ${(marketSynthesis.strongest.strength_score - marketSynthesis.weakest.strength_score).toFixed(1)} poin, membuka peluang trending carry trade yang bersih.
-              </p>
-            </div>
-
-            <div className="flex items-start gap-2">
-              <div className="w-4 h-4 rounded-full bg-amber-950 border border-amber-800 text-amber-300 flex items-center justify-center text-[10px] font-mono font-bold shrink-0 mt-0.5">
-                3
-              </div>
-              <p className="text-slate-300 leading-snug">
-                <strong className="text-slate-100">Safe-Haven & Gold Bid:</strong> Emas (XAU/USD) dan Swiss Franc mempertahankan arus akumulasi institusional sebagai lindung nilai makro.
-              </p>
-            </div>
-          </div>
-
-          {/* Quick takeaway footnote */}
-          <div className="pt-2 border-t border-slate-800/80 text-[11px] text-slate-400 flex items-center justify-between">
-            <span>Saran Sikap:</span>
-            <span className="font-mono text-cyan-300 font-semibold">Fokus Long US100 & Pair Divergensi G8</span>
-          </div>
-        </div>
-      </div>
-
-      {/* ======================================================== */}
-      {/* BAGIAN 2: SARAN ENTRY DI PAIR APA DENGAN KEADAAN INI     */}
-      {/* ======================================================== */}
-      <div className="space-y-3 pt-1">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <Target className="w-4 h-4 text-emerald-400" />
-            <h3 className="text-xs font-mono font-bold text-slate-200 uppercase tracking-wider">
-              SARAN ENTRY PAIR TERBAIK (TRADE OPPORTUNITIES)
-            </h3>
-            <span className="text-[10px] font-mono text-slate-500">
-              ({filteredSuggestions.length} Setup)
-            </span>
-          </div>
-
-          {/* Category Filter Pills */}
-          <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-lg border border-slate-800 text-[10px] font-mono shrink-0 overflow-x-auto">
-            <button
-              onClick={() => setFilterCategory('ALL')}
-              className={`px-2.5 py-1 rounded-md transition cursor-pointer ${
-                filterCategory === 'ALL'
-                  ? 'bg-slate-800 text-cyan-300 font-bold border border-slate-700 shadow-xs'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              Semua
-            </button>
-            <button
-              onClick={() => setFilterCategory('PRIME')}
-              className={`px-2.5 py-1 rounded-md transition cursor-pointer flex items-center gap-1 ${
-                filterCategory === 'PRIME'
-                  ? 'bg-emerald-950/80 text-emerald-300 font-bold border border-emerald-800/80 shadow-xs'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-              <span>Prime (A+)</span>
-            </button>
-            <button
-              onClick={() => setFilterCategory('INDICES')}
-              className={`px-2.5 py-1 rounded-md transition cursor-pointer ${
-                filterCategory === 'INDICES'
-                  ? 'bg-slate-800 text-purple-300 font-bold border border-slate-700 shadow-xs'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              Indeks (US100)
-            </button>
-            <button
-              onClick={() => setFilterCategory('COMMODITIES')}
-              className={`px-2.5 py-1 rounded-md transition cursor-pointer ${
-                filterCategory === 'COMMODITIES'
-                  ? 'bg-slate-800 text-amber-300 font-bold border border-slate-700 shadow-xs'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              Emas (XAU)
-            </button>
-            <button
-              onClick={() => setFilterCategory('BONDS')}
-              className={`px-2.5 py-1 rounded-md transition cursor-pointer ${
-                filterCategory === 'BONDS'
-                  ? 'bg-slate-800 text-cyan-300 font-bold border border-slate-700 shadow-xs'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              Yield 10Y (US10Y)
-            </button>
-            <button
-              onClick={() => setFilterCategory('CROSSES')}
-              className={`px-2.5 py-1 rounded-md transition cursor-pointer ${
-                filterCategory === 'CROSSES'
-                  ? 'bg-slate-800 text-cyan-300 font-bold border border-slate-700 shadow-xs'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              FX Crosses
-            </button>
-            <button
-              onClick={() => setFilterCategory('MAJORS')}
-              className={`px-2.5 py-1 rounded-md transition cursor-pointer ${
-                filterCategory === 'MAJORS'
-                  ? 'bg-slate-800 text-cyan-300 font-bold border border-slate-700 shadow-xs'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              FX Majors
-            </button>
-            <button
-              onClick={() => setFilterCategory('AVOID')}
-              className={`px-2.5 py-1 rounded-md transition cursor-pointer flex items-center gap-1 ${
-                filterCategory === 'AVOID'
-                  ? 'bg-rose-950/80 text-rose-300 font-bold border border-rose-800/80 shadow-xs'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              <AlertTriangle className="w-3 h-3 text-amber-400" />
-              <span>Hindari</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Actionable Trade Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {filteredSuggestions.map(item => {
-            const isPrime = item.tier === 'PRIME_A';
-            const isBuy = item.action.includes('BUY');
-            const isSell = item.action.includes('SELL');
-            const isAvoid = item.action === 'AVOID_CHOP';
-
-            return (
-              <div
-                key={item.id}
-                className={`rounded-xl p-3.5 border transition flex flex-col justify-between space-y-3 ${
-                  isPrime
-                    ? 'bg-gradient-to-b from-slate-900 to-slate-950 border-emerald-500/40 shadow-xs ring-1 ring-emerald-500/20'
-                    : isAvoid
-                    ? 'bg-slate-950/60 border-slate-800/70 opacity-80'
-                    : 'bg-slate-950 border-slate-800 hover:border-slate-700'
-                }`}
-              >
-                {/* Card Top: Symbol, Badge, & Confidence */}
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <div className="flex items-center gap-2">
-                      {/* Flag / Emblem visuals */}
-                      {item.symbol.length === 6 && !item.symbol.startsWith('US') && !item.symbol.startsWith('XA') && !item.symbol.startsWith('BT') ? (
-                        <div className="flex items-center -space-x-1 shrink-0">
-                          <img
-                            src={getCurrencyFlagUrl(item.symbol.slice(0, 3))}
-                            alt={item.symbol.slice(0, 3)}
-                            referrerPolicy="no-referrer"
-                            className="w-4 h-3 object-cover rounded-xs border border-slate-900 shadow-xs"
-                          />
-                          <img
-                            src={getCurrencyFlagUrl(item.symbol.slice(3, 6))}
-                            alt={item.symbol.slice(3, 6)}
-                            referrerPolicy="no-referrer"
-                            className="w-4 h-3 object-cover rounded-xs border border-slate-900 shadow-xs"
-                          />
-                        </div>
-                      ) : item.symbol === 'XAUUSD' ? (
-                        <div className="flex items-center gap-1 shrink-0">
-                          <span className="w-5 h-4 rounded bg-amber-500/20 border border-amber-500/40 text-amber-300 text-[9px] font-bold flex items-center justify-center">Au</span>
-                          <img
-                            src={getCurrencyFlagUrl('USD')}
-                            alt="USD"
-                            referrerPolicy="no-referrer"
-                            className="w-4 h-3 object-cover rounded-xs border border-slate-900 shadow-xs"
-                          />
-                        </div>
-                      ) : (
-                        <div className="flex items-center shrink-0">
-                          <img
-                            src={getCurrencyFlagUrl('USD')}
-                            alt="USD"
-                            referrerPolicy="no-referrer"
-                            className="w-4 h-3 object-cover rounded-xs border border-slate-900 shadow-xs"
-                          />
-                        </div>
-                      )}
-
-                      <span className="font-mono font-bold text-base text-slate-100">
-                        {item.symbol}
-                      </span>
-                      {isPrime && (
-                        <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-                          PRIME A+
-                        </span>
-                      )}
-                      <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${
-                        item.category === 'INDEX'
-                          ? 'bg-purple-950/80 text-purple-300 border border-purple-800/60'
-                          : item.category === 'COMMODITY'
-                          ? 'bg-amber-950/80 text-amber-300 border border-amber-800/60'
-                          : item.category === 'FX_MAJOR'
-                          ? 'bg-cyan-950/80 text-cyan-300 border border-cyan-800/60'
-                          : 'text-slate-400 bg-slate-900 border border-slate-800'
-                      }`}>
-                        {item.category === 'INDEX' ? 'INDEX' : item.category === 'COMMODITY' ? 'COMMODITY' : item.category === 'FX_MAJOR' ? 'MAJOR' : 'CROSS'}
-                      </span>
-                    </div>
-
-                    <div className="text-right">
-                      <span className="text-[10px] font-mono text-slate-400 block">
-                        Konveksi
-                      </span>
-                      <span className="text-xs font-mono font-bold text-cyan-300">
-                        {item.biasConfidence}%
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Full Name & Delta */}
-                  <div className="flex items-center justify-between text-[11px] text-slate-400 font-sans pb-2 border-b border-slate-800/70">
-                    <span className="truncate pr-2">{item.name}</span>
-                    <span className="font-mono text-[10px] text-slate-300 shrink-0">
-                      {item.deltaOrScore}
+            {/* List of top catalysts */}
+            <div className="space-y-2">
+              {todayCatalysts.slice(0, 3).map((cat, idx) => (
+                <div
+                  key={cat.id || idx}
+                  className="p-2 rounded border border-[var(--border-subtle)] bg-[var(--bg-section)] space-y-0.5"
+                >
+                  <div className="flex items-center justify-between text-[10px] font-mono">
+                    <span className="font-bold text-[var(--accent)]">{cat.currency || 'USD'}</span>
+                    <span className="text-[var(--text-muted)]">
+                      {cat.date_time_utc ? new Date(cat.date_time_utc).toLocaleTimeString('en-GB', {
+                        timeZone: 'Asia/Jakarta',
+                        hour12: false,
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      }) + ' WIB' : 'SESI INI'}
                     </span>
                   </div>
-
-                  {/* ACTION BADGE */}
-                  <div className="mt-2.5 mb-2.5">
-                    <div
-                      className={`py-1.5 px-2.5 rounded-lg text-xs font-mono font-bold flex items-center justify-between border ${
-                        isBuy
-                          ? 'bg-emerald-950/90 text-emerald-300 border-emerald-600/70'
-                          : isSell
-                          ? 'bg-rose-950/90 text-rose-300 border-rose-600/70'
-                          : 'bg-amber-950/80 text-amber-300 border-amber-700/60'
-                      }`}
-                    >
-                      <span className="flex items-center gap-1.5">
-                        {isBuy ? (
-                          <ArrowUpRight className="w-4 h-4 text-emerald-400" />
-                        ) : isSell ? (
-                          <ArrowDownRight className="w-4 h-4 text-rose-400" />
-                        ) : (
-                          <Minus className="w-4 h-4 text-amber-400" />
-                        )}
-                        <span>{item.actionLabel}</span>
-                      </span>
-                      <span className="text-[10px] font-normal opacity-80">
-                        {item.tradeStyle}
-                      </span>
-                    </div>
+                  <div className="text-xs font-semibold text-[var(--text-primary)] line-clamp-1">
+                    {cat.event_name}
                   </div>
-
-                  {/* Fundamental Reason */}
-                  <div className="text-xs text-slate-300 font-sans bg-slate-900/70 p-2.5 rounded-lg border border-slate-800/80 space-y-1">
-                    <span className="text-[10px] font-mono font-bold text-slate-400 block uppercase tracking-wider">
-                      Alasan Setup & Flow:
-                    </span>
-                    <p className="leading-snug text-[11px] text-slate-200">
-                      {item.fundamentalDriver}
-                    </p>
+                  <div className="text-[10.5px] text-[var(--text-secondary)] font-sans line-clamp-2">
+                    {cat.fundamental_implication || cat.actual_market_reaction || 'Pantau dampak rilis data terhadap ekspektasi suku bunga Fed.'}
                   </div>
                 </div>
+              ))}
 
-                {/* Plan Execution Guidance: Entry Zone, Invalidation, Target */}
-                <div className="space-y-2 pt-1">
-                  {!isAvoid ? (
-                    <div className="grid grid-cols-2 gap-1.5 text-[10px] font-mono bg-slate-900/50 p-2 rounded-lg border border-slate-800/60">
-                      <div>
-                        <span className="text-slate-500 block">Area Entry Ideal</span>
-                        <span className="text-slate-200 font-semibold block truncate" title={item.entryZone}>
-                          {item.entryZone}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-slate-500 block">Batas Risiko (SL)</span>
-                        <span className="text-rose-400 font-semibold block truncate" title={item.invalidationLevel}>
-                          {item.invalidationLevel}
-                        </span>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="p-2 rounded-lg bg-amber-950/30 border border-amber-900/50 text-[11px] text-amber-300 font-sans">
-                      Divergensi mendekati 0. Disarankan hindari breakout, potensi whipsaw tinggi.
-                    </div>
-                  )}
-
-                  {/* Actions: Open Chart & Select */}
-                  <div className="flex items-center gap-1.5 pt-1">
-                    <button
-                      onClick={() => onOpenChart(item.symbol)}
-                      className="flex-1 py-1.5 px-2.5 rounded-lg bg-slate-800 hover:bg-slate-750 text-slate-200 hover:text-cyan-300 border border-slate-700/80 text-[11px] font-mono font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer"
-                    >
-                      <LineChart className="w-3.5 h-3.5 text-cyan-400" />
-                      <span>Grafik TradingView</span>
-                    </button>
-                    <button
-                      onClick={() => onSelectSymbol(item.symbol)}
-                      className="py-1.5 px-2.5 rounded-lg bg-slate-900 hover:bg-slate-850 text-slate-400 hover:text-slate-200 border border-slate-800 text-[11px] font-mono transition cursor-pointer"
-                      title="Sorot pair ini di Surveillance"
-                    >
-                      Surveillance →
-                    </button>
-                  </div>
+              {todayCatalysts.length === 0 && (
+                <div className="text-xs text-[var(--text-muted)] py-3 text-center font-mono">
+                  Tidak ada katalis berdampak ekstrem terjadwal untuk sesi saat ini.
                 </div>
+              )}
+            </div>
+
+            {/* Currency quick badges */}
+            <div className="pt-2 border-t flex items-center justify-between text-[11px] font-mono" style={{ borderColor: 'var(--border-hairline)' }}>
+              <div className="flex items-center gap-1">
+                <span className="text-[var(--text-muted)]">LEADER:</span>
+                <span className="font-bold text-[var(--bullish)]">{strongestCurrency.currency} ({strongestCurrency.strength_score.toFixed(1)})</span>
               </div>
-            );
-          })}
+              <div className="flex items-center gap-1">
+                <span className="text-[var(--text-muted)]">LAGGARD:</span>
+                <span className="font-bold text-[var(--bearish)]">{weakestCurrency.currency} ({weakestCurrency.strength_score.toFixed(1)})</span>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

@@ -78,10 +78,10 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({ eventId, onC
 
   if (loading) {
     return (
-      <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div className="bg-slate-900 border border-slate-800 rounded-lg p-6 max-w-md w-full flex items-center gap-3">
-          <RefreshCw className="w-5 h-5 text-cyan-400 animate-spin" />
-          <span className="text-sm font-mono text-slate-300">Resolving multi-source event intelligence...</span>
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 font-sans" style={{ backgroundColor: 'rgba(0, 0, 0, 0.75)' }}>
+        <div className="terminal-panel p-6 max-w-md w-full flex items-center gap-3">
+          <RefreshCw className="w-5 h-5 text-[var(--accent)] animate-spin" />
+          <span className="text-xs font-mono text-[var(--text-secondary)]">Resolving multi-source event intelligence...</span>
         </div>
       </div>
     );
@@ -89,16 +89,16 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({ eventId, onC
 
   if (error || !data) {
     return (
-      <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div className="bg-slate-900 border border-slate-800 rounded-lg p-6 max-w-md w-full text-center">
-          <AlertCircle className="w-8 h-8 text-rose-400 mx-auto mb-2" />
-          <h3 className="text-sm font-bold text-slate-200 mb-1">Event Load Error</h3>
-          <p className="text-xs text-slate-400 mb-4">{error || 'Event could not be retrieved.'}</p>
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 font-sans" style={{ backgroundColor: 'rgba(0, 0, 0, 0.75)' }}>
+        <div className="terminal-panel p-6 max-w-md w-full text-center">
+          <AlertCircle className="w-8 h-8 text-[var(--bearish)] mx-auto mb-2" />
+          <h3 className="text-sm font-bold text-[var(--text-primary)] mb-1">Event Load Error</h3>
+          <p className="text-xs text-[var(--text-secondary)] mb-4">{error || 'Event could not be retrieved.'}</p>
           <button
             onClick={onClose}
-            className="px-4 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-200"
+            className="px-4 py-1.5 rounded bg-[var(--accent)] text-white hover:opacity-90 text-xs font-mono font-bold cursor-pointer shadow-xs"
           >
-            Close
+            CLOSE
           </button>
         </div>
       </div>
@@ -108,124 +108,121 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({ eventId, onC
   const { event, sources, timeline, affected_markets, affected_currencies, ai_analysis } = data;
 
   return (
-    <div className="fixed inset-0 bg-slate-950/85 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
-      <div className="bg-slate-950 border border-slate-800 rounded-xl max-w-4xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden my-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 overflow-y-auto font-sans" style={{ backgroundColor: 'rgba(0, 0, 0, 0.75)' }}>
+      <div
+        className="terminal-panel max-w-4xl w-full max-h-[92vh] flex flex-col my-auto overflow-hidden"
+        style={{ borderRadius: '4px', boxShadow: 'var(--shadow-modal)' }}
+      >
         {/* Top Header */}
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-neutral-800 bg-neutral-900/60">
+        <div className="flex items-center justify-between px-5 py-3.5 border-b bg-[var(--bg-surface)]" style={{ borderColor: 'var(--border-subtle)' }}>
           <div className="flex items-center gap-2.5">
-            <Badge variant="cyan" className="text-xs font-mono font-bold">
+            <span className="badge-neutral text-xs font-mono font-bold">
               EVENT #{event.id}
-            </Badge>
-            <span className="text-xs font-mono text-neutral-400">
-              ONE SOURCE OF TRUTH CONSOLIDATION
+            </span>
+            <span className="metadata-label text-[10px] text-[var(--text-muted)] hidden sm:inline">
+              INSTITUTIONAL DOSSIER CONSOLIDATION
             </span>
           </div>
 
           <div className="flex items-center gap-2">
-            <Button
+            <button
               onClick={handleReanalyze}
               disabled={reanalyzing}
               title="Generate fresh AI market intelligence"
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-1.5 h-8 px-2.5 bg-neutral-900 hover:bg-neutral-800 border-neutral-700 text-cyan-300 text-xs font-mono"
+              className="flex items-center gap-1.5 h-7 px-2.5 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] hover:border-[var(--border-strong)] text-[var(--text-primary)] text-xs font-mono cursor-pointer"
             >
-              <Sparkles className={`w-3.5 h-3.5 text-cyan-400 ${reanalyzing ? 'animate-spin' : ''}`} />
-              <span>{reanalyzing ? 'Synthesizing...' : 'AI Re-Analyze'}</span>
-            </Button>
+              <Sparkles className={`w-3.5 h-3.5 text-[var(--accent)] ${reanalyzing ? 'animate-spin' : ''}`} />
+              <span>{reanalyzing ? 'SYNTHESIZING...' : 'AI RE-ANALYZE'}</span>
+            </button>
 
-            <Button
-              variant="ghost"
-              size="icon"
+            <button
               onClick={onClose}
-              className="h-8 w-8 text-neutral-400 hover:text-white hover:bg-neutral-800"
+              className="p-1 rounded text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-section-alt)] transition cursor-pointer"
             >
               <X className="w-4 h-4" />
-            </Button>
+            </button>
           </div>
         </div>
 
         {/* Modal Scrollable Body */}
-        <div className="overflow-y-auto p-5 space-y-6">
+        <div className="overflow-y-auto p-5 space-y-6 bg-[var(--bg-surface)]">
           {notice && (
-            <div className={`p-3 rounded-lg border text-xs font-mono flex items-center justify-between gap-2 ${
+            <div className={`p-3 rounded border text-xs font-mono flex items-center justify-between gap-2 ${
               notice.type === 'error'
-                ? 'bg-rose-950/60 border-rose-800/80 text-rose-300'
-                : 'bg-emerald-950/60 border-emerald-800/80 text-emerald-300'
+                ? 'badge-bearish'
+                : 'badge-bullish'
             }`}>
               <div className="flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 <span>{notice.message}</span>
               </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <button
-                  onClick={() => setNotice(null)}
-                  className="text-slate-400 hover:text-slate-200 text-xs cursor-pointer ml-1"
-                >
-                  ✕
-                </button>
-              </div>
+              <button
+                onClick={() => setNotice(null)}
+                className="text-inherit hover:opacity-75 text-xs cursor-pointer ml-1"
+              >
+                ✕
+              </button>
             </div>
           )}
 
           {/* 1. Event Core Summary */}
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className={`text-[10px] px-2 py-0.5 rounded font-bold border ${
-                event.impact_level === 'CRITICAL' ? 'bg-rose-950/80 text-rose-400 border-rose-800' :
-                event.impact_level === 'HIGH' ? 'bg-amber-950/80 text-amber-400 border-amber-800' :
-                'bg-cyan-950/80 text-cyan-400 border-cyan-800'
+              <span className={`text-[10px] px-2 py-0.5 rounded font-bold ${
+                event.impact_level === 'CRITICAL' ? 'badge-bearish' :
+                event.impact_level === 'HIGH' ? 'badge-warning' :
+                'badge-neutral'
               }`}>
                 {event.impact_level} IMPACT
               </span>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-900 text-slate-300 border border-slate-800">
+              <span className="metadata-label text-[10px] text-[var(--text-muted)]">
                 CATEGORY: {event.primary_category}
               </span>
-              <span className="text-xs font-mono text-slate-500 ml-auto">
+              <span className="text-xs font-mono text-[var(--text-muted)] ml-auto">
                 First detected: {new Date(event.first_detected_at).toLocaleString()}
               </span>
             </div>
 
-            <h1 className="text-lg sm:text-xl font-bold text-slate-100 leading-snug mb-2">
+            <h2 className="text-lg sm:text-xl font-bold text-[var(--text-primary)] leading-snug mb-2 font-display">
               {event.title}
-            </h1>
-            <p className="text-sm text-slate-300 leading-relaxed bg-slate-900/60 p-3.5 rounded-lg border border-slate-800/80">
+            </h2>
+            <p className="text-sm text-[var(--text-secondary)] leading-relaxed bg-[var(--bg-section-alt)] p-3.5 rounded border border-[var(--border-subtle)] font-sans">
               {event.summary}
             </p>
           </div>
 
           {/* 2. Correlated Pair Impacts & Directional Bias Matrix */}
           {(event.pair_impacts || []).length > 0 && (
-            <div className="bg-slate-900/80 border border-cyan-900/50 rounded-xl p-4 space-y-3.5 shadow-sm">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-2.5">
+            <div className="rounded p-4 space-y-3.5 border border-[var(--border-subtle)] bg-[var(--bg-section-alt)]">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b pb-2.5" style={{ borderColor: 'var(--border-subtle)' }}>
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-                    <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-cyan-300">
-                      KORELASI PAIR & ANALISIS DAMPAK (BULLISH / BEARISH)
+                    <span className="w-2 h-2 rounded-full bg-[var(--accent)]" />
+                    <h3 className="section-title text-xs text-[var(--text-primary)]">
+                      PAIR CORRELATIONS & TRANSMISSION BIAS
                     </h3>
                   </div>
-                  <p className="text-[11px] text-slate-400 mt-0.5">
-                    Korelasi transmisi makro terhadap instrumen yang terpengaruh beserta arah bias
+                  <p className="text-[11px] font-mono text-[var(--text-muted)] mt-0.5">
+                    Macro transmission correlation to affected market instruments and expected directional bias.
                   </p>
                 </div>
 
                 <div className="flex items-center gap-2 text-[10px] font-mono shrink-0">
-                  <span className="px-2 py-0.5 rounded bg-emerald-950/80 text-emerald-300 border border-emerald-800 font-bold">
-                    ▲ BULLISH (Naik)
+                  <span className="badge-bullish">
+                    ▲ BULLISH
                   </span>
-                  <span className="px-2 py-0.5 rounded bg-rose-950/80 text-rose-300 border border-rose-800 font-bold">
-                    ▼ BEARISH (Turun)
+                  <span className="badge-bearish">
+                    ▼ BEARISH
                   </span>
                 </div>
               </div>
 
               {/* High Impact Macro Transmission Banner */}
               {(event.impact_level === 'CRITICAL' || event.impact_level === 'HIGH') && (
-                <div className="p-2.5 rounded-lg bg-rose-950/20 border border-rose-900/40 text-xs font-mono text-rose-200 flex items-center gap-2">
-                  <Flame className="w-4 h-4 text-rose-400 shrink-0" />
+                <div className="p-2.5 rounded border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-xs font-mono text-[var(--text-primary)] flex items-center gap-2">
+                  <Flame className="w-4 h-4 text-[var(--accent)] shrink-0" />
                   <span>
-                    <strong className="text-rose-300">Katalis Berdampak Tinggi:</strong> Peristiwa ini memiliki signifikansi makro tinggi terhadap volatilitas pasar. Arah bias dan transmisi ekonomi terhadap pair di bawah memiliki presisi tinggi.
+                    <strong className="text-[var(--accent)]">High Severity Catalyst:</strong> Significant macro order flow sensitivity detected. Directional transmission models are actively tracked.
                   </span>
                 </div>
               )}
@@ -236,28 +233,23 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({ eventId, onC
                   const isBull = pi.bias === 'BULLISH';
                   const isBear = pi.bias === 'BEARISH';
                   const liveMarket = (affected_markets || []).find(
-                    (m) => m.symbol === pi.pair || (pi.pair === 'XAUUSD' && m.symbol === 'XAUUSD')
+                    (m: any) => m.symbol === pi.pair || (pi.pair === 'XAUUSD' && m.symbol === 'XAUUSD')
                   );
 
                   return (
                     <div
                       key={idx}
-                      className={`p-3.5 rounded-lg border transition-all ${
-                        isBull
-                          ? 'bg-gradient-to-br from-emerald-950/30 via-slate-950/90 to-slate-950 border-emerald-800/80 shadow-xs'
-                          : isBear
-                          ? 'bg-gradient-to-br from-rose-950/30 via-slate-950/90 to-slate-950 border-rose-800/80 shadow-xs'
-                          : 'bg-slate-950/80 border-slate-800/80'
-                      }`}
+                      className="p-3.5 rounded border bg-[var(--bg-surface)] space-y-2"
+                      style={{ borderColor: isBull ? 'var(--bullish)' : isBear ? 'var(--bearish)' : 'var(--border-subtle)' }}
                     >
                       {/* Header: Pair Symbol & Bias Badge */}
-                      <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <span className="font-mono font-extrabold text-sm text-slate-100">
+                          <span className="font-mono font-bold text-sm text-[var(--text-primary)]">
                             {pi.pair}
                           </span>
                           {pi.displayName && (
-                            <span className="text-[10px] text-slate-400 font-sans truncate max-w-[140px]">
+                            <span className="text-[10px] text-[var(--text-muted)] font-mono truncate max-w-[140px]">
                               {pi.displayName}
                             </span>
                           )}
@@ -265,22 +257,18 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({ eventId, onC
 
                         <div className="flex items-center gap-1.5">
                           <span
-                            className={`flex items-center gap-1 text-[11px] font-mono font-black px-2.5 py-0.5 rounded-md border shadow-xs ${
-                              isBull
-                                ? 'bg-emerald-900/90 text-emerald-200 border-emerald-500/80'
-                                : isBear
-                                ? 'bg-rose-900/90 text-rose-200 border-rose-500/80'
-                                : 'bg-slate-800 text-slate-300 border-slate-700'
+                            className={`flex items-center gap-1 text-[10px] font-mono font-bold px-2 py-0.5 rounded ${
+                              isBull ? 'badge-bullish' : isBear ? 'badge-bearish' : 'badge-neutral'
                             }`}
                           >
                             {isBull ? (
                               <>
-                                <TrendingUp className="w-3.5 h-3.5 text-emerald-400 stroke-[2.5]" />
+                                <TrendingUp className="w-3 h-3" />
                                 <span>BULLISH</span>
                               </>
                             ) : isBear ? (
                               <>
-                                <TrendingDown className="w-3.5 h-3.5 text-rose-400 stroke-[2.5]" />
+                                <TrendingDown className="w-3 h-3" />
                                 <span>BEARISH</span>
                               </>
                             ) : (
@@ -292,34 +280,30 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({ eventId, onC
 
                       {/* Transmission Mechanism */}
                       {pi.mechanism && (
-                        <div className="text-[10px] font-mono text-cyan-400 font-semibold mb-1.5 flex items-center gap-1">
-                          <span className="text-slate-500">Mekanisme:</span>
-                          <span className="bg-cyan-950/60 px-1.5 py-0.2 rounded border border-cyan-800/50">
-                            {pi.mechanism}
-                          </span>
+                        <div className="text-[10px] font-mono text-[var(--accent)] font-semibold flex items-center gap-1">
+                          <span className="text-[var(--text-muted)]">MECHANISM:</span>
+                          <span>{pi.mechanism}</span>
                         </div>
                       )}
 
                       {/* Causal Rationale */}
-                      <p className="text-xs text-slate-300 leading-relaxed mb-2.5">
+                      <p className="text-xs text-[var(--text-secondary)] leading-relaxed font-sans">
                         {pi.rationale}
                       </p>
 
                       {/* Live Market Quote Snapshot */}
                       {liveMarket && (
-                        <div className="flex items-center justify-between pt-2 border-t border-slate-800/80 font-mono text-[11px]">
-                          <span className="text-slate-500 text-[10px]">Harga Pasar:</span>
+                        <div className="flex items-center justify-between pt-2 border-t font-mono text-[11px]" style={{ borderColor: 'var(--border-hairline)' }}>
+                          <span className="text-[var(--text-muted)] text-[10px]">MARKET PRICE:</span>
                           <div className="flex items-center gap-2">
-                            <span className="font-bold text-slate-200">
+                            <span className="font-bold text-[var(--text-primary)] tabular-nums">
                               {liveMarket.price.toLocaleString(undefined, {
                                 minimumFractionDigits: liveMarket.price < 10 ? 4 : 2,
                               })}
                             </span>
                             <span
-                              className={`font-bold text-[10px] px-1 py-0.2 rounded ${
-                                liveMarket.change_24h_pct >= 0
-                                  ? 'bg-emerald-950 text-emerald-300'
-                                  : 'bg-rose-950 text-rose-300'
+                              className={`font-bold text-[10px] px-1 py-0.2 rounded tabular-nums ${
+                                liveMarket.change_24h_pct >= 0 ? 'badge-bullish' : 'badge-bearish'
                               }`}
                             >
                               {liveMarket.change_24h_pct >= 0 ? '+' : ''}
@@ -337,33 +321,33 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({ eventId, onC
 
           {/* 3. Consolidated AI Intelligence Box */}
           {ai_analysis && (
-            <div className="bg-gradient-to-br from-slate-900 to-slate-950 border border-cyan-900/40 rounded-lg p-4 relative">
-              <div className="flex items-center justify-between mb-3 border-b border-slate-800/60 pb-2">
+            <div className="rounded p-4 border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] space-y-3">
+              <div className="flex items-center justify-between border-b pb-2" style={{ borderColor: 'var(--border-subtle)' }}>
                 <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-cyan-400" />
-                  <span className="text-xs font-bold font-mono text-cyan-300 uppercase tracking-wider">
-                    Consolidated Institutional AI Synthesis
+                  <Sparkles className="w-4 h-4 text-[var(--accent)]" />
+                  <span className="section-title text-xs text-[var(--text-primary)]">
+                    INSTITUTIONAL AI SYNTHESIS
                   </span>
                 </div>
-                <div className="flex items-center gap-2 text-[11px] font-mono text-slate-400">
-                  <span>Confidence:</span>
-                  <span className="text-cyan-400 font-bold">{((ai_analysis.confidence || 0.85) * 100).toFixed(0)}%</span>
+                <div className="flex items-center gap-2 text-[11px] font-mono text-[var(--text-secondary)]">
+                  <span>CONFIDENCE:</span>
+                  <span className="text-[var(--text-primary)] font-bold">{((ai_analysis.confidence || 0.85) * 100).toFixed(0)}%</span>
                 </div>
               </div>
 
-              <p className="text-xs sm:text-sm text-slate-200 leading-relaxed mb-3.5">
+              <p className="text-xs sm:text-sm text-[var(--text-secondary)] leading-relaxed font-sans">
                 {ai_analysis.summary}
               </p>
 
               {ai_analysis.key_implications && ai_analysis.key_implications.length > 0 && (
-                <div className="mb-4">
-                  <h4 className="text-[11px] font-mono text-slate-400 uppercase font-semibold mb-2">
-                    Key Institutional Implications:
+                <div>
+                  <h4 className="metadata-label text-[10px] text-[var(--text-muted)] mb-2">
+                    KEY INSTITUTIONAL IMPLICATIONS:
                   </h4>
-                  <ul className="space-y-1.5">
+                  <ul className="space-y-1.5 font-sans">
                     {ai_analysis.key_implications.map((imp, idx) => (
-                      <li key={idx} className="flex items-start gap-2 text-xs text-slate-300">
-                        <span className="text-cyan-400 font-bold mt-0.5">›</span>
+                      <li key={idx} className="flex items-start gap-2 text-xs text-[var(--text-secondary)]">
+                        <span className="text-[var(--accent)] font-bold mt-0.5">›</span>
                         <span>{imp}</span>
                       </li>
                     ))}
@@ -373,26 +357,24 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({ eventId, onC
 
               {ai_analysis.affected_assets_outlook && ai_analysis.affected_assets_outlook.length > 0 && (
                 <div>
-                  <h4 className="text-[11px] font-mono text-slate-400 uppercase font-semibold mb-2">
-                    Asset Directional Outlook:
+                  <h4 className="metadata-label text-[10px] text-[var(--text-muted)] mb-2">
+                    ASSET DIRECTIONAL OUTLOOK:
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
                     {ai_analysis.affected_assets_outlook.map((out, idx) => {
                       const isBull = out.bias === 'BULLISH';
                       const isBear = out.bias === 'BEARISH';
                       return (
-                        <div key={idx} className="p-2.5 rounded bg-slate-950/70 border border-slate-800/80">
+                        <div key={idx} className="p-2.5 rounded bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
                           <div className="flex items-center justify-between mb-1">
-                            <span className="font-mono font-bold text-xs text-slate-200">{out.asset}</span>
-                            <span className={`text-[10px] font-mono font-bold px-1.5 py-0.2 rounded border ${
-                              isBull ? 'bg-emerald-950 text-emerald-400 border-emerald-800' :
-                              isBear ? 'bg-rose-950 text-rose-400 border-rose-800' :
-                              'bg-slate-900 text-slate-400 border-slate-800'
+                            <span className="font-mono font-bold text-xs text-[var(--text-primary)]">{out.asset}</span>
+                            <span className={`text-[9.5px] font-mono font-bold px-1.5 py-0.2 rounded ${
+                              isBull ? 'badge-bullish' : isBear ? 'badge-bearish' : 'badge-neutral'
                             }`}>
                               {out.bias}
                             </span>
                           </div>
-                          <p className="text-[11px] text-slate-400 leading-tight">{out.rationale}</p>
+                          <p className="text-[11px] text-[var(--text-secondary)] leading-tight font-sans">{out.rationale}</p>
                         </div>
                       );
                     })}
@@ -403,102 +385,102 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({ eventId, onC
           )}
 
           {/* Measurable Intelligence Layer (Fundamental & Market Synthesis) */}
-          <div className="bg-slate-900/60 border border-cyan-900/50 rounded-xl p-4 space-y-3.5">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-2.5">
+          <div className="rounded p-4 space-y-3.5 border border-[var(--border-subtle)] bg-[var(--bg-section-alt)]">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b pb-2.5" style={{ borderColor: 'var(--border-subtle)' }}>
               <div className="flex items-center gap-2 flex-wrap font-mono">
-                <Sparkles className="w-4 h-4 text-cyan-400" />
-                <span className="text-xs font-bold uppercase tracking-wider text-cyan-300">
+                <Sparkles className="w-4 h-4 text-[var(--accent)]" />
+                <span className="section-title text-xs text-[var(--text-primary)]">
                   MEASURABLE INTELLIGENCE LAYER
                 </span>
-                <span className={`text-[9px] px-1.5 py-0.2 rounded font-bold border uppercase ${
-                  event.impact_level === 'CRITICAL' ? 'bg-rose-950 text-rose-300 border-rose-800' :
-                  event.impact_level === 'HIGH' ? 'bg-amber-950 text-amber-300 border-amber-800' :
-                  'bg-cyan-950 text-cyan-300 border-cyan-800'
+                <span className={`text-[9.5px] px-1.5 py-0.2 rounded font-bold uppercase ${
+                  event.impact_level === 'CRITICAL' ? 'badge-bearish' :
+                  event.impact_level === 'HIGH' ? 'badge-warning' :
+                  'badge-neutral'
                 }`}>
                   {event.impact_level} IMPACT
                 </span>
-                <span className="text-[10px] text-slate-400">
-                  CONFIDENCE: <strong className="text-emerald-400 font-bold">{((ai_analysis?.confidence || 0.92) * 100).toFixed(0)}%</strong>
+                <span className="text-[10px] text-[var(--text-muted)]">
+                  CONFIDENCE: <strong className="text-[var(--bullish)] font-bold">{((ai_analysis?.confidence || 0.92) * 100).toFixed(0)}%</strong>
                 </span>
-                <span className="text-[10px] text-slate-400">
-                  FRESHNESS: <strong className="text-slate-200">Live Synchronized</strong>
+                <span className="text-[10px] text-[var(--text-muted)]">
+                  FEED: <strong className="text-[var(--text-primary)]">SYNCHRONIZED</strong>
                 </span>
               </div>
-              <div className="text-[10px] font-mono text-slate-500">
-                Data Standard: <span className="text-cyan-400">Strict Quantitative Grounding</span>
+              <div className="text-[10px] font-mono text-[var(--text-muted)]">
+                STANDARD: <span className="text-[var(--text-primary)]">QUANTITATIVE GROUNDING</span>
               </div>
             </div>
 
             {/* Empirical Market Reaction Matrix */}
-            <div className="p-3 rounded-lg bg-slate-950 border border-slate-800/90 font-mono">
+            <div className="p-3 rounded bg-[var(--bg-surface)] border border-[var(--border-subtle)] font-mono">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[10px] uppercase font-bold text-cyan-400 tracking-wider">
-                  Observed Market Reaction Across Horizons (DXY / EURUSD Proxy)
+                <span className="metadata-label text-[10px] text-[var(--text-primary)]">
+                  OBSERVED MARKET HORIZONS REACTION (DXY / EURUSD PROXY)
                 </span>
-                <span className="text-[9px] text-slate-500">Empirical Order Flow</span>
+                <span className="text-[9px] text-[var(--text-muted)] uppercase">Order Flow Empirical</span>
               </div>
               <div className="grid grid-cols-5 gap-2 text-center text-xs">
-                <div className="p-2 rounded bg-slate-900 border border-slate-800">
-                  <div className="text-[9px] text-slate-500">1m</div>
-                  <div className="font-bold text-emerald-400 mt-0.5">+0.12%</div>
+                <div className="p-2 rounded bg-[var(--bg-section-alt)] border border-[var(--border-subtle)]">
+                  <div className="text-[9px] text-[var(--text-muted)]">1M</div>
+                  <div className="font-bold text-[var(--bullish)] mt-0.5 tabular-nums">+0.12%</div>
                 </div>
-                <div className="p-2 rounded bg-slate-900 border border-slate-800">
-                  <div className="text-[9px] text-slate-500">5m</div>
-                  <div className="font-bold text-emerald-400 mt-0.5">+0.24%</div>
+                <div className="p-2 rounded bg-[var(--bg-section-alt)] border border-[var(--border-subtle)]">
+                  <div className="text-[9px] text-[var(--text-muted)]">5M</div>
+                  <div className="font-bold text-[var(--bullish)] mt-0.5 tabular-nums">+0.24%</div>
                 </div>
-                <div className="p-2 rounded bg-slate-900 border border-slate-800">
-                  <div className="text-[9px] text-slate-500">15m</div>
-                  <div className="font-bold text-cyan-400 mt-0.5">+0.19%</div>
+                <div className="p-2 rounded bg-[var(--bg-section-alt)] border border-[var(--border-subtle)]">
+                  <div className="text-[9px] text-[var(--text-muted)]">15M</div>
+                  <div className="font-bold text-[var(--bullish)] mt-0.5 tabular-nums">+0.19%</div>
                 </div>
-                <div className="p-2 rounded bg-slate-900 border border-slate-800">
-                  <div className="text-[9px] text-slate-500">1h</div>
-                  <div className="font-bold text-slate-300 mt-0.5">+0.15%</div>
+                <div className="p-2 rounded bg-[var(--bg-section-alt)] border border-[var(--border-subtle)]">
+                  <div className="text-[9px] text-[var(--text-muted)]">1H</div>
+                  <div className="font-bold text-[var(--text-primary)] mt-0.5 tabular-nums">+0.15%</div>
                 </div>
-                <div className="p-2 rounded bg-slate-900 border border-slate-800">
-                  <div className="text-[9px] text-slate-500">4h</div>
-                  <div className="font-bold text-emerald-400 mt-0.5">+0.28%</div>
+                <div className="p-2 rounded bg-[var(--bg-section-alt)] border border-[var(--border-subtle)]">
+                  <div className="text-[9px] text-[var(--text-muted)]">4H</div>
+                  <div className="font-bold text-[var(--bullish)] mt-0.5 tabular-nums">+0.28%</div>
                 </div>
               </div>
             </div>
 
             {/* Fundamental Implication vs Actual Market Reaction Separation */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
-              <div className="p-3 rounded-lg bg-slate-950 border border-slate-800/90">
-                <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-amber-400 mb-1 flex items-center justify-between">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1 font-sans">
+              <div className="p-3 rounded bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
+                <div className="metadata-label text-[10px] text-[var(--accent)] mb-1 flex items-center justify-between">
                   <span>1. FUNDAMENTAL IMPLICATION</span>
-                  <span className="text-[9px] text-slate-500 font-normal">Macro Policy Trajectory</span>
+                  <span className="text-[9px] text-[var(--text-muted)] font-normal">Macro Policy Trajectory</span>
                 </div>
-                <p className="text-xs text-slate-300 leading-relaxed">
-                  Pergeseran ekspektasi suku bunga terminal bank sentral dan premi risiko sovereign yield. Fundamental bias mencerminkan transmisi ekonomi riil jangka menengah.
+                <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                  Terminal rate expectations shift across sovereign yield benchmarks. Structural macro direction reflects medium-term economic realities.
                 </p>
               </div>
 
-              <div className="p-3 rounded-lg bg-slate-950 border border-slate-800/90">
-                <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-cyan-400 mb-1 flex items-center justify-between">
+              <div className="p-3 rounded bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
+                <div className="metadata-label text-[10px] text-[var(--text-primary)] mb-1 flex items-center justify-between">
                   <span>2. ACTUAL MARKET REACTION</span>
-                  <span className="text-[9px] text-slate-500 font-normal">Liquidity & Order Flow</span>
+                  <span className="text-[9px] text-[var(--text-muted)] font-normal">Liquidity & Order Flow</span>
                 </div>
-                <p className="text-xs text-slate-300 leading-relaxed">
-                  Penyerapan likuiditas oleh algorithmic market makers, pergerakan bid-ask spread seketika, dan rotasi posisi portofolio yang dapat mendahului atau menyimpang sementara dari analisis fundamental murni.
+                <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                  Market maker liquidity absorption, bid-ask spread expansion, and short-term positioning adjustments across algorithmic liquidity pools.
                 </p>
               </div>
             </div>
 
             {/* Grounded Provenance (SOURCE + TIMESTAMP + EVIDENCE + CONFIDENCE) */}
-            <div className="p-2.5 rounded-lg bg-slate-950 border border-slate-800 font-mono text-[11px] text-slate-400 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div className="p-2.5 rounded bg-[var(--bg-surface)] border border-[var(--border-subtle)] font-mono text-[11px] text-[var(--text-secondary)] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-cyan-400 font-bold">SOURCE:</span>
-                <span className="text-slate-200">{sources[0]?.source_name || 'Institutional Wire'}</span>
+                <span className="metadata-label text-[10px] text-[var(--text-muted)]">SOURCE:</span>
+                <span className="text-[var(--text-primary)] font-bold">{sources[0]?.source_name || 'Institutional Wire'}</span>
                 <span>•</span>
-                <span className="text-cyan-400 font-bold">TIMESTAMP:</span>
-                <span className="text-slate-200">{new Date(event.first_detected_at).toLocaleString()}</span>
+                <span className="metadata-label text-[10px] text-[var(--text-muted)]">TIMESTAMP:</span>
+                <span className="text-[var(--text-primary)]">{new Date(event.first_detected_at).toLocaleString()}</span>
                 <span>•</span>
-                <span className="text-cyan-400 font-bold">CONFIDENCE:</span>
-                <span className="text-emerald-400 font-bold">{((ai_analysis?.confidence || 0.92) * 100).toFixed(0)}%</span>
+                <span className="metadata-label text-[10px] text-[var(--text-muted)]">CONFIDENCE:</span>
+                <span className="text-[var(--bullish)] font-bold">{((ai_analysis?.confidence || 0.92) * 100).toFixed(0)}%</span>
               </div>
-              <div className="text-slate-400">
-                <span className="text-cyan-400 font-bold mr-1">EVIDENCE:</span>
-                <span>Cross-verified across {sources.length} canonical report{sources.length > 1 ? 's' : ''}.</span>
+              <div className="text-[var(--text-muted)]">
+                <span className="metadata-label text-[10px] mr-1">EVIDENCE:</span>
+                <span>Verified across {sources.length} canonical wire report{sources.length > 1 ? 's' : ''}.</span>
               </div>
             </div>
           </div>
@@ -506,14 +488,14 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({ eventId, onC
           {/* 3. Live Market Context & Affected Assets */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Affected Market Instruments */}
-            <div className="bg-slate-900/50 border border-slate-800 rounded-lg p-3.5">
-              <h3 className="text-xs font-mono font-bold text-slate-300 uppercase tracking-wider mb-2.5 flex items-center justify-between">
-                <span>Affected Market Instruments ({affected_markets.length})</span>
-                <span className="text-[10px] text-slate-500">LIVE FEED</span>
+            <div className="rounded p-3.5 border border-[var(--border-subtle)] bg-[var(--bg-section-alt)]">
+              <h3 className="text-xs font-mono font-bold text-[var(--text-primary)] uppercase tracking-wider mb-2.5 flex items-center justify-between">
+                <span>AFFECTED INSTRUMENTS ({affected_markets.length})</span>
+                <span className="metadata-label text-[10px] text-[var(--text-muted)]">LIVE QUOTES</span>
               </h3>
 
               {affected_markets.length === 0 ? (
-                <p className="text-xs text-slate-500 font-mono">No direct asset impact mapped.</p>
+                <p className="text-xs text-[var(--text-muted)] font-mono">No direct asset impact mapped.</p>
               ) : (
                 <div className="space-y-1.5">
                   {affected_markets.map(m => {
@@ -521,16 +503,16 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({ eventId, onC
                     return (
                       <div
                         key={m.symbol}
-                        className="flex items-center justify-between p-2 rounded bg-slate-950/60 border border-slate-800/70 font-mono text-xs"
+                        className="flex items-center justify-between p-2 rounded bg-[var(--bg-surface)] border border-[var(--border-subtle)] font-mono text-xs"
                       >
                         <div className="flex items-center gap-2">
-                          <span className="font-bold text-slate-200">{m.symbol}</span>
-                          <span className="text-[10px] text-slate-500">{m.display_name}</span>
+                          <span className="font-bold text-[var(--text-primary)]">{m.symbol}</span>
+                          <span className="text-[10px] text-[var(--text-muted)]">{m.display_name}</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="font-semibold text-slate-100">{m.price.toLocaleString()}</span>
-                          <span className={`flex items-center gap-0.5 text-[11px] font-bold ${
-                            isPos ? 'text-emerald-400' : 'text-rose-400'
+                          <span className="font-bold text-[var(--text-primary)] tabular-nums">{m.price.toLocaleString()}</span>
+                          <span className={`tabular-nums text-[11px] font-bold ${
+                            isPos ? 'text-[var(--bullish)]' : 'text-[var(--bearish)]'
                           }`}>
                             {isPos ? '+' : ''}{m.change_24h_pct.toFixed(2)}%
                           </span>
@@ -543,41 +525,42 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({ eventId, onC
             </div>
 
             {/* Affected Currencies & Strength Meter */}
-            <div className="bg-slate-900/50 border border-slate-800 rounded-lg p-3.5">
-              <h3 className="text-xs font-mono font-bold text-slate-300 uppercase tracking-wider mb-2.5 flex items-center justify-between">
-                <span>Affected Currencies ({affected_currencies.length})</span>
-                <span className="text-[10px] text-slate-500">STRENGTH INDEX</span>
+            <div className="rounded p-3.5 border border-[var(--border-subtle)] bg-[var(--bg-section-alt)]">
+              <h3 className="text-xs font-mono font-bold text-[var(--text-primary)] uppercase tracking-wider mb-2.5 flex items-center justify-between">
+                <span>CURRENCY SENSITIVITY ({affected_currencies.length})</span>
+                <span className="metadata-label text-[10px] text-[var(--text-muted)]">STRENGTH METRIC</span>
               </h3>
 
               {affected_currencies.length === 0 ? (
-                <p className="text-xs text-slate-500 font-mono">No specific currency sensitivity identified.</p>
+                <p className="text-xs text-[var(--text-muted)] font-mono">No specific currency sensitivity identified.</p>
               ) : (
                 <div className="space-y-2">
                   {affected_currencies.map(c => {
                     const score = c.strength_score;
                     const pct = (score / 10) * 100;
                     return (
-                      <div key={c.currency} className="p-2 rounded bg-slate-950/60 border border-slate-800/70">
+                      <div key={c.currency} className="p-2 rounded bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
                         <div className="flex items-center justify-between text-xs font-mono mb-1">
                           <div className="flex items-center gap-2">
-                            <span className="font-bold text-cyan-400">{c.currency}</span>
-                            <span className="text-[10px] text-slate-500">Rank #{c.rank}</span>
+                            <span className="font-bold text-[var(--text-primary)]">{c.currency}</span>
+                            <span className="text-[10px] text-[var(--text-muted)]">Rank #{c.rank}</span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className="font-bold text-slate-200">{score.toFixed(1)} / 10.0</span>
-                            <span className={`text-[10px] px-1 rounded font-bold ${
-                              c.change_direction.includes('BUY') ? 'text-emerald-400' : 'text-rose-400'
+                            <span className="font-bold text-[var(--text-primary)] tabular-nums">{score.toFixed(1)} / 10.0</span>
+                            <span className={`text-[10px] font-bold ${
+                              c.change_direction.includes('BUY') ? 'text-[var(--bullish)]' : 'text-[var(--bearish)]'
                             }`}>
                               {c.change_direction}
                             </span>
                           </div>
                         </div>
-                        <div className="h-1.5 w-full bg-slate-900 rounded-full overflow-hidden">
+                        <div className="h-1.5 w-full bg-[var(--bg-section-alt)] rounded-xs overflow-hidden">
                           <div
-                            className={`h-full rounded-full transition-all duration-500 ${
-                              score >= 6 ? 'bg-emerald-500' : score >= 4 ? 'bg-cyan-500' : 'bg-rose-500'
-                            }`}
-                            style={{ width: `${pct}%` }}
+                            className="h-full transition-all duration-500 rounded-xs"
+                            style={{
+                              width: `${pct}%`,
+                              backgroundColor: score >= 6 ? 'var(--bullish)' : score >= 4 ? 'var(--accent)' : 'var(--bearish)'
+                            }}
                           />
                         </div>
                       </div>
@@ -589,57 +572,57 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({ eventId, onC
           </div>
 
           {/* 4. Multiple Sources & Deduplication Breakdown */}
-          <div className="bg-slate-900/30 border border-slate-800 rounded-lg p-4">
-            <div className="flex items-center justify-between mb-3 border-b border-slate-800/60 pb-2">
+          <div className="rounded p-4 border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] space-y-3">
+            <div className="flex items-center justify-between border-b pb-2" style={{ borderColor: 'var(--border-subtle)' }}>
               <div className="flex items-center gap-2">
-                <Layers className="w-4 h-4 text-indigo-400" />
-                <h3 className="text-xs font-mono font-bold text-slate-200 uppercase tracking-wider">
-                  Consolidated Source Articles ({sources.length})
+                <Layers className="w-4 h-4 text-[var(--text-muted)]" />
+                <h3 className="section-title text-xs text-[var(--text-primary)]">
+                  CONSOLIDATED SOURCE ARTICLES ({sources.length})
                 </h3>
               </div>
-              <span className="text-[11px] font-mono text-emerald-400 flex items-center gap-1">
+              <span className="text-[11px] font-mono text-[var(--bullish)] flex items-center gap-1">
                 <ShieldCheck className="w-3.5 h-3.5" />
                 Deduplicated into Single Event ID
               </span>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {timeline.map((s, idx) => (
-                <div key={s.id || idx} className="p-3 rounded bg-slate-950/80 border border-slate-800/80 text-xs">
-                  <div className="flex items-center justify-between gap-2 mb-1.5 font-mono">
+                <div key={s.id || idx} className="p-3 rounded bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-xs space-y-1.5">
+                  <div className="flex items-center justify-between gap-2 font-mono">
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-cyan-400 bg-cyan-950/60 px-1.5 py-0.5 rounded border border-cyan-800/60">
+                      <span className="font-bold text-[var(--text-primary)] bg-[var(--bg-section-alt)] px-1.5 py-0.5 rounded border border-[var(--border-subtle)]">
                         {s.source_name}
                       </span>
-                      <span className="text-[10px] text-slate-500 uppercase">
+                      <span className="text-[10px] text-[var(--text-muted)] uppercase">
                         LANG: {s.language}
                       </span>
                       {s.similarity_score && (
-                        <span className="text-[10px] text-indigo-300 bg-indigo-950/50 px-1.5 py-0.2 rounded border border-indigo-800/40">
+                        <span className="badge-neutral text-[9.5px]">
                           Match: {(s.similarity_score * 100).toFixed(0)}%
                         </span>
                       )}
                     </div>
-                    <span className="text-[11px] text-slate-500">
+                    <span className="text-[11px] text-[var(--text-muted)]">
                       {new Date(s.published_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </div>
 
-                  <h4 className="font-medium text-slate-200 mb-1 leading-snug">
+                  <h4 className="font-medium text-[var(--text-primary)] leading-snug">
                     {s.original_title}
                   </h4>
-                  <p className="text-slate-400 text-[11px] leading-relaxed mb-2">
+                  <p className="text-[var(--text-secondary)] text-[11px] leading-relaxed font-sans">
                     {s.original_content}
                   </p>
 
-                  <div className="flex items-center justify-between text-[10px] font-mono text-slate-500 pt-1 border-t border-slate-900">
+                  <div className="flex items-center justify-between text-[10px] font-mono text-[var(--text-muted)] pt-1 border-t" style={{ borderColor: 'var(--border-hairline)' }}>
                     <span>Reason: {s.matched_reason || 'Canonical initial report'}</span>
                     {s.source_url && (
                       <a
                         href={s.source_url}
                         target="_blank"
                         rel="noreferrer"
-                        className="flex items-center gap-1 text-cyan-400 hover:underline"
+                        className="flex items-center gap-1 text-[var(--accent)] hover:underline"
                       >
                         <span>Original Wire</span>
                         <ExternalLink className="w-2.5 h-2.5" />
@@ -653,13 +636,13 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({ eventId, onC
         </div>
 
         {/* Modal Footer */}
-        <div className="px-5 py-3 border-t border-slate-800 bg-slate-900/60 flex items-center justify-between text-xs font-mono text-slate-400">
-          <span>ONE EVENT → ONE EVENT ID → MULTIPLE SOURCES → MULTIPLE ASSETS → ONE ANALYSIS</span>
+        <div className="px-5 py-3 border-t bg-[var(--bg-surface)] flex items-center justify-between text-xs font-mono text-[var(--text-muted)]" style={{ borderColor: 'var(--border-subtle)' }}>
+          <span className="hidden sm:inline">ONE EVENT → ONE CANONICAL ID → MULTI-SOURCE SYNTHESIS</span>
           <button
             onClick={onClose}
-            className="px-4 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 transition font-sans cursor-pointer"
+            className="px-4 py-1.5 rounded bg-[var(--accent)] text-white hover:opacity-90 font-bold transition cursor-pointer ml-auto shadow-xs"
           >
-            Close Detail
+            CLOSE DOSSIER
           </button>
         </div>
       </div>

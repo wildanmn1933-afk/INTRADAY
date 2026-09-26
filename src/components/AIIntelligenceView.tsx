@@ -18,6 +18,7 @@ import {
   FileText,
 } from 'lucide-react';
 import { api } from '../lib/api';
+import { PageHeader } from './shared/PageHeader';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   AIAnalysis,
@@ -106,104 +107,108 @@ export const AIIntelligenceView: React.FC<AIIntelligenceViewProps> = React.memo(
   const getToneBadge = (tone: CentralBankTone) => {
     switch (tone) {
       case 'HAWKISH':
-        return 'bg-rose-950/80 text-rose-300 border-rose-800';
+        return 'badge-bearish';
       case 'DOVISH':
-        return 'bg-emerald-950/80 text-emerald-300 border-emerald-800';
+        return 'badge-bullish';
       case 'NEUTRAL':
-        return 'bg-slate-900 text-slate-300 border-slate-700';
+        return 'badge-neutral';
       case 'MIXED':
-        return 'bg-amber-950/80 text-amber-300 border-amber-800';
+        return 'badge-warning';
     }
   };
 
   const getConditionBadge = (cond: MacroConditionStatus) => {
     switch (cond) {
       case 'STRONG':
-        return 'bg-emerald-950/80 text-emerald-300 border-emerald-800';
+        return 'badge-bullish';
       case 'WEAK':
-        return 'bg-rose-950/80 text-rose-300 border-rose-800';
+        return 'badge-bearish';
       case 'MIXED':
-        return 'bg-amber-950/80 text-amber-300 border-amber-800';
+        return 'badge-warning';
     }
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 font-sans">
+      <PageHeader
+        eyebrow="MAIN · AI ANALYSIS"
+        title="AI analysis"
+        description="Model-driven reads of the market regime, central-bank language, G8 macro conditions, and the unified cross-asset context."
+      />
+
       {/* Sub-Navigation Tabs for Intelligence Layer */}
-      <div className="flex items-center gap-1.5 border-b border-slate-800/80 pb-2 overflow-x-auto">
+      <div className="flex items-center gap-1.5 border-b pb-2 overflow-x-auto" style={{ borderColor: 'var(--border-subtle)' }}>
         <button
           onClick={() => setActiveTab('OVERVIEW')}
-          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold transition whitespace-nowrap cursor-pointer ${
+          className={`flex items-center gap-2 px-3 py-1.5 rounded text-xs font-mono font-bold transition whitespace-nowrap cursor-pointer ${
             activeTab === 'OVERVIEW'
-              ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 shadow-[0_0_12px_rgba(6,182,212,0.25)]'
-              : 'text-slate-400 hover:text-slate-200 bg-slate-900/60 border border-slate-800/60'
+              ? 'bg-[var(--active-bg)] text-[var(--active-text)] border border-[var(--active-border)] shadow-xs'
+              : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] bg-[var(--bg-surface)] border border-[var(--border-subtle)]'
           }`}
         >
-          <Brain className="w-3.5 h-3.5 text-cyan-400" />
+          <Brain className="w-3.5 h-3.5" />
           <span>MARKET REGIME & THEMES</span>
         </button>
 
         <button
           onClick={() => setActiveTab('CENTRAL_BANK')}
-          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold transition whitespace-nowrap cursor-pointer ${
+          className={`flex items-center gap-2 px-3 py-1.5 rounded text-xs font-mono font-bold transition whitespace-nowrap cursor-pointer ${
             activeTab === 'CENTRAL_BANK'
-              ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 shadow-[0_0_12px_rgba(6,182,212,0.25)]'
-              : 'text-slate-400 hover:text-slate-200 bg-slate-900/60 border border-slate-800/60'
+              ? 'bg-[var(--active-bg)] text-[var(--active-text)] border border-[var(--active-border)] shadow-xs'
+              : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] bg-[var(--bg-surface)] border border-[var(--border-subtle)]'
           }`}
         >
-          <Landmark className="w-3.5 h-3.5 text-amber-400" />
+          <Landmark className="w-3.5 h-3.5" />
           <span>CENTRAL BANK SPEECHES</span>
-          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-800 text-slate-300">
+          <span className="text-[10px] px-1.5 py-0.2 rounded bg-[var(--bg-section-alt)] text-[var(--text-secondary)] border border-[var(--border-subtle)]">
             {speeches.length}
           </span>
         </button>
 
         <button
           onClick={() => setActiveTab('MACRO_CONTEXT')}
-          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold transition whitespace-nowrap cursor-pointer ${
+          className={`flex items-center gap-2 px-3 py-1.5 rounded text-xs font-mono font-bold transition whitespace-nowrap cursor-pointer ${
             activeTab === 'MACRO_CONTEXT'
-              ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 shadow-[0_0_12px_rgba(6,182,212,0.25)]'
-              : 'text-slate-400 hover:text-slate-200 bg-slate-900/60 border border-slate-800/60'
+              ? 'bg-[var(--active-bg)] text-[var(--active-text)] border border-[var(--active-border)] shadow-xs'
+              : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] bg-[var(--bg-surface)] border border-[var(--border-subtle)]'
           }`}
         >
-          <Globe2 className="w-3.5 h-3.5 text-emerald-400" />
+          <Globe2 className="w-3.5 h-3.5" />
           <span>G8 MACRO CONDITIONS</span>
-          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-800 text-slate-300">
+          <span className="text-[10px] px-1.5 py-0.2 rounded bg-[var(--bg-section-alt)] text-[var(--text-secondary)] border border-[var(--border-subtle)]">
             8 FX
           </span>
         </button>
 
         <button
           onClick={() => setActiveTab('UNIFIED_CONTEXT')}
-          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold transition whitespace-nowrap cursor-pointer ${
+          className={`flex items-center gap-2 px-3 py-1.5 rounded text-xs font-mono font-bold transition whitespace-nowrap cursor-pointer ${
             activeTab === 'UNIFIED_CONTEXT'
-              ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 shadow-[0_0_12px_rgba(6,182,212,0.25)]'
-              : 'text-slate-400 hover:text-slate-200 bg-slate-900/60 border border-slate-800/60'
+              ? 'bg-[var(--active-bg)] text-[var(--active-text)] border border-[var(--active-border)] shadow-xs'
+              : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] bg-[var(--bg-surface)] border border-[var(--border-subtle)]'
           }`}
         >
-          <Cpu className="w-3.5 h-3.5 text-cyan-400" />
+          <Cpu className="w-3.5 h-3.5" />
           <span>UNIFIED MARKET CONTEXT</span>
         </button>
       </div>
 
       {notification && (
-        <div className={`px-3.5 py-2.5 rounded-lg border text-xs font-mono flex flex-col sm:flex-row sm:items-center justify-between gap-2 ${
+        <div className={`px-3.5 py-2.5 rounded border text-xs font-mono flex flex-col sm:flex-row sm:items-center justify-between gap-2 ${
           notification.type === 'error'
-            ? 'bg-rose-950/50 border-rose-800/60 text-rose-300'
-            : 'bg-emerald-950/50 border-emerald-800/60 text-emerald-300'
+            ? 'badge-bearish'
+            : 'badge-bullish'
         }`}>
           <div className="flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{notification.message}</span>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <button
-              onClick={() => setNotification(null)}
-              className="text-slate-400 hover:text-slate-200 text-xs cursor-pointer ml-2"
-            >
-              ✕
-            </button>
-          </div>
+          <button
+            onClick={() => setNotification(null)}
+            className="text-inherit hover:opacity-75 text-xs cursor-pointer ml-2"
+          >
+            ✕
+          </button>
         </div>
       )}
 
@@ -220,57 +225,64 @@ export const AIIntelligenceView: React.FC<AIIntelligenceViewProps> = React.memo(
           {activeTab === 'OVERVIEW' && (
         <div className="space-y-4">
           {/* Overview Card */}
-          <div className="bg-slate-950 border border-slate-800 rounded-xl p-5 relative overflow-hidden">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800/80 mb-4">
+          <div className="terminal-panel p-5 relative overflow-hidden">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b mb-4" style={{ borderColor: 'var(--border-subtle)' }}>
               <div className="flex items-center gap-2">
-                <Brain className="w-5 h-5 text-cyan-400" />
+                <span className="w-2 h-2 rounded-xs bg-[var(--accent)]" />
                 <div>
-                  <h2 className="text-sm font-mono font-bold text-slate-100 uppercase tracking-wider">
+                  <h2 className="section-title text-xs sm:text-sm text-[var(--text-primary)]">
                     EXECUTIVE MACRO MARKET REGIME SYNTHESIS
                   </h2>
-                  <p className="text-[10px] font-mono text-slate-500">
+                  <p className="text-xs font-mono text-[var(--text-secondary)] mt-0.5">
                     Ground-Truth Multimodal Intelligence (News + Prices + Currency Strength + Macro)
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 font-mono">
                 {overview && (
-                  <span className="text-[11px] font-mono text-slate-400">
-                    Confidence: <strong className="text-cyan-400">{((overview.confidence || 0.9) * 100).toFixed(0)}%</strong>
+                  <span className="text-[11px] text-[var(--text-secondary)]">
+                    CONFIDENCE: <strong className="text-[var(--text-primary)]">{((overview.confidence || 0.9) * 100).toFixed(0)}%</strong>
+                  </span>
+                )}
+                {/* The synthesis is cached server-side until RE-SYNTHESIZE runs, so
+                    the read can be hours old while live prices move on. */}
+                {overview?.created_at && (
+                  <span className="text-[11px] text-[var(--text-muted)]">
+                    AS OF <strong className="text-[var(--text-secondary)]">{new Date(overview.created_at).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' })} WIB</strong>
                   </span>
                 )}
                 <button
                   onClick={handleRefresh}
                   disabled={refreshing}
-                  className="flex items-center gap-1.5 px-3 py-1 rounded bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-800/80 text-cyan-300 text-xs font-mono transition cursor-pointer disabled:opacity-50"
+                  className="flex items-center gap-1.5 px-3 py-1 rounded bg-[var(--accent)] text-white hover:opacity-90 text-xs font-bold transition cursor-pointer disabled:opacity-50 shadow-xs"
                 >
-                  <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin text-cyan-400' : ''}`} />
-                  <span>{refreshing ? 'Synthesizing...' : 'Re-Synthesize'}</span>
+                  <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+                  <span>{refreshing ? 'SYNTHESIZING...' : 'RE-SYNTHESIZE'}</span>
                 </button>
               </div>
             </div>
 
             {loading ? (
-              <div className="py-8 flex items-center justify-center gap-2 text-xs font-mono text-slate-400">
-                <RefreshCw className="w-4 h-4 text-cyan-400 animate-spin" />
+              <div className="py-8 flex items-center justify-center gap-2 text-xs font-mono text-[var(--text-secondary)]">
+                <RefreshCw className="w-4 h-4 text-[var(--accent)] animate-spin" />
                 <span>Analyzing consolidated market feeds with Gemini...</span>
               </div>
             ) : overview ? (
-              <div>
-                <p className="text-sm text-slate-200 leading-relaxed bg-slate-900/50 p-4 rounded-lg border border-slate-800/80 mb-4">
+              <div className="space-y-4">
+                <p className="text-sm text-[var(--text-secondary)] leading-relaxed bg-[var(--bg-section-alt)] p-4 rounded border border-[var(--border-subtle)] font-sans">
                   {overview.summary}
                 </p>
 
                 {/* Key Macro Implications */}
-                <div className="mb-5">
-                  <h3 className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider mb-2.5">
-                    Key Strategic Takeaways:
+                <div>
+                  <h3 className="metadata-label text-[10px] text-[var(--text-muted)] mb-2.5">
+                    KEY STRATEGIC TAKEAWAYS:
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
                     {overview.key_implications.map((imp, idx) => (
-                      <div key={idx} className="p-3 rounded-lg bg-slate-900/40 border border-slate-800/70 text-xs text-slate-300">
-                        <span className="text-cyan-400 font-bold block mb-1 font-mono">0{idx + 1}.</span>
+                      <div key={idx} className="p-3 rounded bg-[var(--bg-section-alt)] border border-[var(--border-subtle)] text-xs text-[var(--text-secondary)]">
+                        <span className="text-[var(--accent)] font-bold block mb-1 font-mono">0{idx + 1}.</span>
                         <span>{imp}</span>
                       </div>
                     ))}
@@ -279,26 +291,24 @@ export const AIIntelligenceView: React.FC<AIIntelligenceViewProps> = React.memo(
 
                 {/* Asset Sensitivity Matrix */}
                 <div>
-                  <h3 className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider mb-2.5">
-                    Asset Directional Outlook:
+                  <h3 className="metadata-label text-[10px] text-[var(--text-muted)] mb-2.5">
+                    ASSET DIRECTIONAL OUTLOOK:
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5">
                     {overview.affected_assets_outlook.map((out, idx) => {
                       const isBull = out.bias === 'BULLISH';
                       const isBear = out.bias === 'BEARISH';
                       return (
-                        <div key={idx} className="p-3 rounded-lg bg-slate-900/60 border border-slate-800/80">
+                        <div key={idx} className="p-3 rounded bg-[var(--bg-section-alt)] border border-[var(--border-subtle)]">
                           <div className="flex items-center justify-between mb-1.5 font-mono">
-                            <span className="font-bold text-slate-100">{out.asset}</span>
-                            <span className={`text-[10px] px-1.5 py-0.2 rounded font-bold border uppercase ${
-                              isBull ? 'bg-emerald-950 text-emerald-400 border-emerald-800' :
-                              isBear ? 'bg-rose-950 text-rose-400 border-rose-800' :
-                              'bg-slate-900 text-slate-400 border-slate-800'
+                            <span className="font-bold text-[var(--text-primary)] text-xs">{out.asset}</span>
+                            <span className={`text-[9.5px] px-1.5 py-0.2 rounded font-bold uppercase ${
+                              isBull ? 'badge-bullish' : isBear ? 'badge-bearish' : 'badge-neutral'
                             }`}>
                               {out.bias}
                             </span>
                           </div>
-                          <p className="text-[11px] text-slate-400 leading-snug">{out.rationale}</p>
+                          <p className="text-[11px] text-[var(--text-secondary)] leading-snug font-sans">{out.rationale}</p>
                         </div>
                       );
                     })}
@@ -311,27 +321,27 @@ export const AIIntelligenceView: React.FC<AIIntelligenceViewProps> = React.memo(
           {/* Active Macro Themes & Transmission Mechanisms */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Active Themes */}
-            <div className="bg-slate-950 border border-slate-800 rounded-xl p-4">
-              <div className="flex items-center gap-2 pb-2.5 border-b border-slate-800/80 mb-3 font-mono">
-                <Layers className="w-4 h-4 text-cyan-400" />
-                <h3 className="text-xs font-bold text-slate-200 uppercase tracking-wider">
+            <div className="terminal-panel p-4">
+              <div className="flex items-center gap-2 pb-2.5 border-b mb-3 font-mono" style={{ borderColor: 'var(--border-subtle)' }}>
+                <Layers className="w-4 h-4 text-[var(--accent)]" />
+                <h3 className="section-title text-xs text-[var(--text-primary)]">
                   ACTIVE INSTITUTIONAL THEMES ({themes.length})
                 </h3>
               </div>
 
               <div className="space-y-2.5">
                 {themes.map(t => (
-                  <div key={t.id} className="p-3 rounded-lg bg-slate-900/50 border border-slate-800/80">
-                    <div className="flex items-center justify-between mb-1 font-mono">
-                      <h4 className="font-semibold text-xs text-slate-100">{t.title}</h4>
-                      <span className={`text-[10px] px-1.5 rounded font-bold ${
-                        t.sentiment === 'BULLISH' ? 'text-emerald-400' : 'text-slate-400'
+                  <div key={t.id} className="p-3 rounded bg-[var(--bg-section-alt)] border border-[var(--border-subtle)] space-y-1.5">
+                    <div className="flex items-center justify-between font-mono">
+                      <h4 className="font-bold text-xs text-[var(--text-primary)]">{t.title}</h4>
+                      <span className={`text-[9.5px] px-1.5 py-0.2 rounded font-bold uppercase ${
+                        t.sentiment === 'BULLISH' ? 'badge-bullish' : 'badge-neutral'
                       }`}>
                         {t.sentiment}
                       </span>
                     </div>
-                    <p className="text-[11px] text-slate-400 leading-relaxed mb-2">{t.description}</p>
-                    <div className="flex items-center gap-2 text-[10px] font-mono text-slate-500">
+                    <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed font-sans">{t.description}</p>
+                    <div className="flex items-center gap-2 text-[10px] font-mono text-[var(--text-muted)] pt-1 border-t" style={{ borderColor: 'var(--border-hairline)' }}>
                       <span>DRIVER: {t.driver || 'Macro Catalyst'}</span>
                       <span>•</span>
                       <span>ASSETS: {(t.affected_assets || t.primary_assets || []).join(', ') || 'Global'}</span>
@@ -342,27 +352,27 @@ export const AIIntelligenceView: React.FC<AIIntelligenceViewProps> = React.memo(
             </div>
 
             {/* Transmission Mechanism & Sensitivity Matrix */}
-            <div className="bg-slate-950 border border-slate-800 rounded-xl p-4">
-              <div className="flex items-center gap-2 pb-2.5 border-b border-slate-800/80 mb-3 font-mono">
-                <TrendingUp className="w-4 h-4 text-cyan-400" />
-                <h3 className="text-xs font-bold text-slate-200 uppercase tracking-wider">
+            <div className="terminal-panel p-4">
+              <div className="flex items-center gap-2 pb-2.5 border-b mb-3 font-mono" style={{ borderColor: 'var(--border-subtle)' }}>
+                <TrendingUp className="w-4 h-4 text-[var(--accent)]" />
+                <h3 className="section-title text-xs text-[var(--text-primary)]">
                   MACRO TRANSMISSION MECHANISM MATRIX
                 </h3>
               </div>
 
               <div className="space-y-2.5">
                 {relationships.map((rel, idx) => (
-                  <div key={idx} className="p-3 rounded-lg bg-slate-900/50 border border-slate-800/80 text-xs">
-                    <div className="flex items-center justify-between mb-1 font-mono">
-                      <span className="font-bold text-slate-200">{rel.driver}</span>
-                      <span className="text-cyan-400 text-[10px]">
+                  <div key={idx} className="p-3 rounded bg-[var(--bg-section-alt)] border border-[var(--border-subtle)] text-xs space-y-1.5">
+                    <div className="flex items-center justify-between font-mono">
+                      <span className="font-bold text-[var(--text-primary)]">{rel.driver}</span>
+                      <span className="text-[var(--accent)] text-[10px]">
                         FX: {(rel.sensitive_currencies || []).join(', ')}
                       </span>
                     </div>
-                    <p className="text-[11px] text-slate-400 leading-relaxed mb-2">
+                    <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed font-sans">
                       {rel.transmission_mechanism}
                     </p>
-                    <div className="text-[10px] font-mono text-amber-400/90">
+                    <div className="text-[10px] font-mono text-[var(--text-muted)] pt-1 border-t" style={{ borderColor: 'var(--border-hairline)' }}>
                       Primary Assets: {(rel.primary_assets || []).join(', ')}
                     </div>
                   </div>
@@ -376,108 +386,108 @@ export const AIIntelligenceView: React.FC<AIIntelligenceViewProps> = React.memo(
       {/* TAB 2: CENTRAL BANK SPEECHES */}
       {activeTab === 'CENTRAL_BANK' && (
         <div className="space-y-4">
-          <div className="bg-slate-950 border border-slate-800 rounded-xl p-5">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800/80 mb-4">
+          <div className="terminal-panel p-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b gap-2 mb-4" style={{ borderColor: 'var(--border-subtle)' }}>
               <div className="flex items-center gap-2">
-                <Landmark className="w-5 h-5 text-amber-400" />
+                <span className="w-2 h-2 rounded-xs bg-[var(--accent)]" />
                 <div>
-                  <h2 className="text-sm font-mono font-bold text-slate-100 uppercase tracking-wider">
+                  <h2 className="section-title text-xs sm:text-sm text-[var(--text-primary)]">
                     CENTRAL BANK SPEECH & STATEMENT INTELLIGENCE
                   </h2>
-                  <p className="text-[10px] font-mono text-slate-500">
+                  <p className="text-xs font-mono text-[var(--text-secondary)] mt-0.5">
                     Grounded Statement Analysis: Hawkish / Dovish / Neutral / Mixed • Prior Statement Delta • 5-Step Transmission
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2 text-xs font-mono text-slate-400">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+              <div className="flex items-center gap-2 text-xs font-mono text-[var(--text-secondary)]">
+                <ShieldCheck className="w-3.5 h-3.5 text-[var(--bullish)]" />
                 <span>Verified Feeds (FOMC, ECB, BoE, BoJ, RBA, SNB)</span>
               </div>
             </div>
 
             <div className="space-y-4">
               {speeches.map(sp => (
-                <div key={sp.id} className="p-4 rounded-xl bg-slate-900/60 border border-slate-800/80 space-y-3">
+                <div key={sp.id} className="p-4 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] space-y-3">
                   {/* Speech Header */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800/60 pb-2.5">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b pb-2.5" style={{ borderColor: 'var(--border-subtle)' }}>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="px-2 py-0.5 rounded font-mono font-bold text-xs bg-slate-800 text-cyan-300 border border-slate-700">
+                      <span className="px-2 py-0.5 rounded font-mono font-bold text-xs bg-[var(--bg-surface)] text-[var(--text-primary)] border border-[var(--border-subtle)]">
                         {sp.central_bank} ({sp.currency})
                       </span>
-                      <span className="font-bold text-sm text-slate-100">{sp.speaker}</span>
-                      <span className="text-xs text-slate-400 font-mono">({sp.title})</span>
-                      <span className={`text-[10px] px-2 py-0.5 rounded font-bold border uppercase font-mono ${getToneBadge(sp.tone)}`}>
+                      <span className="font-bold text-sm text-[var(--text-primary)]">{sp.speaker}</span>
+                      <span className="text-xs text-[var(--text-muted)] font-mono">({sp.title})</span>
+                      <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase font-mono ${getToneBadge(sp.tone)}`}>
                         {sp.tone} STANCE
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-3 text-[11px] font-mono text-slate-500">
+                    <div className="flex items-center gap-3 text-[11px] font-mono text-[var(--text-muted)]">
                       <span>{new Date(sp.timestamp || sp.date_time_utc).toLocaleString()}</span>
                       <span>•</span>
-                      <span className="text-slate-400">{sp.source}</span>
+                      <span className="text-[var(--text-secondary)]">{sp.source}</span>
                       <span>•</span>
-                      <span className="text-emerald-400 font-bold">Conf: {sp.confidence}%</span>
+                      <span className="text-[var(--bullish)] font-bold">Conf: {sp.confidence}%</span>
                     </div>
                   </div>
 
                   {/* Prior Guidance Comparison */}
-                  <div className="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800 font-mono text-xs">
-                    <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-1 flex items-center gap-1">
-                      <span>PERBANDINGAN STATEMENT SEBELUMNYA / PRIOR STANCE</span>
+                  <div className="p-2.5 rounded bg-[var(--bg-surface)] border border-[var(--border-subtle)] font-mono text-xs">
+                    <div className="metadata-label text-[10px] text-[var(--text-muted)] mb-1">
+                      PRIOR STATEMENT COMPARISON:
                     </div>
-                    <p className="text-slate-300 leading-snug font-sans text-xs">{sp.previous_stance}</p>
+                    <p className="text-[var(--text-secondary)] leading-snug font-sans text-xs">{sp.previous_stance}</p>
                   </div>
 
-                  {/* 5-Step Causal Framework: WHAT WAS SAID → WHAT CHANGED → WHY IT MATTERS → CURRENCY IMPACT → ASSET RELEVANCE */}
+                  {/* 5-Step Causal Framework */}
                   <div className="space-y-2 pt-1 font-mono">
-                    <div className="text-[10px] font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-1.5">
-                      <Activity className="w-3.5 h-3.5" />
-                      <span>5-STEP CAUSAL PIPELINE (WHAT WAS SAID → WHAT CHANGED → WHY IT MATTERS → CURRENCY IMPACT → ASSET RELEVANCE)</span>
+                    <div className="flex items-center gap-1.5 text-[13px] font-semibold text-[var(--text-primary)]">
+                      <Activity className="w-3.5 h-3.5 text-[var(--accent)]" />
+                      <span>Causal pipeline</span>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
-                      <div className="p-2.5 rounded-lg bg-slate-950 border border-slate-800/90">
-                        <div className="text-[9px] uppercase font-bold text-amber-400 mb-1">1. WHAT WAS SAID</div>
-                        <p className="text-[11px] text-slate-300 leading-snug font-sans">{sp.what_was_said}</p>
+                      <div className="p-2.5 rounded bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
+                        <div className="metadata-label text-[9px] text-[var(--accent)] mb-1">1. WHAT WAS SAID</div>
+                        <p className="text-[11px] text-[var(--text-secondary)] leading-snug font-sans">{sp.what_was_said}</p>
                       </div>
 
-                      <div className="p-2.5 rounded-lg bg-slate-950 border border-slate-800/90">
-                        <div className="text-[9px] uppercase font-bold text-cyan-400 mb-1">2. WHAT CHANGED</div>
-                        <p className="text-[11px] text-slate-300 leading-snug font-sans">{sp.what_changed}</p>
+                      <div className="p-2.5 rounded bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
+                        <div className="metadata-label text-[9px] text-[var(--text-primary)] mb-1">2. WHAT CHANGED</div>
+                        <p className="text-[11px] text-[var(--text-secondary)] leading-snug font-sans">{sp.what_changed}</p>
                       </div>
 
-                      <div className="p-2.5 rounded-lg bg-slate-950 border border-slate-800/90">
-                        <div className="text-[9px] uppercase font-bold text-indigo-400 mb-1">3. WHY IT MATTERS</div>
-                        <p className="text-[11px] text-slate-300 leading-snug font-sans">{sp.why_it_matters}</p>
+                      <div className="p-2.5 rounded bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
+                        <div className="metadata-label text-[9px] text-[var(--text-secondary)] mb-1">3. WHY IT MATTERS</div>
+                        <p className="text-[11px] text-[var(--text-secondary)] leading-snug font-sans">{sp.why_it_matters}</p>
                       </div>
 
-                      <div className="p-2.5 rounded-lg bg-slate-950 border border-slate-800/90">
-                        <div className="text-[9px] uppercase font-bold text-emerald-400 mb-1">4. CURRENCY IMPACT</div>
-                        <p className="text-[11px] text-slate-300 leading-snug font-sans">{sp.currency_impact}</p>
+                      <div className="p-2.5 rounded bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
+                        <div className="metadata-label text-[9px] text-[var(--bullish)] mb-1">4. CURRENCY IMPACT</div>
+                        <p className="text-[11px] text-[var(--text-secondary)] leading-snug font-sans">{sp.currency_impact}</p>
                       </div>
 
-                      <div className="p-2.5 rounded-lg bg-slate-950 border border-slate-800/90">
-                        <div className="text-[9px] uppercase font-bold text-purple-400 mb-1">5. ASSET RELEVANCE</div>
-                        <p className="text-[11px] text-slate-300 leading-snug font-sans">{sp.asset_relevance}</p>
+                      <div className="p-2.5 rounded bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
+                        <div className="metadata-label text-[9px] text-[var(--text-primary)] mb-1">5. ASSET RELEVANCE</div>
+                        <p className="text-[11px] text-[var(--text-secondary)] leading-snug font-sans">{sp.asset_relevance}</p>
                       </div>
                     </div>
                   </div>
 
-                  {/* AI Explanation Provenance: SOURCE + TIMESTAMP + EVIDENCE + CONFIDENCE */}
-                  <div className="p-2.5 rounded-lg bg-slate-950/90 border border-cyan-900/40 font-mono text-[11px] text-slate-400 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  {/* AI Explanation Provenance */}
+                  <div className="p-2.5 rounded bg-[var(--bg-surface)] border border-[var(--border-subtle)] font-mono text-[11px] text-[var(--text-secondary)] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-cyan-400 font-bold">SOURCE:</span>
-                      <span className="text-slate-200">{sp.source}</span>
+                      <span className="metadata-label text-[10px] text-[var(--text-muted)]">SOURCE:</span>
+                      <span className="text-[var(--text-primary)] font-bold">{sp.source}</span>
                       <span>•</span>
-                      <span className="text-cyan-400 font-bold">TIMESTAMP:</span>
-                      <span className="text-slate-200">{new Date(sp.timestamp || sp.date_time_utc).toISOString()}</span>
+                      <span className="metadata-label text-[10px] text-[var(--text-muted)]">TIMESTAMP:</span>
+                      <span className="text-[var(--text-primary)]">{new Date(sp.timestamp || sp.date_time_utc).toISOString()}</span>
                       <span>•</span>
-                      <span className="text-cyan-400 font-bold">CONFIDENCE:</span>
-                      <span className="text-emerald-400 font-bold">{sp.confidence}%</span>
+                      <span className="metadata-label text-[10px] text-[var(--text-muted)]">CONFIDENCE:</span>
+                      <span className="text-[var(--bullish)] font-bold">{sp.confidence}%</span>
                     </div>
-                    <div className="text-slate-400 truncate max-w-sm">
-                      <span className="text-cyan-400 font-bold mr-1">STATUS:</span>
-                      <span className="text-emerald-400">Strictly Grounded</span>
+                    <div className="text-[var(--text-muted)]">
+                      <span className="metadata-label text-[10px] mr-1">STATUS:</span>
+                      <span className="text-[var(--bullish)] font-bold">Strictly Grounded</span>
                     </div>
                   </div>
                 </div>
@@ -490,81 +500,81 @@ export const AIIntelligenceView: React.FC<AIIntelligenceViewProps> = React.memo(
       {/* TAB 3: G8 MACRO CURRENCY CONDITIONS */}
       {activeTab === 'MACRO_CONTEXT' && (
         <div className="space-y-4">
-          <div className="bg-slate-950 border border-slate-800 rounded-xl p-5">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800/80 mb-4">
+          <div className="terminal-panel p-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b gap-2 mb-4" style={{ borderColor: 'var(--border-subtle)' }}>
               <div className="flex items-center gap-2">
-                <Globe2 className="w-5 h-5 text-emerald-400" />
+                <span className="w-2 h-2 rounded-xs bg-[var(--accent)]" />
                 <div>
-                  <h2 className="text-sm font-mono font-bold text-slate-100 uppercase tracking-wider">
+                  <h2 className="section-title text-xs sm:text-sm text-[var(--text-primary)]">
                     G8 CURRENCY MACRO ECONOMIC CONTEXT
                   </h2>
-                  <p className="text-[10px] font-mono text-slate-500">
+                  <p className="text-xs font-mono text-[var(--text-secondary)] mt-0.5">
                     Live Status: STRONG / WEAK / MIXED • Grounded by Inflation + Employment + Growth + PMI + Central Bank Tone
                   </p>
                 </div>
               </div>
-              <div className="text-xs font-mono text-slate-400">
-                Data Verification: <strong className="text-emerald-400">Grounded Macro Engine</strong>
+              <div className="text-xs font-mono text-[var(--text-secondary)]">
+                VERIFICATION: <strong className="text-[var(--bullish)]">Grounded Macro Engine</strong>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3.5">
               {macroContexts.map(c => (
-                <div key={c.currency} className="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800/80 space-y-3">
+                <div key={c.currency} className="p-3.5 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] space-y-3">
                   {/* Card Header */}
-                  <div className="flex items-center justify-between border-b border-slate-800/60 pb-2">
-                    <span className="text-sm font-bold font-mono text-slate-100 px-2 py-0.5 rounded bg-slate-800 border border-slate-700">
+                  <div className="flex items-center justify-between border-b pb-2" style={{ borderColor: 'var(--border-subtle)' }}>
+                    <span className="text-sm font-bold font-mono text-[var(--text-primary)] px-2 py-0.5 rounded bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
                       {c.currency}
                     </span>
 
-                    <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border uppercase ${getConditionBadge(c.status)}`}>
+                    <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded uppercase ${getConditionBadge(c.status)}`}>
                       {c.status}
                     </span>
                   </div>
 
                   {/* Quantitative Economic Indicators */}
                   <div className="space-y-1.5 font-mono text-xs">
-                    <div className="flex items-center justify-between text-slate-400">
-                      <span>Inflation (CPI):</span>
-                      <span className="text-slate-200 font-semibold">{c.inflation.value}</span>
+                    <div className="flex items-center justify-between text-[var(--text-muted)]">
+                      <span>INFLATION (CPI):</span>
+                      <span className="text-[var(--text-primary)] font-semibold tabular-nums">{c.inflation.value}</span>
                     </div>
-                    <div className="flex items-center justify-between text-slate-400">
-                      <span>Employment / Jobs:</span>
-                      <span className="text-slate-200 font-semibold">{c.employment.value}</span>
+                    <div className="flex items-center justify-between text-[var(--text-muted)]">
+                      <span>EMPLOYMENT:</span>
+                      <span className="text-[var(--text-primary)] font-semibold tabular-nums">{c.employment.value}</span>
                     </div>
-                    <div className="flex items-center justify-between text-slate-400">
-                      <span>GDP Growth:</span>
-                      <span className="text-slate-200 font-semibold">{c.growth.value}</span>
+                    <div className="flex items-center justify-between text-[var(--text-muted)]">
+                      <span>GDP GROWTH:</span>
+                      <span className="text-[var(--text-primary)] font-semibold tabular-nums">{c.growth.value}</span>
                     </div>
-                    <div className="flex items-center justify-between text-slate-400">
-                      <span>PMI / Activity:</span>
-                      <span className="text-slate-200 font-semibold">{c.pmi.value}</span>
+                    <div className="flex items-center justify-between text-[var(--text-muted)]">
+                      <span>PMI / ACTIVITY:</span>
+                      <span className="text-[var(--text-primary)] font-semibold tabular-nums">{c.pmi.value}</span>
                     </div>
-                    <div className="flex items-center justify-between text-slate-400">
-                      <span>Policy Rate:</span>
-                      <span className="text-slate-200 font-semibold">{c.interest_rate.value}</span>
+                    <div className="flex items-center justify-between text-[var(--text-muted)]">
+                      <span>POLICY RATE:</span>
+                      <span className="text-[var(--text-primary)] font-semibold tabular-nums">{c.interest_rate.value}</span>
                     </div>
-                    <div className="flex items-center justify-between text-slate-400">
-                      <span>Central Bank Tone:</span>
-                      <span className={`text-[10px] px-1.5 py-0.2 rounded font-bold border uppercase ${getToneBadge(c.central_bank_tone.value)}`}>
+                    <div className="flex items-center justify-between text-[var(--text-muted)]">
+                      <span>CB TONE:</span>
+                      <span className={`text-[9.5px] px-1.5 py-0.2 rounded font-bold uppercase ${getToneBadge(c.central_bank_tone.value)}`}>
                         {c.central_bank_tone.value}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between text-slate-400 pt-1 border-t border-slate-800/50">
-                      <span>Strength Score:</span>
-                      <span className="text-cyan-400 font-bold">{c.score.toFixed(1)} / 10</span>
+                    <div className="flex items-center justify-between text-[var(--text-muted)] pt-1 border-t" style={{ borderColor: 'var(--border-hairline)' }}>
+                      <span>STRENGTH SCORE:</span>
+                      <span className="text-[var(--text-primary)] font-bold tabular-nums">{c.score.toFixed(1)} / 10</span>
                     </div>
                   </div>
 
                   {/* Grounded Evidence Summary */}
-                  <div className="p-2 rounded bg-slate-950 border border-slate-800/80">
-                    <div className="text-[9px] uppercase font-mono text-slate-500 mb-1">EMPIRICAL EVIDENCE:</div>
-                    <p className="text-[11px] text-slate-300 leading-relaxed font-sans">{c.evidence_summary}</p>
+                  <div className="p-2 rounded bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
+                    <div className="metadata-label text-[9px] text-[var(--text-muted)] mb-1">EMPIRICAL EVIDENCE:</div>
+                    <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed font-sans">{c.evidence_summary}</p>
                   </div>
 
-                  <div className="flex items-center justify-between text-[10px] font-mono text-slate-500 pt-1">
+                  <div className="flex items-center justify-between text-[10px] font-mono text-[var(--text-muted)] pt-1">
                     <span>Source: {c.source}</span>
-                    <span className="text-emerald-400">Conf: {c.confidence}%</span>
+                    <span className="text-[var(--bullish)]">Conf: {c.confidence}%</span>
                   </div>
                 </div>
               ))}
@@ -576,67 +586,67 @@ export const AIIntelligenceView: React.FC<AIIntelligenceViewProps> = React.memo(
       {/* TAB 4: UNIFIED MARKET CONTEXT */}
       {activeTab === 'UNIFIED_CONTEXT' && (
         <div className="space-y-4">
-          <div className="bg-slate-950 border border-slate-800 rounded-xl p-5">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800/80 mb-4">
+          <div className="terminal-panel p-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b gap-2 mb-4" style={{ borderColor: 'var(--border-subtle)' }}>
               <div className="flex items-center gap-2">
-                <Cpu className="w-5 h-5 text-cyan-400" />
+                <span className="w-2 h-2 rounded-xs bg-[var(--accent)]" />
                 <div>
-                  <h2 className="text-sm font-mono font-bold text-slate-100 uppercase tracking-wider">
+                  <h2 className="section-title text-xs sm:text-sm text-[var(--text-primary)]">
                     UNIFIED MULTIMODAL MARKET CONTEXT
                   </h2>
-                  <p className="text-[10px] font-mono text-slate-500">
+                  <p className="text-xs font-mono text-[var(--text-secondary)] mt-0.5">
                     Harmonized Synthesis: News Wire + Macro Calendar + Central Bank Speeches + Currency Dispersion + Live Prices
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2 text-xs font-mono text-slate-400">
-                <ShieldCheck className="w-3.5 h-3.5 text-cyan-400" />
-                <span>Confidence: <strong className="text-cyan-400">{unifiedContext?.confidence || 93}%</strong></span>
+              <div className="flex items-center gap-2 text-xs font-mono text-[var(--text-secondary)]">
+                <ShieldCheck className="w-3.5 h-3.5 text-[var(--bullish)]" />
+                <span>CONFIDENCE: <strong className="text-[var(--text-primary)]">{unifiedContext?.confidence || 93}%</strong></span>
               </div>
             </div>
 
             {unifiedContext ? (
               <div className="space-y-4">
                 {/* Executive Synthesis */}
-                <div className="p-4 rounded-xl bg-slate-900/60 border border-cyan-900/40">
-                  <div className="flex items-center justify-between mb-2 font-mono text-xs font-bold text-cyan-300 uppercase">
-                    <span className="flex items-center gap-2">
-                      <Sparkles className="w-4 h-4 text-cyan-400" />
+                <div className="p-4 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] space-y-2">
+                  <div className="flex items-center justify-between font-mono text-xs font-bold uppercase">
+                    <span className="flex items-center gap-2 text-[var(--text-primary)]">
+                      <Sparkles className="w-4 h-4 text-[var(--accent)]" />
                       <span>{unifiedContext.regime}</span>
                     </span>
-                    <span className="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-200">
+                    <span className="px-2 py-0.5 rounded bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-[var(--text-primary)] text-[10px]">
                       SENTIMENT: {unifiedContext.sentiment}
                     </span>
                   </div>
-                  <p className="text-sm text-slate-200 leading-relaxed">
+                  <p className="text-sm text-[var(--text-secondary)] leading-relaxed font-sans">
                     {unifiedContext.summary}
                   </p>
                 </div>
 
                 {/* 5 Pillars Summary */}
                 <div>
-                  <h3 className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider mb-2.5">
-                    Five-Pillar Intelligence Inputs:
+                  <h3 className="metadata-label text-[10px] text-[var(--text-muted)] mb-2.5">
+                    FIVE-PILLAR INTELLIGENCE INPUTS:
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
-                    <div className="p-3 rounded-lg bg-slate-900/40 border border-slate-800/70 text-xs text-slate-300 font-sans">
-                      <span className="text-cyan-400 font-bold block mb-1 font-mono">1. NEWS WIRE FEED</span>
+                    <div className="p-3 rounded bg-[var(--bg-section-alt)] border border-[var(--border-subtle)] text-xs text-[var(--text-secondary)] font-sans">
+                      <span className="text-[var(--text-primary)] font-bold block mb-1 font-mono metadata-label">1. NEWS WIRE FEED</span>
                       <span>{unifiedContext.pillars.news_wire_summary}</span>
                     </div>
-                    <div className="p-3 rounded-lg bg-slate-900/40 border border-slate-800/70 text-xs text-slate-300 font-sans">
-                      <span className="text-amber-400 font-bold block mb-1 font-mono">2. MACRO DATA RELEASE</span>
+                    <div className="p-3 rounded bg-[var(--bg-section-alt)] border border-[var(--border-subtle)] text-xs text-[var(--text-secondary)] font-sans">
+                      <span className="text-[var(--text-primary)] font-bold block mb-1 font-mono metadata-label">2. MACRO DATA RELEASE</span>
                       <span>{unifiedContext.pillars.macro_data_summary}</span>
                     </div>
-                    <div className="p-3 rounded-lg bg-slate-900/40 border border-slate-800/70 text-xs text-slate-300 font-sans">
-                      <span className="text-indigo-400 font-bold block mb-1 font-mono">3. CENTRAL BANK SPEECHES</span>
+                    <div className="p-3 rounded bg-[var(--bg-section-alt)] border border-[var(--border-subtle)] text-xs text-[var(--text-secondary)] font-sans">
+                      <span className="text-[var(--text-primary)] font-bold block mb-1 font-mono metadata-label">3. CENTRAL BANK SPEECHES</span>
                       <span>{unifiedContext.pillars.central_bank_summary}</span>
                     </div>
-                    <div className="p-3 rounded-lg bg-slate-900/40 border border-slate-800/70 text-xs text-slate-300 font-sans">
-                      <span className="text-emerald-400 font-bold block mb-1 font-mono">4. CURRENCY STRENGTH</span>
+                    <div className="p-3 rounded bg-[var(--bg-section-alt)] border border-[var(--border-subtle)] text-xs text-[var(--text-secondary)] font-sans">
+                      <span className="text-[var(--text-primary)] font-bold block mb-1 font-mono metadata-label">4. CURRENCY STRENGTH</span>
                       <span>{unifiedContext.pillars.currency_strength_summary}</span>
                     </div>
-                    <div className="p-3 rounded-lg bg-slate-900/40 border border-slate-800/70 text-xs text-slate-300 font-sans">
-                      <span className="text-purple-400 font-bold block mb-1 font-mono">5. LIVE MARKET EXECUTION</span>
+                    <div className="p-3 rounded bg-[var(--bg-section-alt)] border border-[var(--border-subtle)] text-xs text-[var(--text-secondary)] font-sans">
+                      <span className="text-[var(--text-primary)] font-bold block mb-1 font-mono metadata-label">5. LIVE MARKET EXECUTION</span>
                       <span>{unifiedContext.pillars.market_data_summary}</span>
                     </div>
                   </div>
@@ -644,31 +654,29 @@ export const AIIntelligenceView: React.FC<AIIntelligenceViewProps> = React.memo(
 
                 {/* Cross-Asset Directional Matrix */}
                 <div>
-                  <h3 className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider mb-2.5">
-                    Asset Directional Outlook & Implication vs Reaction:
+                  <h3 className="metadata-label text-[10px] text-[var(--text-muted)] mb-2.5">
+                    ASSET DIRECTIONAL OUTLOOK & IMPLICATION VS REACTION:
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 font-mono">
                     {unifiedContext.asset_outlook.map((ca, idx) => {
                       const isBull = ca.bias === 'BULLISH';
                       const isBear = ca.bias === 'BEARISH';
                       return (
-                        <div key={idx} className="p-3 rounded-lg bg-slate-900/50 border border-slate-800/80 space-y-2">
+                        <div key={idx} className="p-3 rounded bg-[var(--bg-section-alt)] border border-[var(--border-subtle)] space-y-2">
                           <div className="flex items-center justify-between">
-                            <span className="font-bold text-slate-100 text-xs">{ca.asset}</span>
-                            <span className={`text-[10px] px-1.5 py-0.2 rounded font-bold border uppercase ${
-                              isBull ? 'bg-emerald-950 text-emerald-400 border-emerald-800' :
-                              isBear ? 'bg-rose-950 text-rose-400 border-rose-800' :
-                              'bg-slate-900 text-slate-400 border-slate-800'
+                            <span className="font-bold text-[var(--text-primary)] text-xs">{ca.asset}</span>
+                            <span className={`text-[9.5px] px-1.5 py-0.2 rounded font-bold uppercase ${
+                              isBull ? 'badge-bullish' : isBear ? 'badge-bearish' : 'badge-neutral'
                             }`}>
                               {ca.bias}
                             </span>
                           </div>
-                          <div className="text-[11px] font-sans text-slate-300">
-                            <strong className="text-amber-400 font-mono text-[10px] block">FUNDAMENTAL:</strong>
+                          <div className="text-[11px] font-sans text-[var(--text-secondary)]">
+                            <strong className="metadata-label text-[9.5px] block text-[var(--accent)]">FUNDAMENTAL:</strong>
                             {ca.fundamental_implication}
                           </div>
-                          <div className="text-[11px] font-sans text-slate-400">
-                            <strong className="text-cyan-400 font-mono text-[10px] block">ACTUAL REACTION:</strong>
+                          <div className="text-[11px] font-sans text-[var(--text-secondary)]">
+                            <strong className="metadata-label text-[9.5px] block text-[var(--text-primary)]">ACTUAL REACTION:</strong>
                             {ca.actual_market_reaction}
                           </div>
                         </div>
@@ -677,35 +685,35 @@ export const AIIntelligenceView: React.FC<AIIntelligenceViewProps> = React.memo(
                   </div>
                 </div>
 
-                {/* AI Explanation Provenance Box: SOURCE + TIMESTAMP + EVIDENCE + CONFIDENCE */}
-                <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-2 font-mono text-xs">
-                  <div className="flex items-center justify-between text-slate-400 border-b border-slate-800/60 pb-1.5">
-                    <span className="font-bold text-cyan-400 uppercase tracking-wider">
-                      RIGOROUS CAUSAL EXPLANATION & DATA PROVENANCE
+                {/* AI Explanation Provenance Box */}
+                <div className="p-3 rounded bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-2 font-mono text-xs">
+                  <div className="flex items-center justify-between text-[var(--text-secondary)] border-b pb-1.5" style={{ borderColor: 'var(--border-subtle)' }}>
+                    <span className="text-[13px] font-semibold text-[var(--text-primary)]">
+                      Explanation and provenance
                     </span>
-                    <span className="text-emerald-400 font-bold">CONFIDENCE: {unifiedContext.confidence}%</span>
+                    <span className="text-[var(--bullish)] font-semibold tabular-nums">{unifiedContext.confidence}% confidence</span>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
                     <div>
-                      <span className="text-slate-500 uppercase block">TIMESTAMP:</span>
-                      <span className="text-slate-300">{new Date(unifiedContext.timestamp).toLocaleString()}</span>
+                      <span className="metadata-label text-[9px] text-[var(--text-muted)] block">TIMESTAMP:</span>
+                      <span className="text-[var(--text-primary)]">{new Date(unifiedContext.timestamp).toLocaleString()}</span>
                     </div>
                     <div>
-                      <span className="text-slate-500 uppercase block">INTELLIGENCE STANDARD:</span>
-                      <span className="text-cyan-400 font-semibold">Strict Grounding (No Hallucination)</span>
+                      <span className="metadata-label text-[9px] text-[var(--text-muted)] block">INTELLIGENCE STANDARD:</span>
+                      <span className="text-[var(--text-primary)] font-semibold">Strict Grounding (Quantitative Verification)</span>
                     </div>
                   </div>
 
-                  <div className="p-2 rounded bg-slate-900/60 border border-slate-800/80 text-[11px] text-slate-300 font-sans">
-                    <strong className="font-mono text-cyan-400 mr-1">EVIDENCE SUMMARY:</strong>
-                    Data cross-verified across macro calendars, news wires, central bank speeches, and live market quotes. When evidence is conflicting, it is strictly classified as MIXED. When data is unavailable, it is marked as INSUFFICIENT CURRENT DATA.
+                  <div className="p-2 rounded bg-[var(--bg-section-alt)] border border-[var(--border-subtle)] text-[11px] text-[var(--text-secondary)] font-sans">
+                    <strong className="font-mono metadata-label text-[10px] text-[var(--accent)] mr-1">EVIDENCE SUMMARY:</strong>
+                    Data cross-verified across macro calendars, news wires, central bank speeches, and live market quotes. Conflicting signals are classified as MIXED.
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="py-8 text-center text-xs font-mono text-slate-400">
-                <RefreshCw className="w-4 h-4 text-cyan-400 animate-spin mx-auto mb-2" />
+              <div className="py-8 text-center text-xs font-mono text-[var(--text-secondary)]">
+                <RefreshCw className="w-4 h-4 text-[var(--accent)] animate-spin mx-auto mb-2" />
                 <span>Aggregating News, Macro, Speeches, Currency Strength, and Price Feeds...</span>
               </div>
             )}

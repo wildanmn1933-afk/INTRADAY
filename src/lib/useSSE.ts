@@ -11,6 +11,7 @@ interface UseSSEOptions {
   onNewsIngested?: (data: any) => void;
   onEconomicCalendar?: (data: any) => void;
   onAIAnalysis?: (data: any) => void;
+  onArahMarket?: (data: any) => void;
 }
 
 export function useSSE(options: UseSSEOptions = {}) {
@@ -113,6 +114,18 @@ export function useSSE(options: UseSSEOptions = {}) {
         setMessagesReceived(prev => prev + 1);
       } catch {}
     });
+
+    const handleArahMarket = (e: MessageEvent) => {
+      try {
+        const data = JSON.parse(e.data);
+        const payload = data?.data || data;
+        optionsRef.current.onArahMarket?.(payload);
+        setMessagesReceived(prev => prev + 1);
+      } catch {}
+    };
+
+    es.addEventListener('arah_market', handleArahMarket);
+    es.addEventListener('arah_market_update', handleArahMarket);
 
     es.onerror = () => {
       setStatus('CONNECTING');

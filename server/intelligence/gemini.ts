@@ -9,6 +9,7 @@ import { GoogleGenAI } from '@google/genai';
 import { db } from '../db/database.js';
 import { MarketEvent, AIAnalysis } from '../types.js';
 import { sseBroker } from '../realtime/sse.js';
+import { CentralMarketContextEngine } from './centralMarketContext.js';
 
 let aiClient: GoogleGenAI | null = null;
 
@@ -174,17 +175,17 @@ async function callGeminiWithResilience(
 
 export async function analyzeMarketEventWithGemini(event: MarketEvent): Promise<AIAnalysis> {
   // Check if analysis already exists for this event (Deduplicated events must not be re-analyzed repeatedly)
-  const existing = db.getAIAnalysisForEvent(event.id);
+  const existing = await db.getAIAnalysisForEvent(event.id);
   if (existing && Date.now() - new Date(existing.created_at).getTime() < 30 * 60 * 1000) {
     return existing;
   }
 
   // Gather verified system context
-  const eventSources = db.getEventSources(event.id);
-  const marketPrices = db.getAllMarketPrices();
-  const currencyStrengths = db.getCurrencyStrength();
-  const macroReleases = db.getEconomicEvents(10);
-  const activeThemes = db.getMarketThemes();
+  const eventSources = await db.getEventSources(event.id);
+  const marketPrices = await db.getAllMarketPrices();
+  const currencyStrengths = await db.getCurrencyStrength();
+  const macroReleases = await db.getEconomicEvents(10);
+  const activeThemes = await db.getMarketThemes();
 
   // Build price snapshot for affected assets
   const priceSnapshot: Record<string, number> = {};
@@ -225,7 +226,7 @@ export async function analyzeMarketEventWithGemini(event: MarketEvent): Promise<
       created_at: new Date().toISOString(),
       is_insufficient_data: true,
     };
-    db.upsertAIAnalysis(insufficientAnalysis);
+    await db.upsertAIAnalysis(insufficientAnalysis);
     return insufficientAnalysis;
   }
 
@@ -306,8 +307,8 @@ STRICT RULES:
           is_insufficient_data: false,
         };
 
-        db.upsertAIAnalysis(analysis);
-        db.updateEvent(event.id, { ai_analysis_id: analysis.id });
+        await db.upsertAIAnalysis(analysis);
+        await db.updateEvent(event.id, { ai_analysis_id: analysis.id });
         sseBroker.broadcast('ai_analysis_updated', analysis);
         return analysis;
       }
@@ -357,39 +358,44 @@ STRICT RULES:
     is_insufficient_data: false,
   };
 
-  db.upsertAIAnalysis(analysis);
-  db.updateEvent(event.id, { ai_analysis_id: analysis.id });
+  await db.upsertAIAnalysis(analysis);
+  await db.updateEvent(event.id, { ai_analysis_id: analysis.id });
   sseBroker.broadcast('ai_analysis_updated', analysis);
   return analysis;
 }
 
 export async function generateMacroMarketOverview(): Promise<AIAnalysis> {
+  const centralContext = await CentralMarketContextEngine.getCentralContext();
   const prices = db.getAllMarketPrices();
   const strength = db.getCurrencyStrength();
   const events = db.getAllEvents(5);
   const macro = db.getEconomicEvents(5);
 
   const priceMap: Record<string, number> = {};
-  prices.forEach(p => { priceMap[p.symbol] = p.price; });
+  prices.forEach((p) => { priceMap[p.symbol] = p.price; });
 
   const strengthMap: Record<string, number> = {};
-  strength.forEach(s => { strengthMap[s.currency] = s.strength_score; });
+  strength.forEach((s) => { strengthMap[s.currency] = s.strength_score; });
 
   const ai = getGeminiClient();
 
   if (ai) {
     try {
-      const prompt = `You are a Chief Market Strategist. Produce a high-density, concise Executive Market Briefing based exclusively on these verified metrics:
-- Market Prices: ${JSON.stringify(priceMap)}
-- Currency Strength (0-10): ${JSON.stringify(strengthMap)}
-- Key Events: ${events.map(e => e.title).join(' | ')}
+      const prompt = `You are a Chief Market Strategist synthesizing the Central Market Context (Single Source of Truth).
+You must STRICTLY adhere to the verified institutional market state without inventing data or contradicting context:
+- Global Regime: ${centralContext.globalRegime.title} (Risk Score: ${centralContext.globalRegime.riskScore})
+- Yield Transmission: US10Y at ${centralContext.ratesAndYields.us10yPrice}% (${centralContext.ratesAndYields.yieldCondition})
+- Currency Hierarchy: Strongest ${centralContext.currencyHierarchy.strongest.currency} (${centralContext.currencyHierarchy.strongest.score.toFixed(1)}) vs Weakest ${centralContext.currencyHierarchy.weakest.currency} (${centralContext.currencyHierarchy.weakest.score.toFixed(1)})
+- Detected Divergences (do not force harmony, explain divergence): ${JSON.stringify(centralContext.divergences.map(d => ({ title: d.title, cause: d.structuralCause, implication: d.marketImplication })))}
+- Verified Prices: ${JSON.stringify(priceMap)}
+- High Impact Events: ${events.map(e => e.title).join(' | ')}
 - Economic Releases: ${macro.map(m => `${m.event_name}: ${m.actual || 'Pending'}`).join(' | ')}
 
-Strict rules: No fabricated numbers. Return JSON:
+Strict rules: No fabricated numbers. Synthesize the reality of the data. Return JSON:
 {
-  "summary": "3-4 sentence comprehensive market regime assessment.",
-  "key_implications": ["Key strategic takeaway 1", "Key strategic takeaway 2", "Key strategic takeaway 3"],
-  "confidence": 0.90
+  "summary": "3-4 sentence comprehensive market regime assessment grounded in the central context.",
+  "key_implications": ["Strategic takeaway 1 explaining drivers or divergences", "Strategic takeaway 2", "Strategic takeaway 3"],
+  "confidence": 0.92
 }`;
 
       const rawJson = await callGeminiWithResilience(ai, {
@@ -403,8 +409,8 @@ Strict rules: No fabricated numbers. Return JSON:
         const analysis: AIAnalysis = {
           id: `ai_overview_${Date.now()}`,
           analysis_type: 'MARKET_OVERVIEW',
-          title: 'Real-Time Global Market Context & Macro Regime',
-          summary: parsed.summary || 'Global asset classes reflect balanced liquidity conditions with steady policy pacing across central banks.',
+          title: `Real-Time Context: ${centralContext.globalRegime.title}`,
+          summary: parsed.summary || centralContext.globalRegime.summaryNarrative,
           context_data_used: {
             news_titles: events.map(e => e.title),
             market_prices: priceMap,
@@ -412,23 +418,27 @@ Strict rules: No fabricated numbers. Return JSON:
             macro_releases: macro.map(m => m.event_name),
           },
           key_implications: Array.isArray(parsed.key_implications) && parsed.key_implications.length > 0 ? parsed.key_implications : [
-            'Precious metals and safe-haven assets sustain resilient baseline support.',
-            'Cross-currency dispersion shows relative strength in high-beta G8 currencies.',
-            'Deduplicated event pipeline maintains single source of truth across news wires.'
+            `Global Regime: ${centralContext.globalRegime.title} with US 10Y yield at ${centralContext.ratesAndYields.us10yPrice}%.`,
+            centralContext.divergences[0] ? `Divergence Alert: ${centralContext.divergences[0].title} — ${centralContext.divergences[0].structuralCause}` : 'Intermarket transmission aligned across core asset classes.',
+            `G8 Currency Matrix: ${centralContext.currencyHierarchy.strongest.currency} outperforming while ${centralContext.currencyHierarchy.weakest.currency} lags.`,
           ],
-          affected_assets_outlook: [
-            { asset: 'XAUUSD', bias: 'BULLISH', rationale: 'Central bank demand and real rate trajectory.' },
-            { asset: 'BTC', bias: 'BULLISH', rationale: 'Global liquidity momentum.' },
-            { asset: 'US500', bias: 'NEUTRAL', rationale: 'Balanced growth vs valuation multiple.' },
-            { asset: 'USD', bias: 'NEUTRAL', rationale: 'Range-bound yield differentials.' },
-          ],
-          confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 0.9,
-          disclaimer: 'Synthesized directly from live market feeds and multi-source event deduplication.',
-          created_at: new Date().toISOString(),
+          affected_assets_outlook: ['XAUUSD', 'EURUSD', 'USDJPY', 'US100', 'BTC'].map(sym => {
+            const b = centralContext.canonicalBiases[sym];
+            const rawBias = b?.bias || 'NEUTRAL';
+            const mappedBias: 'BULLISH' | 'BEARISH' | 'NEUTRAL' = rawBias.includes('BULLISH') ? 'BULLISH' : rawBias.includes('BEARISH') ? 'BEARISH' : 'NEUTRAL';
+            return {
+              asset: sym,
+              bias: mappedBias,
+              rationale: b?.fundamentalDriver || b?.intermarketDriver || 'Synchronized with central market context.',
+            };
+          }),
+          confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 0.92,
+          disclaimer: 'Synthesized strictly from single source of truth Central Market Context.',
+          created_at: centralContext.timestamp,
           is_insufficient_data: false,
         };
 
-        db.upsertAIAnalysis(analysis);
+        await db.upsertAIAnalysis(analysis);
         return analysis;
       }
     } catch {
@@ -436,12 +446,12 @@ Strict rules: No fabricated numbers. Return JSON:
     }
   }
 
-  // Deterministic fallback
+  // Deterministic fallback grounded strictly in Central Market Context
   const fallback: AIAnalysis = {
     id: `ai_overview_${Date.now()}`,
     analysis_type: 'MARKET_OVERVIEW',
-    title: 'Real-Time Global Market Context & Macro Regime',
-    summary: `Global markets are navigating active rate cycle adjustments with Gold (XAUUSD at $${priceMap['XAUUSD'] || '2718'}) and Bitcoin (BTC at $${priceMap['BTC'] || '64200'}) demonstrating sustained institutional engagement. Currency strength rankings highlight leadership in ${strength[0]?.currency || 'GBP'} (Score ${strength[0]?.strength_score || 8.2}) against relative weakness in ${strength[strength.length - 1]?.currency || 'JPY'}.`,
+    title: `Real-Time Context: ${centralContext.globalRegime.title}`,
+    summary: centralContext.globalRegime.summaryNarrative,
     context_data_used: {
       news_titles: events.map(e => e.title),
       market_prices: priceMap,
@@ -449,22 +459,26 @@ Strict rules: No fabricated numbers. Return JSON:
       macro_releases: macro.map(m => m.event_name),
     },
     key_implications: [
-      'Multi-source event normalization prevents duplicate news noise from distorting sentiment indicators.',
-      'Currency strength dispersion indicates selective risk-taking in specific currency cross-pairs.',
-      'Macroeconomic calendar prints continue to serve as the primary catalyst for intraday volatility.',
+      `Regime Classification: ${centralContext.globalRegime.title} (Risk Score: ${centralContext.globalRegime.riskScore}).`,
+      centralContext.divergences[0] ? `Divergence Note: ${centralContext.divergences[0].title} (${centralContext.divergences[0].structuralCause})` : 'Yield transmission aligned with commodity and forex responses.',
+      `Currency Strength Leadership: ${centralContext.currencyHierarchy.strongest.currency} (${centralContext.currencyHierarchy.strongest.score.toFixed(1)}) vs ${centralContext.currencyHierarchy.weakest.currency} (${centralContext.currencyHierarchy.weakest.score.toFixed(1)}).`,
     ],
-    affected_assets_outlook: [
-      { asset: 'XAUUSD', bias: 'BULLISH', rationale: 'Firm support from macro hedging.' },
-      { asset: 'BTC', bias: 'BULLISH', rationale: 'Bullish liquidity expansion.' },
-      { asset: 'US100', bias: 'BULLISH', rationale: 'Tech capital expenditure momentum.' },
-      { asset: 'USD', bias: 'NEUTRAL', rationale: 'Range-bound against major counterparts.' },
-    ],
-    confidence: 0.89,
-    disclaimer: 'Synthesized directly from live market feeds and multi-source event deduplication.',
-    created_at: new Date().toISOString(),
+    affected_assets_outlook: ['XAUUSD', 'EURUSD', 'USDJPY', 'US100', 'BTC'].map(sym => {
+      const b = centralContext.canonicalBiases[sym];
+      const rawBias = b?.bias || 'NEUTRAL';
+      const mappedBias: 'BULLISH' | 'BEARISH' | 'NEUTRAL' = rawBias.includes('BULLISH') ? 'BULLISH' : rawBias.includes('BEARISH') ? 'BEARISH' : 'NEUTRAL';
+      return {
+        asset: sym,
+        bias: mappedBias,
+        rationale: b?.fundamentalDriver || b?.intermarketDriver || 'Synchronized with central market context.',
+      };
+    }),
+    confidence: 0.92,
+    disclaimer: 'Synthesized strictly from single source of truth Central Market Context.',
+    created_at: centralContext.timestamp,
     is_insufficient_data: false,
   };
 
-  db.upsertAIAnalysis(fallback);
+  await db.upsertAIAnalysis(fallback);
   return fallback;
 }

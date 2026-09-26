@@ -4,15 +4,143 @@ import { generateMacroMarketOverview } from '../intelligence/gemini.js';
 import { MacroIntelligenceEngine } from '../intelligence/macroIntelligence.js';
 import { IntradayMarketMapEngine } from '../intelligence/intradayMarketMap.js';
 import { ArahMarketEngine } from '../intelligence/arahMarketEngine.js';
+import { CentralMarketContextEngine } from '../intelligence/centralMarketContext.js';
+import { DailyReportEngine, WeeklyReportEngine } from '../intelligence/dailyReportEngine.js';
 import { requireAuth, AuthenticatedRequest } from '../auth/authService.js';
 import { EntitlementService } from '../auth/entitlementService.js';
 
 export const intelligenceRouter = Router();
 
-// GET Segment: ARAH MARKET HARI INI (Intraday Triple-Confluence Synthesis)
-intelligenceRouter.get('/arah-market', (req, res) => {
+// GET Central Market Context (Single Source of Truth)
+intelligenceRouter.get('/central-context', async (req, res) => {
   try {
-    const data = ArahMarketEngine.getArahMarketToday();
+    const forceRefresh = req.query.refresh === 'true';
+    const context = await CentralMarketContextEngine.getCentralContext(forceRefresh);
+    res.json({
+      success: true,
+      context,
+      timestamp: context.timestamp,
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// GET Executive Daily Market Report
+intelligenceRouter.get('/daily-report', async (req, res) => {
+  try {
+    const lang = (req.query.lang === 'en' ? 'en' : 'id') as 'id' | 'en';
+    const dateStr = req.query.date as string | undefined;
+    const report = await DailyReportEngine.getDailyReport(lang, false, dateStr);
+    res.json({
+      success: true,
+      report,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST Force-regenerate Daily Market Report
+intelligenceRouter.post('/daily-report/generate', async (req, res) => {
+  try {
+    const lang = (req.body.lang === 'en' || req.query.lang === 'en' ? 'en' : 'id') as 'id' | 'en';
+    const report = await DailyReportEngine.getDailyReport(lang, true);
+    res.json({
+      success: true,
+      report,
+      refreshed: true,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// GET Weekly Market Synthesis Report
+intelligenceRouter.get('/weekly-report', async (req, res) => {
+  try {
+    const lang = (req.query.lang === 'en' ? 'en' : 'id') as 'id' | 'en';
+    const weekStr = req.query.week as string | undefined;
+    const report = await WeeklyReportEngine.getWeeklyReport(lang, false, weekStr);
+    res.json({
+      success: true,
+      report,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST Force-regenerate Weekly Market Synthesis Report
+intelligenceRouter.post('/weekly-report/generate', async (req, res) => {
+  try {
+    const lang = (req.body.lang === 'en' || req.query.lang === 'en' ? 'en' : 'id') as 'id' | 'en';
+    const report = await WeeklyReportEngine.getWeeklyReport(lang, true);
+    res.json({
+      success: true,
+      report,
+      refreshed: true,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// GET Expected vs Actual Learning Matrix
+intelligenceRouter.get('/expected-vs-actual', async (req, res) => {
+  try {
+    const category = req.query.category as string | undefined;
+    const impact = req.query.impact as string | undefined;
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
+    const items = db.getExpectedVsActualList(category, impact, limit);
+    res.json({
+      success: true,
+      items,
+      count: items.length,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// GET Historical Market Memory & Regime Transition Analysis
+intelligenceRouter.get('/historical-memory', async (req, res) => {
+  try {
+    const analysis = db.getHistoricalMemoryAnalysis();
+    res.json({
+      success: true,
+      analysis,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// GET Reports Archive List (Daily & Weekly)
+intelligenceRouter.get('/reports-archive', async (_req, res) => {
+  try {
+    const archive = db.getReportsArchive();
+    res.json({
+      success: true,
+      archive,
+      count: archive.length,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// GET Segment: ARAH MARKET HARI INI (Intraday Triple-Confluence Synthesis)
+intelligenceRouter.get('/arah-market', async (req, res) => {
+  try {
+    const data = await ArahMarketEngine.getArahMarketToday();
     res.json({
       success: true,
       data,
@@ -24,8 +152,8 @@ intelligenceRouter.get('/arah-market', (req, res) => {
 });
 
 // GET Today's Intraday Market Map (for 13 core assets)
-intelligenceRouter.get('/intraday-map', (req, res) => {
-  const map = IntradayMarketMapEngine.getIntradayMarketMap();
+intelligenceRouter.get('/intraday-map', async (req, res) => {
+  const map = await IntradayMarketMapEngine.getIntradayMarketMap();
   res.json({
     market_map: map,
     count: map.length,
@@ -34,8 +162,8 @@ intelligenceRouter.get('/intraday-map', (req, res) => {
 });
 
 // GET active market themes
-intelligenceRouter.get('/themes', (req, res) => {
-  const rawThemes = db.getMarketThemes();
+intelligenceRouter.get('/themes', async (req, res) => {
+  const rawThemes = await db.getMarketThemes();
   const themes = rawThemes.map(t => ({
     ...t,
     driver: (t as any).driver || 'Macro Catalyst',
@@ -64,8 +192,8 @@ intelligenceRouter.get('/central-bank-speeches', (req, res) => {
 
 // GET 8-Currency Macro Context (USD, EUR, GBP, JPY, AUD, NZD, CAD, CHF)
 // Inflation + Employment + Growth + PMI + Interest Rate + Tone + Strength -> STRONG / WEAK / MIXED
-intelligenceRouter.get('/macro-context', (req, res) => {
-  const contexts = MacroIntelligenceEngine.getCurrencyMacroContext();
+intelligenceRouter.get('/macro-context', async (req, res) => {
+  const contexts = await MacroIntelligenceEngine.getCurrencyMacroContext();
   res.json({
     contexts,
     count: contexts.length,
@@ -75,8 +203,8 @@ intelligenceRouter.get('/macro-context', (req, res) => {
 
 // GET Unified Multimodal Market Context
 // Merging NEWS + MACRO + CENTRAL BANK + CURRENCY STRENGTH + MARKET DATA
-intelligenceRouter.get('/unified-context', (req, res) => {
-  const unified = MacroIntelligenceEngine.getUnifiedMarketContext();
+intelligenceRouter.get('/unified-context', async (req, res) => {
+  const unified = await MacroIntelligenceEngine.getUnifiedMarketContext();
   res.json({
     context: unified,
     timestamp: new Date().toISOString(),
@@ -84,10 +212,10 @@ intelligenceRouter.get('/unified-context', (req, res) => {
 });
 
 // GET market impacts
-intelligenceRouter.get('/impact', (req, res) => {
-  const events = db.getAllEvents(20);
-  const prices = db.getAllMarketPrices();
-  const strength = db.getCurrencyStrength();
+intelligenceRouter.get('/impact', async (req, res) => {
+  const events = await db.getAllEvents(20);
+  const prices = await db.getAllMarketPrices();
+  const strength = await db.getCurrencyStrength();
 
   // Aggregate high-impact cross correlations
   const highImpactEvents = events.filter(e => e.impact_level === 'CRITICAL' || e.impact_level === 'HIGH');
@@ -148,7 +276,7 @@ intelligenceRouter.get('/relationships', (req, res) => {
 
 // GET latest AI market overview
 intelligenceRouter.get('/ai', async (req, res) => {
-  let overview = db.getLatestMarketOverviewAnalysis();
+  let overview = await db.getLatestMarketOverviewAnalysis();
   if (!overview) {
     try {
       overview = await generateMacroMarketOverview();

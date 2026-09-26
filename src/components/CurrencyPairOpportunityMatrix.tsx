@@ -152,67 +152,67 @@ export const CurrencyPairOpportunityMatrix: React.FC<CurrencyPairOpportunityMatr
   const topAvoid = pairOpportunities.find(p => p.absDelta < 1.2);
 
   return (
-    <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-4 sm:p-5 space-y-4 shadow-sm font-sans" id="currency-pair-opportunities">
+    <div className="terminal-panel p-4 sm:p-5 space-y-4 font-sans" id="currency-pair-opportunities">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800/80">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b" style={{ borderColor: 'var(--border-subtle)' }}>
         <div>
           <div className="flex items-center gap-2">
-            <Flame className="w-4 h-4 text-amber-400" />
-            <h3 className="text-xs sm:text-sm font-mono font-bold text-slate-100 uppercase tracking-wider">
-              WORTH-IT PAIRS TO TRADE RIGHT NOW (LIVE DIVERGENCE)
+            <span className="w-2 h-2 bg-[var(--accent)] rounded-xs" />
+            <h3 className="section-title text-xs sm:text-sm text-[var(--text-primary)]">
+              CURRENCY PAIR OPPORTUNITY MATRIX
             </h3>
             <MetricInfoIcon term="PRIME_PAIR" position="bottom" />
           </div>
-          <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-            Analisis pair dengan probabilitas tertinggi berdasarkan disparitas mata uang terkuat vs terlemah.
+          <p className="text-xs text-[var(--text-secondary)] mt-1 font-mono">
+            High-probability pairs ranked by central-bank score divergence and macro delta.
           </p>
         </div>
 
-        {/* Filter Pills */}
-        <div className="flex items-center gap-1.5 p-1 rounded-lg bg-slate-950 border border-slate-800 text-[11px] font-mono shrink-0">
+        {/* Filter Bar */}
+        <div className="flex items-center gap-1 p-0.5 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] text-xs font-mono shrink-0">
           <button
             onClick={() => setFilter('ALL')}
-            className={`px-2.5 py-1 rounded-md transition cursor-pointer ${
+            className={`px-2.5 py-1 rounded-xs transition cursor-pointer text-[11px] font-semibold ${
               filter === 'ALL'
-                ? 'bg-cyan-950 text-cyan-300 font-bold border border-cyan-800/80'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-[var(--active-bg)] text-[var(--active-text)] border border-[var(--active-border)] shadow-xs'
+                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
             }`}
           >
-            All Pairs
+            ALL PAIRS
           </button>
           <button
             onClick={() => setFilter('PRIME_LONGS')}
-            className={`px-2.5 py-1 rounded-md transition cursor-pointer flex items-center gap-1 ${
+            className={`px-2.5 py-1 rounded-xs transition cursor-pointer flex items-center gap-1 text-[11px] font-semibold ${
               filter === 'PRIME_LONGS'
-                ? 'bg-emerald-950 text-emerald-300 font-bold border border-emerald-800/80'
-                : 'text-slate-400 hover:text-emerald-400'
+                ? 'bg-[var(--bullish)] text-white'
+                : 'text-[var(--text-secondary)] hover:text-[var(--bullish)]'
             }`}
           >
-            <ArrowUpRight className="w-3 h-3 text-emerald-400" />
-            <span>Top Longs</span>
+            <ArrowUpRight className="w-3 h-3" />
+            <span>TOP LONGS</span>
           </button>
           <button
             onClick={() => setFilter('PRIME_SHORTS')}
-            className={`px-2.5 py-1 rounded-md transition cursor-pointer flex items-center gap-1 ${
+            className={`px-2.5 py-1 rounded-xs transition cursor-pointer flex items-center gap-1 text-[11px] font-semibold ${
               filter === 'PRIME_SHORTS'
-                ? 'bg-rose-950 text-rose-300 font-bold border border-rose-800/80'
-                : 'text-slate-400 hover:text-rose-400'
+                ? 'bg-[var(--bearish)] text-white'
+                : 'text-[var(--text-secondary)] hover:text-[var(--bearish)]'
             }`}
           >
-            <ArrowDownRight className="w-3 h-3 text-rose-400" />
-            <span>Top Shorts</span>
+            <ArrowDownRight className="w-3 h-3" />
+            <span>TOP SHORTS</span>
           </button>
           <MetricTooltip term="CHOP_AVOID" underline={false}>
             <button
               onClick={() => setFilter('AVOID')}
-              className={`px-2.5 py-1 rounded-md transition cursor-pointer flex items-center gap-1 ${
+              className={`px-2.5 py-1 rounded-xs transition cursor-pointer flex items-center gap-1 text-[11px] font-semibold ${
                 filter === 'AVOID'
-                  ? 'bg-amber-950 text-amber-300 font-bold border border-amber-800/80'
-                  : 'text-slate-400 hover:text-amber-400'
+                  ? 'bg-[var(--warning)] text-white'
+                  : 'text-[var(--text-secondary)] hover:text-[var(--warning)]'
               }`}
             >
-              <AlertTriangle className="w-3 h-3 text-amber-400" />
-              <span>Hindari (Chop)</span>
+              <AlertTriangle className="w-3 h-3" />
+              <span>CHOP / AVOID</span>
             </button>
           </MetricTooltip>
         </div>
@@ -222,151 +222,153 @@ export const CurrencyPairOpportunityMatrix: React.FC<CurrencyPairOpportunityMatr
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         {/* Prime Long */}
         {topLong && (
-          <div className="p-3 rounded-lg bg-emerald-950/30 border border-emerald-800/60 font-mono">
+          <div className="p-3.5 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] font-mono border-l-2" style={{ borderLeftColor: 'var(--bullish)' }}>
             <div className="flex items-center justify-between text-[11px] mb-1">
-              <span className="text-emerald-400 font-bold flex items-center gap-1">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+              <span className="metadata-label text-[var(--bullish)] flex items-center gap-1 font-bold">
+                <CheckCircle2 className="w-3.5 h-3.5" />
                 PRIME LONG BIAS
               </span>
-              <span className="text-emerald-300 font-bold text-xs">+{topLong.delta} DELTA</span>
+              <span className="badge-bullish text-xs tabular-nums font-bold">+{topLong.delta} DELTA</span>
             </div>
-            <div className="text-base font-bold text-slate-100 mt-1 flex items-baseline gap-2">
-              <span>{topLong.symbol}</span>
-              <span className="text-xs font-normal text-slate-400">
+            <div className="text-base font-bold text-[var(--text-primary)] mt-1.5 flex items-baseline gap-2">
+              <span className="font-mono tracking-tight">{topLong.symbol}</span>
+              <span className="text-xs font-normal text-[var(--text-muted)]">
                 ({topLong.baseCurrency} {topLong.baseScore} vs {topLong.quoteCurrency} {topLong.quoteScore})
               </span>
             </div>
-            <p className="text-[10px] text-slate-300 font-sans mt-1.5 leading-snug">
+            <p className="text-[11px] text-[var(--text-secondary)] font-sans mt-2 leading-relaxed">
               {topLong.catalyst}
             </p>
-            <div className="mt-2 text-[10px] text-emerald-400 font-mono">
-              Action: Buy the dips / Trend-following
+            <div className="mt-2.5 pt-2 border-t text-[10.5px] text-[var(--bullish)] font-mono flex items-center justify-between" style={{ borderColor: 'var(--border-hairline)' }}>
+              <span>STRATEGY: Buy Dips / Trend</span>
+              <span className="text-[var(--text-muted)]">{topLong.sessionSuitability}</span>
             </div>
           </div>
         )}
 
         {/* Second Prime Opportunity (Next High Divergence) */}
         {pairOpportunities[1] && pairOpportunities[1] !== topLong && (
-          <div className="p-3 rounded-lg bg-cyan-950/30 border border-cyan-800/60 font-mono">
+          <div className="p-3.5 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] font-mono border-l-2" style={{ borderLeftColor: 'var(--accent)' }}>
             <div className="flex items-center justify-between text-[11px] mb-1">
-              <span className="text-cyan-400 font-bold flex items-center gap-1">
-                <TrendingUp className="w-3.5 h-3.5 text-cyan-400" />
+              <span className="metadata-label text-[var(--accent)] flex items-center gap-1 font-bold">
+                <TrendingUp className="w-3.5 h-3.5" />
                 HIGH DIVERGENCE #2
               </span>
-              <span className="text-cyan-300 font-bold text-xs">
+              <span className="badge-neutral text-xs tabular-nums font-bold">
                 {pairOpportunities[1].delta > 0 ? `+${pairOpportunities[1].delta}` : pairOpportunities[1].delta} DELTA
               </span>
             </div>
-            <div className="text-base font-bold text-slate-100 mt-1 flex items-baseline gap-2">
-              <span>{pairOpportunities[1].symbol}</span>
-              <span className="text-xs font-normal text-slate-400">
+            <div className="text-base font-bold text-[var(--text-primary)] mt-1.5 flex items-baseline gap-2">
+              <span className="font-mono tracking-tight">{pairOpportunities[1].symbol}</span>
+              <span className="text-xs font-normal text-[var(--text-muted)]">
                 ({pairOpportunities[1].baseCurrency} {pairOpportunities[1].baseScore} vs {pairOpportunities[1].quoteCurrency} {pairOpportunities[1].quoteScore})
               </span>
             </div>
-            <p className="text-[10px] text-slate-300 font-sans mt-1.5 leading-snug">
+            <p className="text-[11px] text-[var(--text-secondary)] font-sans mt-2 leading-relaxed">
               {pairOpportunities[1].catalyst}
             </p>
-            <div className="mt-2 text-[10px] text-cyan-400 font-mono">
-              Action: {pairOpportunities[1].tradeStyle}
+            <div className="mt-2.5 pt-2 border-t text-[10.5px] text-[var(--text-primary)] font-mono flex items-center justify-between" style={{ borderColor: 'var(--border-hairline)' }}>
+              <span>STRATEGY: {pairOpportunities[1].tradeStyle}</span>
+              <span className="text-[var(--text-muted)]">{pairOpportunities[1].sessionSuitability}</span>
             </div>
           </div>
         )}
 
         {/* Avoid Chop Warning */}
         {topAvoid && (
-          <div className="p-3 rounded-lg bg-amber-950/30 border border-amber-800/60 font-mono">
+          <div className="p-3.5 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] font-mono border-l-2" style={{ borderLeftColor: 'var(--warning)' }}>
             <div className="flex items-center justify-between text-[11px] mb-1">
-              <span className="text-amber-400 font-bold flex items-center gap-1">
-                <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
-                HINDARI / LOW SPREAD
+              <span className="metadata-label text-[var(--warning)] flex items-center gap-1 font-bold">
+                <AlertTriangle className="w-3.5 h-3.5" />
+                CHOP / AVOID
               </span>
-              <span className="text-amber-300 font-bold text-xs">{topAvoid.delta} DELTA</span>
+              <span className="badge-warning text-xs tabular-nums font-bold">{topAvoid.delta} DELTA</span>
             </div>
-            <div className="text-base font-bold text-slate-100 mt-1 flex items-baseline gap-2">
-              <span>{topAvoid.symbol}</span>
-              <span className="text-xs font-normal text-slate-400">
+            <div className="text-base font-bold text-[var(--text-primary)] mt-1.5 flex items-baseline gap-2">
+              <span className="font-mono tracking-tight">{topAvoid.symbol}</span>
+              <span className="text-xs font-normal text-[var(--text-muted)]">
                 ({topAvoid.baseCurrency} {topAvoid.baseScore} vs {topAvoid.quoteCurrency} {topAvoid.quoteScore})
               </span>
             </div>
-            <p className="text-[10px] text-slate-300 font-sans mt-1.5 leading-snug">
-              Kekuatan mata uang hampir seimbang. Potensi konsolidasi menyempit, false breakout, dan resiko sideways tinggi.
+            <p className="text-[11px] text-[var(--text-secondary)] font-sans mt-2 leading-relaxed">
+              Parity between base and quote scores indicates tight consolidation, heightened whipsaw risk, and low directional follow-through.
             </p>
-            <div className="mt-2 text-[10px] text-amber-400 font-mono">
-              Rekomendasi: Jangan ambil posisi breakout
+            <div className="mt-2.5 pt-2 border-t text-[10.5px] text-[var(--warning)] font-mono flex items-center justify-between" style={{ borderColor: 'var(--border-hairline)' }}>
+              <span>ACTION: Avoid Breakouts</span>
+              <span className="text-[var(--text-muted)]">Mean Revert Only</span>
             </div>
           </div>
         )}
       </div>
 
       {/* Ranked Pair Opportunity Table */}
-      <div className="border border-slate-800 rounded-lg overflow-hidden bg-slate-950/60">
+      <div className="rounded border overflow-hidden" style={{ borderColor: 'var(--border-subtle)' }}>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs font-mono">
-            <thead className="bg-slate-900/90 text-slate-400 border-b border-slate-800 text-[11px] uppercase">
-              <tr>
+            <thead>
+              <tr className="table-header border-b" style={{ borderColor: 'var(--border-subtle)' }}>
                 <th className="py-2.5 px-3">
                   <MetricTooltip term="CCY" underline={false}>
-                    <span>Pair</span>
+                    <span>PAIR</span>
                   </MetricTooltip>
                 </th>
                 <th className="py-2.5 px-3">
                   <MetricTooltip term="OVERALL_BIAS" underline={false}>
-                    <span>Status / Bias</span>
+                    <span>STATUS / BIAS</span>
                   </MetricTooltip>
                 </th>
                 <th className="py-2.5 px-3">
                   <MetricTooltip term="DIVERGENCE_DELTA" underline={false}>
-                    <span>Divergence Delta</span>
+                    <span>DIVERGENCE DELTA</span>
                   </MetricTooltip>
                 </th>
                 <th className="py-2.5 px-3 hidden md:table-cell">
                   <MetricTooltip term="CURRENCY_STRENGTH" underline={false}>
-                    <span>Base vs Quote</span>
+                    <span>BASE VS QUOTE</span>
                   </MetricTooltip>
                 </th>
                 <th className="py-2.5 px-3 hidden lg:table-cell">
                   <MetricTooltip term="FUNDAMENTAL_IMPLICATION" underline={false}>
-                    <span>Fundamental / Macro Driver</span>
+                    <span>FUNDAMENTAL / MACRO DRIVER</span>
                   </MetricTooltip>
                 </th>
                 <th className="py-2.5 px-3 hidden sm:table-cell">
                   <MetricTooltip term="PRIME_PAIR" underline={false}>
-                    <span>Trading Style</span>
+                    <span>TRADING STYLE</span>
                   </MetricTooltip>
                 </th>
-                <th className="py-2.5 px-3 text-right">Chart</th>
+                <th className="py-2.5 px-3 text-right">ACTION</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60">
+            <tbody className="divide-y" style={{ borderColor: 'var(--border-hairline)' }}>
               {filteredPairs.map((p) => {
                 const isLong = p.delta >= 2.0;
                 const isShort = p.delta <= -2.0;
-                const isChop = p.tier === 'CHOP_AVOID';
 
                 return (
                   <tr
                     key={p.symbol}
-                    className="hover:bg-slate-900/50 transition cursor-pointer group"
+                    className="table-row transition cursor-pointer group"
                     onClick={() => onSelectSymbol?.(p.symbol)}
                   >
-                    <td className="py-2.5 px-3 font-bold text-slate-100 flex items-center gap-1.5">
-                      <span className="text-cyan-400 group-hover:text-cyan-300 transition text-sm">
+                    <td className="py-2 px-3 font-bold text-[var(--text-primary)]">
+                      <span className="group-hover:text-[var(--accent)] transition text-sm">
                         {p.symbol}
                       </span>
                     </td>
 
-                    <td className="py-2.5 px-3">
+                    <td className="py-2 px-3">
                       <span
                         className={`text-[9px] px-2 py-0.5 rounded font-bold border uppercase tracking-wider inline-flex items-center gap-1 ${
                           p.action === 'STRONG_BUY'
-                            ? 'bg-emerald-950/90 text-emerald-300 border-emerald-700 shadow-xs'
+                            ? 'badge-bullish'
                             : p.action === 'BUY'
-                            ? 'bg-emerald-950/50 text-emerald-400 border-emerald-800/60'
+                            ? 'badge-bullish'
                             : p.action === 'STRONG_SELL'
-                            ? 'bg-rose-950/90 text-rose-300 border-rose-700 shadow-xs'
+                            ? 'badge-bearish'
                             : p.action === 'SELL'
-                            ? 'bg-rose-950/50 text-rose-400 border-rose-800/60'
-                            : 'bg-amber-950/40 text-amber-400 border-amber-800/60'
+                            ? 'badge-bearish'
+                            : 'badge-warning'
                         }`}
                       >
                         {p.action === 'STRONG_BUY' && <ArrowUpRight className="w-2.5 h-2.5" />}
@@ -376,20 +378,20 @@ export const CurrencyPairOpportunityMatrix: React.FC<CurrencyPairOpportunityMatr
                       </span>
                     </td>
 
-                    <td className="py-2.5 px-3">
+                    <td className="py-2 px-3">
                       <div className="flex items-center gap-2">
                         <span
                           className={`font-bold tabular-nums text-sm ${
-                            isLong ? 'text-emerald-400' : isShort ? 'text-rose-400' : 'text-slate-400'
+                            isLong ? 'text-[var(--bullish)]' : isShort ? 'text-[var(--bearish)]' : 'text-[var(--text-muted)]'
                           }`}
                         >
                           {p.delta > 0 ? `+${p.delta}` : p.delta}
                         </span>
                         {/* Visual divergence bar */}
-                        <div className="w-16 h-1.5 bg-slate-900 rounded-full overflow-hidden border border-slate-800 hidden sm:block">
+                        <div className="w-16 h-1.5 bg-[var(--bg-section-alt)] rounded-xs overflow-hidden border border-[var(--border-subtle)] hidden sm:block">
                           <div
                             className={`h-full ${
-                              isLong ? 'bg-emerald-400' : isShort ? 'bg-rose-400' : 'bg-amber-400'
+                              isLong ? 'bg-[var(--bullish)]' : isShort ? 'bg-[var(--bearish)]' : 'bg-[var(--warning)]'
                             }`}
                             style={{
                               width: `${Math.min(100, (p.absDelta / 8.0) * 100)}%`,
@@ -399,27 +401,27 @@ export const CurrencyPairOpportunityMatrix: React.FC<CurrencyPairOpportunityMatr
                       </div>
                     </td>
 
-                    <td className="py-2.5 px-3 hidden md:table-cell text-slate-400 text-[11px]">
-                      <span className="font-semibold text-slate-200">{p.baseCurrency}</span> ({p.baseScore}) vs{' '}
-                      <span className="font-semibold text-slate-200">{p.quoteCurrency}</span> ({p.quoteScore})
+                    <td className="py-2 px-3 hidden md:table-cell text-[var(--text-secondary)] text-[11px] tabular-nums">
+                      <span className="font-semibold text-[var(--text-primary)]">{p.baseCurrency}</span> ({p.baseScore}) vs{' '}
+                      <span className="font-semibold text-[var(--text-primary)]">{p.quoteCurrency}</span> ({p.quoteScore})
                     </td>
 
-                    <td className="py-2.5 px-3 hidden lg:table-cell text-slate-300 font-sans text-xs max-w-xs truncate">
+                    <td className="py-2 px-3 hidden lg:table-cell text-[var(--text-secondary)] font-sans text-xs max-w-xs truncate">
                       {p.catalyst}
                     </td>
 
-                    <td className="py-2.5 px-3 hidden sm:table-cell text-[11px] text-slate-400">
+                    <td className="py-2 px-3 hidden sm:table-cell text-[11px] text-[var(--text-muted)]">
                       {p.tradeStyle}
                     </td>
 
-                    <td className="py-2.5 px-3 text-right">
+                    <td className="py-2 px-3 text-right">
                       {onOpenChart && (
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             onOpenChart(p.symbol);
                           }}
-                          className="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-cyan-300 transition cursor-pointer"
+                          className="p-1 rounded text-[var(--text-muted)] hover:text-[var(--accent)] hover:bg-[var(--bg-section-alt)] transition cursor-pointer"
                           title={`Open ${p.symbol} Chart`}
                         >
                           <BarChart2 className="w-3.5 h-3.5" />
@@ -435,14 +437,14 @@ export const CurrencyPairOpportunityMatrix: React.FC<CurrencyPairOpportunityMatr
       </div>
 
       {/* Trader Discipline Guide */}
-      <div className="p-3 bg-slate-950/70 border border-slate-800/80 rounded-lg text-xs text-slate-400 font-sans flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+      <div className="p-2.5 bg-[var(--bg-section-alt)] border border-[var(--border-subtle)] rounded text-xs text-[var(--text-secondary)] font-sans flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <ShieldCheck className="w-4 h-4 text-cyan-400 shrink-0" />
+          <ShieldCheck className="w-4 h-4 text-[var(--accent)] shrink-0" />
           <span>
-            <strong className="text-slate-200 font-mono">Golden Rule Currency Strength:</strong> Pasangkan mata uang terkuat (Skor &gt; 7.0) dengan mata uang terlemah (Skor &lt; 3.0) untuk memaksimalkan momentum tren dan meminimalkan resiko drawdown.
+            <strong className="text-[var(--text-primary)] font-mono">DIVERGENCE RULE:</strong> Pair highest score (&gt; 7.0) with lowest score (&lt; 3.0) for maximum trend momentum and tightest stop-loss invalidation.
           </span>
         </div>
-        <span className="text-[10px] font-mono text-cyan-400 shrink-0">DISPERSION MATRIX ACTIVE</span>
+        <span className="metadata-label text-[10px] text-[var(--accent)] shrink-0">DISPERSION ENGINE ACTIVE</span>
       </div>
     </div>
   );

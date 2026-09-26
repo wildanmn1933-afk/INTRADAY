@@ -12,6 +12,14 @@ import {
   ArahMarketTodayData,
 } from './types';
 import { api, setAuthToken, getAuthToken, getStoredUser, setStoredUser } from './lib/api';
+import {
+  auth,
+  fbSignOut,
+  doc,
+  setDoc,
+  serverTimestamp,
+  db as firestoreDb,
+} from './lib/firebase';
 
 import { Sidebar, NavTabId } from './components/Sidebar';
 import { Header } from './components/Header';
@@ -25,20 +33,22 @@ import { AIIntelligenceView } from './components/AIIntelligenceView';
 import { AdminPanel } from './components/AdminPanel';
 import { WatchlistView } from './components/WatchlistView';
 import { TradingViewChartModal } from './components/TradingViewChartModal';
-import { IntradayMarketMapView } from './components/IntradayMarketMapView';
-import { TodayCatalystsView } from './components/TodayCatalystsView';
 import { ArahMarketView } from './components/ArahMarketView';
+import { DailyReportView } from './components/DailyReportView';
 import { CurrencyPairOpportunityMatrix } from './components/CurrencyPairOpportunityMatrix';
 import { IntermarketRelationshipMatrix } from './components/IntermarketRelationshipMatrix';
 import { MarketHistoryView } from './components/MarketHistoryView';
 import { OverviewDashboard } from './components/OverviewDashboard';
-import { PublicLandingPage } from './components/PublicLandingPage';
+import { LandingPage } from './components/LandingPage';
 import { AuthPage } from './components/AuthPage';
 import { AutoTriggerNewsModal } from './components/AutoTriggerNewsModal';
 import { BreakingNewsAlertPopup } from './components/BreakingNewsAlertPopup';
 import { Toaster } from './components/ui/sonner';
+import { PageHeader } from './components/shared/PageHeader';
+import { Autocomplete, AutocompleteGroup } from './components/ui/autocomplete';
 import { useMarketDataStream } from './hooks/useMarketDataStream';
 import { useNewsAlertManager } from './hooks/useNewsAlertManager';
+import { CentralMarketProvider } from './lib/CentralMarketContext';
 import {
   useLocation,
   isPublicRoute,
@@ -95,6 +105,41 @@ export default function App() {
   // News impact filter: default to HIGH so traders see high-impact news with accurate pair impacts
   const [impactFilter, setImpactFilter] = useState<'HIGH' | 'CRITICAL' | 'ALL'>('HIGH');
 
+  // Autocomplete group definitions for News Wire Search
+  const wireSearchGroups: AutocompleteGroup[] = useMemo(() => [
+    {
+      category: 'Key Instruments',
+      items: [
+        { id: 'eurusd', label: 'EUR/USD', description: 'Euro / US Dollar', badge: 'FX' },
+        { id: 'gbpusd', label: 'GBP/USD', description: 'British Pound / US Dollar', badge: 'FX' },
+        { id: 'usdjpy', label: 'USD/JPY', description: 'US Dollar / Japanese Yen', badge: 'FX' },
+        { id: 'xauusd', label: 'XAU/USD', description: 'Gold Spot / US Dollar', badge: 'COMMODITY' },
+        { id: 'btcusd', label: 'BTC/USD', description: 'Bitcoin / US Dollar', badge: 'CRYPTO' },
+        { id: 'us10y', label: 'US10Y', description: 'US 10Y Treasury Yield', badge: 'BOND' },
+        { id: 'spx', label: 'SPX', description: 'S&P 500 Index', badge: 'INDEX' },
+      ],
+    },
+    {
+      category: 'Macro Catalysts & Central Banks',
+      items: [
+        { id: 'fed', label: 'Federal Reserve', description: 'FOMC rate hike/cut decisions' },
+        { id: 'cpi', label: 'CPI Inflation', description: 'Consumer price index releases' },
+        { id: 'nfp', label: 'Non-Farm Payrolls', description: 'US labor & unemployment report' },
+        { id: 'ecb', label: 'ECB Policy', description: 'European Central Bank announcements' },
+        { id: 'boj', label: 'Bank of Japan', description: 'BoJ yield curve control' },
+        { id: 'geopolitics', label: 'Geopolitics', description: 'Trade tariffs & conflicts' },
+      ],
+    },
+    {
+      category: 'Sentiment & Tone',
+      items: [
+        { id: 'hawkish', label: 'Hawkish', description: 'Rate hikes & policy tightening' },
+        { id: 'dovish', label: 'Dovish', description: 'Rate cuts & stimulus easing' },
+        { id: 'critical', label: 'CRITICAL', description: 'Breaking high volatility events', badge: 'ALERT' },
+      ],
+    },
+  ], []);
+
   // Pagination for Canonical Event Wire (optimized rendering for large event lists)
   const [wirePage, setWirePage] = useState(1);
   const WIRE_PAGE_SIZE = 18;
@@ -138,6 +183,7 @@ export default function App() {
     setTodayCatalysts,
     arahMarketData,
     setArahMarketData,
+    centralContext,
 
     sseStatus,
     initialLoading,
@@ -234,8 +280,9 @@ export default function App() {
         navigate('/login', true);
       }
     } else {
-      // Authenticated user
-      if (path === '/' || path === '/login' || path === '/register') {
+      // Authenticated user: private routes stay reachable, marketing routes stay browsable,
+      // and the auth screens redirect into the workspace.
+      if (path === '/login' || path === '/register') {
         navigate('/dashboard', true);
       } else if (isPrivateRoute(path)) {
         const expectedTab = routeToTab(path);
@@ -246,7 +293,7 @@ export default function App() {
     }
   }, [user, path, isAuthChecking, navigate, activeTab]);
 
-  // Watchlist Toggle
+  // Watchlist Toggle with Firestore sync
   const handleToggleWatchlist = useCallback(async (symbol: string, assetType: string) => {
     if (!user) {
       navigate('/login');
@@ -260,15 +307,29 @@ export default function App() {
       const res = await api.addToWatchlist(symbol, assetType);
       if (res.item) setWatchlist(prev => [...prev, res.item]);
     }
+    // Persist watchlist to Firestore database
+    try {
+      const userDocRef = doc(firestoreDb, 'users', user.id);
+      const nextSymbols = exists
+        ? watchlist.filter(w => w.symbol !== symbol).map(w => w.symbol)
+        : [...watchlist.map(w => w.symbol), symbol];
+      await setDoc(userDocRef, {
+        watchlistSymbols: nextSymbols,
+        updatedAt: serverTimestamp(),
+      }, { merge: true });
+    } catch (fsErr) {
+      console.warn('[Firestore] Watchlist sync notice:', fsErr);
+    }
   }, [user, watchlist, navigate]);
 
-  // Logout Handler
+  // Logout Handler with Firebase Sign-Out
   const handleLogout = useCallback(() => {
+    fbSignOut(auth).catch(() => {});
     setAuthToken(null);
     setStoredUser(null);
     setUser(null);
     setWatchlist([]);
-    navigate('/login');
+    navigate('/');
   }, [navigate]);
 
   const handleAuthSuccess = useCallback(async (u: User, token?: string) => {
@@ -349,29 +410,29 @@ export default function App() {
   // Screen 1: Session Verification
   if (isAuthChecking) {
     return (
-      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center font-mono">
+      <div className="min-h-screen flex flex-col items-center justify-center font-mono" style={{ backgroundColor: 'var(--bg-canvas)', color: 'var(--text-primary)' }}>
         <div className="flex items-center gap-3 mb-3">
-          <div className="w-9 h-9 rounded-lg bg-linear-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-slate-950 font-bold shadow-lg shadow-cyan-500/20 animate-pulse">
-            <Layers className="w-5 h-5 stroke-[2.5]" />
+          <div className="w-8 h-8 rounded flex items-center justify-center font-bold text-xs bg-[var(--accent)] text-[var(--accent-contrast)] shadow-xs">
+            AM
           </div>
-          <span className="text-base font-bold tracking-wider text-slate-100">
-            ARAH <span className="text-cyan-400">MARKET</span>
+          <span className="text-sm font-bold tracking-wider font-mono text-[var(--text-primary)]">
+            ARAH <span className="text-[var(--accent)]">MARKET</span>
           </span>
         </div>
-        <div className="text-xs text-slate-400 flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
+        <div className="text-xs text-[var(--text-secondary)] flex items-center gap-2">
+          <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-ping" />
           <span>Verifying encrypted terminal session...</span>
         </div>
       </div>
     );
   }
 
-  // Screen 2: Unauthenticated Visitor Flow (Auth Pages & Optional Public Landing)
-  if (!user) {
+  // Screen 2: Marketing & Auth Routes (render for visitors and signed-in users alike)
+  {
     const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
     const hasToken = searchParams ? searchParams.has('token') : false;
 
-    if (hasToken && path !== '/reset-password') {
+    if (!user && hasToken && path !== '/reset-password') {
       return (
         <AuthPage
           mode="verify-email"
@@ -436,21 +497,19 @@ export default function App() {
       return null;
     }
 
-    if (path === '/landing' || path === '/features') {
+    if (path === '/landing' || path === '/features' || path === '/') {
       return (
-        <PublicLandingPage
-          currentPath={path}
+        <LandingPage
           onNavigate={navigate}
-          user={user}
+          onOpenAuth={() => navigate('/login')}
         />
       );
     }
-
-    // Default flow: direct access to the Linear Pro Terminal workspace for all visitors & traders
   }
 
   return (
-    <div className="min-h-screen bg-[#07090e] text-slate-100 flex font-sans selection:bg-cyan-500/30 selection:text-cyan-200">
+    <CentralMarketProvider initialContext={centralContext}>
+      <div className="min-h-screen bg-[var(--bg-canvas)] text-[var(--text-primary)] flex font-sans selection:bg-[var(--accent)] selection:text-[var(--accent-contrast)]">
       {/* 1. Global Responsive Sidebar Navigation */}
       <Sidebar
         activeTab={activeTab}
@@ -459,8 +518,6 @@ export default function App() {
         onClose={() => setIsSidebarOpen(false)}
         isCollapsed={isSidebarCollapsed}
         onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-        marketMapCount={intradayMap.length || 13}
-        catalystsCount={todayCatalysts.length}
         user={user}
         onOpenAuth={() => navigate('/login')}
         onLogout={handleLogout}
@@ -482,6 +539,15 @@ export default function App() {
           onOpenAutoTriggerModal={() => setIsAutoTriggerModalOpen(true)}
           isAutoTriggerActive={autoTriggerConfig.enabled}
           autoTriggerSecondsRemaining={autoTriggerSecondsRemaining}
+          user={user}
+          prices={prices}
+          events={events}
+          calendar={calendar}
+          onSelectSymbol={(sym) => {
+            handleSelectSymbol(sym);
+            if (activeTab !== 'terminal') handleTabChange('terminal');
+          }}
+          onOpenChart={handleOpenChart}
         />
 
         {/* Real-time Ticker Bar */}
@@ -497,15 +563,15 @@ export default function App() {
 
         {/* Active Instrument Filter Strip */}
         {selectedSymbol && (
-          <div className="bg-cyan-950/70 border-b border-cyan-800/60 px-4 py-1.5 flex items-center justify-between text-xs font-mono text-cyan-300">
+          <div className="px-4 py-1.5 flex items-center justify-between text-xs font-mono border-b" style={{ background: 'var(--accent-subtle)', borderColor: 'var(--border-subtle)', color: 'var(--accent)' }}>
             <div className="flex items-center gap-2">
               <span>FILTERED BY INSTRUMENT:</span>
-              <strong className="text-white font-bold bg-cyan-900 px-2 py-0.5 rounded">{selectedSymbol}</strong>
-              <span className="text-slate-400 hidden sm:inline">Highlighting events and macro correlations</span>
+              <strong className="font-bold px-2 py-0.5 rounded" style={{ background: 'var(--accent)', color: 'var(--accent-contrast)' }}>{selectedSymbol}</strong>
+              <span className="hidden sm:inline" style={{ color: 'var(--text-muted)' }}>Highlighting events and macro correlations</span>
             </div>
             <button
               onClick={() => setSelectedSymbol(null)}
-              className="text-cyan-400 hover:text-white underline cursor-pointer"
+              className="underline cursor-pointer hover:opacity-80" style={{ color: 'var(--accent)' }}
             >
               Clear Filter ×
             </button>
@@ -533,17 +599,11 @@ export default function App() {
               events={filteredEvents}
               calendar={calendar}
               overview={overview}
-              watchlistSymbols={watchlistSymbols}
-              selectedSymbol={selectedSymbol}
-              onSelectSymbol={handleSelectSymbol}
               onNavigateTab={handleTabChange}
-              onToggleWatchlist={handleToggleWatchlist}
+              globalRegime={arahMarketData?.globalRegime ?? null}
+              arahMarketData={arahMarketData}
               onOpenChart={handleOpenChart}
               onSelectEvent={handleSelectEvent}
-              onRefreshPrices={refreshPrices}
-              isRefreshingPrices={isRefreshingPrices}
-              onRefreshCS={refreshCurrencyStrength}
-              isRefreshingCS={isRefreshingCS}
               onSyncWire={refreshEvents}
               isSyncingWire={isSyncing}
             />
@@ -557,28 +617,16 @@ export default function App() {
               onRefresh={refreshArahMarket}
               isRefreshing={isRefreshingArah}
               onOpenChart={handleOpenChart}
+              onNavigateTab={handleTabChange}
             />
           )}
 
-          {/* VIEW 2: DEDICATED INTRADAY MARKET MAP (13 ASSETS) */}
-          {activeTab === 'intraday_map' && (
-            <IntradayMarketMapView
-              data={intradayMap}
-              prices={prices}
-              onRefresh={refreshIntradayMap}
-              isRefreshing={isRefreshingIntraday}
-              onOpenChart={handleOpenChart}
-            />
-          )}
-
-          {/* VIEW 3: TODAY'S KEY CATALYSTS */}
-          {activeTab === 'today_catalysts' && (
-            <TodayCatalystsView
-              catalysts={todayCatalysts}
-              onRefresh={refreshCatalysts}
-              isRefreshing={isRefreshingCatalysts}
-              onSelectAsset={handleSelectSymbol}
-              onOpenChart={handleOpenChart}
+          {/* VIEW: DAILY MARKET REPORT (LAPORAN PASAR HARIAN) */}
+          {activeTab === 'daily_report' && (
+            <DailyReportView
+              user={user}
+              onNavigateTab={handleTabChange}
+              onSelectSymbol={handleSelectSymbol}
             />
           )}
 
@@ -614,21 +662,29 @@ export default function App() {
 
           {/* VIEW 5: CURRENCY MATRIX */}
           {activeTab === 'currency' && (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-              <div className="lg:col-span-5">
-                <CurrencyStrengthWidget
-                  strengths={strengths}
-                  onRefresh={refreshCurrencyStrength}
-                  isRefreshing={isRefreshingCS}
-                />
-              </div>
+            <div className="space-y-4">
+              <PageHeader
+                eyebrow="RESEARCH · CURRENCY G8"
+                title="Currency strength matrix"
+                description="Relative G8 strength, live parity timelines, and the pair opportunity matrix built from the same readings."
+              />
 
-              <div className="lg:col-span-7">
-                <CurrencyPairOpportunityMatrix
-                  strengths={strengths}
-                  onOpenChart={handleOpenChart}
-                  onSelectSymbol={handleSelectSymbol}
-                />
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                <div className="lg:col-span-5">
+                  <CurrencyStrengthWidget
+                    strengths={strengths}
+                    onRefresh={refreshCurrencyStrength}
+                    isRefreshing={isRefreshingCS}
+                  />
+                </div>
+
+                <div className="lg:col-span-7">
+                  <CurrencyPairOpportunityMatrix
+                    strengths={strengths}
+                    onOpenChart={handleOpenChart}
+                    onSelectSymbol={handleSelectSymbol}
+                  />
+                </div>
               </div>
             </div>
           )}
@@ -644,106 +700,104 @@ export default function App() {
 
           {/* VIEW 7: CANONICAL EVENT WIRE */}
           {activeTab === 'events' && (
-            <div className="space-y-4">
-              <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-3.5 shadow-sm">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div>
-                    <h1 className="text-sm font-mono font-bold text-slate-100 uppercase tracking-wider flex items-center gap-2">
-                      <Layers className="w-4 h-4 text-cyan-400" />
-                      <span>DEDUPLICATED EVENT ENGINE WIRE</span>
-                    </h1>
-                    <p className="text-xs text-slate-400 mt-0.5">
-                      ONE EVENT → ONE EVENT ID → MULTIPLE SOURCES → MULTIPLE ASSETS → ONE ANALYSIS
-                    </p>
-                  </div>
+            <div className="space-y-5">
+              <div className="space-y-4">
+                <PageHeader
+                  eyebrow="MAIN · NEWS WIRE"
+                  title="Canonical news wire"
+                  description="One event, one canonical id, every source that carried it."
+                  actions={
+                    <>
+                      <button
+                        onClick={refreshEvents}
+                        disabled={isSyncing}
+                        className="flex items-center gap-1.5 px-3 h-8 rounded-md text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-section-alt)] text-xs font-medium transition cursor-pointer disabled:opacity-50"
+                        title="Sync wire with latest source releases"
+                      >
+                        <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin text-[var(--accent)]' : ''}`} />
+                        <span>Sync wire</span>
+                      </button>
 
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={refreshEvents}
-                      disabled={isSyncing}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-mono font-medium transition cursor-pointer disabled:opacity-50"
-                      title="Sync wire with latest source releases"
-                    >
-                      <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin text-cyan-400' : ''}`} />
-                      <span>Sync Wire</span>
-                    </button>
-
-                    <input
-                      type="text"
-                      placeholder="Cari berita, pair, aset..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="bg-slate-950 border border-slate-800 px-3 py-1.5 rounded text-xs font-mono text-slate-200 outline-none w-48 sm:w-60 focus:border-cyan-500 transition"
-                    />
-                  </div>
-                </div>
+                      <Autocomplete
+                        value={searchQuery}
+                        onChange={setSearchQuery}
+                        placeholder="Search news, pairs, assets..."
+                        groups={wireSearchGroups}
+                        recentStorageKey="wire_search"
+                        className="w-48 sm:w-64"
+                        inputClassName="bg-[var(--bg-section-alt)] h-8 text-xs focus:border-[var(--border-strong)]"
+                      />
+                    </>
+                  }
+                />
 
                 {/* Filter Controls: Impact Level & Category */}
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2.5 pt-2 border-t border-slate-800/80">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2.5 pt-2 border-t" style={{ borderColor: 'var(--border-hairline)' }}>
                   {/* Impact Filter Buttons */}
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-[11px] font-mono text-slate-400 font-semibold flex items-center gap-1 mr-1">
-                      <Filter className="w-3 h-3 text-cyan-400" />
-                      <span>Dampak:</span>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="metadata-label text-[9px] text-[var(--text-muted)] flex items-center gap-1">
+                      <Filter className="w-3 h-3" />
+                      <span>Impact</span>
                     </span>
 
                     <button
                       onClick={() => setImpactFilter('HIGH')}
-                      className={`flex items-center gap-1.5 px-3 py-1 rounded text-xs font-mono font-bold border transition cursor-pointer ${
+                      className={`flex items-center gap-1.5 px-2.5 h-7 rounded text-[11px] font-medium transition cursor-pointer ${
                         impactFilter === 'HIGH'
-                          ? 'bg-rose-950 text-rose-300 border-rose-700 shadow-sm shadow-rose-950/40'
-                          : 'bg-slate-950 text-slate-400 border-slate-800 hover:text-slate-200'
+                          ? 'bg-[var(--bg-surface)] text-[var(--warning)] shadow-sm'
+                          : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
                       }`}
-                      title="Tampilkan hanya berita High & Critical impact agar korelasi pair akurat"
+                      title="Show only High & Critical impact events for reliable pair correlations"
                     >
-                      <Flame className="w-3.5 h-3.5 text-rose-400" />
-                      <span>🔥 High Impact (Default)</span>
-                      <span className="text-[9px] px-1 py-0.2 rounded bg-rose-900/60 text-rose-200">
+                      <Flame className="w-3 h-3" />
+                      <span>High</span>
+                      <span className="tabular-nums opacity-70">
                         {events.filter(e => e.impact_level === 'CRITICAL' || e.impact_level === 'HIGH').length}
                       </span>
                     </button>
 
                     <button
                       onClick={() => setImpactFilter('CRITICAL')}
-                      className={`flex items-center gap-1.5 px-3 py-1 rounded text-xs font-mono font-bold border transition cursor-pointer ${
+                      className={`flex items-center gap-1.5 px-2.5 h-7 rounded text-[11px] font-medium transition cursor-pointer ${
                         impactFilter === 'CRITICAL'
-                          ? 'bg-red-950 text-red-300 border-red-700 shadow-sm shadow-red-950/40'
-                          : 'bg-slate-950 text-slate-400 border-slate-800 hover:text-slate-200'
+                          ? 'bg-[var(--bg-surface)] text-[var(--bearish)] shadow-sm'
+                          : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
                       }`}
-                      title="Tampilkan hanya berita dampak kritis tertinggi (Fed rate, perang, krisis likuiditas)"
+                      title="Show only critical macro events (Rates, geopolitical disruptions, liquidity shocks)"
                     >
-                      <Zap className="w-3.5 h-3.5 text-red-400" />
-                      <span>⚡ Critical Only</span>
-                      <span className="text-[9px] px-1 py-0.2 rounded bg-red-900/60 text-red-200">
+                      <Zap className="w-3 h-3" />
+                      <span>Critical</span>
+                      <span className="tabular-nums opacity-70">
                         {events.filter(e => e.impact_level === 'CRITICAL').length}
                       </span>
                     </button>
 
                     <button
                       onClick={() => setImpactFilter('ALL')}
-                      className={`flex items-center gap-1.5 px-3 py-1 rounded text-xs font-mono font-medium border transition cursor-pointer ${
+                      className={`flex items-center gap-1.5 px-2.5 h-7 rounded text-[11px] font-medium transition cursor-pointer ${
                         impactFilter === 'ALL'
-                          ? 'bg-slate-800 text-slate-100 border-slate-700'
-                          : 'bg-slate-950 text-slate-500 border-slate-800 hover:text-slate-300'
+                          ? 'bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-sm'
+                          : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
                       }`}
                     >
-                      <span>Semua Level ({events.length})</span>
+                      <span>All</span>
+                      <span className="tabular-nums opacity-70">{events.length}</span>
                     </button>
                   </div>
 
                   {/* Category Filter Chips */}
-                  <div className="flex items-center gap-1 overflow-x-auto text-xs font-mono">
+                  <div className="flex items-center flex-wrap gap-0.5 p-0.5 rounded-md bg-[var(--bg-section-alt)] min-w-0">
                     {['ALL', 'MACRO', 'CENTRAL_BANK', 'COMMODITIES', 'GEOPOLITICS', 'CRYPTO'].map((cat) => (
                       <button
                         key={cat}
                         onClick={() => setCategoryFilter(cat)}
-                        className={`px-2 py-0.5 rounded text-[11px] whitespace-nowrap transition cursor-pointer border ${
+                        className={`px-2.5 h-7 rounded text-[11px] whitespace-nowrap font-medium transition cursor-pointer ${
                           categoryFilter === cat
-                            ? 'bg-cyan-950 text-cyan-300 border-cyan-800 font-bold'
-                            : 'bg-slate-950 text-slate-400 border-slate-800 hover:text-slate-300'
+                            ? 'bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-sm'
+                            : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
                         }`}
                       >
-                        {cat}
+                        {cat === 'ALL' ? 'All' : cat.charAt(0) + cat.slice(1).toLowerCase().replace('_', ' ')}
                       </button>
                     ))}
                   </div>
@@ -751,26 +805,29 @@ export default function App() {
 
                 {/* High Impact Mode Explanatory Banner */}
                 {impactFilter !== 'ALL' && (
-                  <div className="p-2.5 rounded-lg bg-rose-950/20 border border-rose-900/40 flex items-center justify-between text-xs font-mono text-rose-200">
-                    <div className="flex items-center gap-2">
-                      <Flame className="w-4 h-4 text-rose-400 shrink-0" />
+                  <div
+                    className="p-3 rounded-lg flex items-center justify-between gap-3 text-xs"
+                    style={{ backgroundColor: 'var(--warning-bg)' }}
+                  >
+                    <div className="flex items-center gap-2.5 text-[var(--text-secondary)]">
+                      <Flame className="w-4 h-4 text-[var(--warning)] shrink-0" />
                       <span>
-                        <strong className="text-rose-300">Penyaringan High Impact Aktif:</strong> Menampilkan hanya berita katalis penggerak pasar utama (Kebijakan Suku Bunga, Inflasi, Geopolitik, Komoditas) untuk memastikan presisi efek transmisi terhadap pair (XAUUSD, Forex, Indeks).
+                        Filtered to high-volatility drivers: monetary policy, CPI, geopolitics and commodities.
                       </span>
                     </div>
-                    <span className="text-[10px] text-slate-400 shrink-0 hidden sm:inline ml-2">
-                      {filteredEvents.length} dari {events.length} berita
+                    <span className="text-[11px] text-[var(--warning)] font-semibold shrink-0 hidden sm:inline tabular-nums">
+                      {filteredEvents.length} of {events.length}
                     </span>
                   </div>
                 )}
               </div>
 
               {filteredEvents.length === 0 ? (
-                <div className="bg-slate-900 border border-slate-800 rounded-xl p-10 text-center space-y-3">
-                  <Flame className="w-8 h-8 text-slate-600 mx-auto" />
-                  <h3 className="text-sm font-bold text-slate-300">Tidak ada berita yang cocok dengan filter</h3>
-                  <p className="text-xs text-slate-500 max-w-md mx-auto">
-                    Tidak ditemukan berita {impactFilter !== 'ALL' ? `dengan dampak ${impactFilter}` : ''} pada kategori yang dipilih.
+                <div className="py-16 text-center space-y-3">
+                  <Flame className="w-8 h-8 text-[var(--text-muted)] mx-auto" />
+                  <h3 className="text-sm font-semibold text-[var(--text-primary)]">No events match these filters</h3>
+                  <p className="text-xs text-[var(--text-muted)] max-w-md mx-auto">
+                    No active wire stories found {impactFilter !== 'ALL' ? `with impact ${impactFilter}` : ''} in the selected category.
                   </p>
                   <button
                     onClick={() => {
@@ -778,9 +835,9 @@ export default function App() {
                       setCategoryFilter('ALL');
                       setSearchQuery('');
                     }}
-                    className="px-3.5 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-cyan-400 text-xs font-mono transition cursor-pointer"
+                    className="px-3.5 py-1.5 rounded bg-[var(--bg-section-alt)] hover:bg-[var(--border-subtle)] text-[var(--accent)] text-xs font-mono font-bold transition cursor-pointer border border-[var(--border-subtle)]"
                   >
-                    Reset Semua Filter
+                    Reset All Filters
                   </button>
                 </div>
               ) : (
@@ -797,12 +854,12 @@ export default function App() {
 
                   {/* High-Performance Pagination Bar */}
                   {totalWirePages > 1 && (
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 rounded-xl bg-slate-900/80 border border-slate-800 text-xs font-mono text-slate-300">
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 rounded terminal-panel text-xs font-mono text-[var(--text-primary)]">
                       <div className="flex items-center gap-2">
-                        <span className="text-slate-400">
-                          Menampilkan <strong className="text-cyan-400">{(wirePage - 1) * WIRE_PAGE_SIZE + 1}</strong> -{' '}
-                          <strong className="text-cyan-400">{Math.min(wirePage * WIRE_PAGE_SIZE, filteredEvents.length)}</strong> dari{' '}
-                          <strong className="text-slate-200">{filteredEvents.length}</strong> peristiwa
+                        <span className="text-[var(--text-secondary)]">
+                          Showing <strong className="text-[var(--text-primary)]">{(wirePage - 1) * WIRE_PAGE_SIZE + 1}</strong> -{' '}
+                          <strong className="text-[var(--text-primary)]">{Math.min(wirePage * WIRE_PAGE_SIZE, filteredEvents.length)}</strong> of{' '}
+                          <strong className="text-[var(--text-primary)]">{filteredEvents.length}</strong> events
                         </span>
                       </div>
 
@@ -810,22 +867,22 @@ export default function App() {
                         <button
                           onClick={() => setWirePage(prev => Math.max(1, prev - 1))}
                           disabled={wirePage === 1}
-                          className="flex items-center gap-1 px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer border border-slate-700"
+                          className="flex items-center gap-1 px-2.5 py-1 rounded bg-[var(--bg-section-alt)] hover:bg-[var(--border-subtle)] text-[var(--text-primary)] disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer border border-[var(--border-subtle)]"
                         >
                           <ChevronLeft className="w-3.5 h-3.5" />
                           <span>Prev</span>
                         </button>
 
                         <div className="flex items-center gap-1 px-2">
-                          <span className="text-cyan-300 font-bold">{wirePage}</span>
-                          <span className="text-slate-500">/</span>
-                          <span className="text-slate-400">{totalWirePages}</span>
+                          <span className="text-[var(--text-primary)] font-bold">{wirePage}</span>
+                          <span className="text-[var(--text-muted)]">/</span>
+                          <span className="text-[var(--text-secondary)]">{totalWirePages}</span>
                         </div>
 
                         <button
                           onClick={() => setWirePage(prev => Math.min(totalWirePages, prev + 1))}
                           disabled={wirePage >= totalWirePages}
-                          className="flex items-center gap-1 px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer border border-slate-700"
+                          className="flex items-center gap-1 px-2.5 py-1 rounded bg-[var(--bg-section-alt)] hover:bg-[var(--border-subtle)] text-[var(--text-primary)] disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer border border-[var(--border-subtle)]"
                         >
                           <span>Next</span>
                           <ChevronRight className="w-3.5 h-3.5" />
@@ -884,18 +941,18 @@ export default function App() {
             user?.role === 'ADMIN' ? (
               <AdminPanel currentUser={user} />
             ) : (
-              <div className="max-w-md mx-auto my-12 p-6 rounded-xl bg-slate-900 border border-slate-800 text-center font-mono">
-                <div className="w-12 h-12 mx-auto rounded-full bg-red-950/80 border border-red-500/40 flex items-center justify-center text-red-400 mb-4">
+              <div className="max-w-md mx-auto my-12 p-6 rounded border text-center font-mono bg-[var(--bg-surface)] border-[var(--border-subtle)]">
+                <div className="w-12 h-12 mx-auto rounded-full flex items-center justify-center mb-4" style={{ background: 'var(--bearish-bg)', border: '1px solid var(--bearish-border)', color: 'var(--bearish)' }}>
                   <ShieldAlert className="w-6 h-6" />
                 </div>
-                <h2 className="text-base font-bold text-slate-100 uppercase tracking-wider">Access Restricted</h2>
-                <p className="text-xs text-slate-400 mt-2">
+                <h2 className="text-base font-bold text-[var(--text-primary)] uppercase tracking-wider">Access Restricted</h2>
+                <p className="text-xs text-[var(--text-secondary)] mt-2">
                   Administrative Telemetry & Feed Orchestration is restricted to system administrators with verified authority.
                 </p>
                 <div className="mt-6 flex justify-center gap-3">
                   <button
                     onClick={() => handleTabChange('terminal')}
-                    className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs rounded-lg transition cursor-pointer"
+                    className="px-4 py-2 bg-[var(--bg-section-alt)] hover:bg-[var(--border-subtle)] text-[var(--text-primary)] text-xs rounded border border-[var(--border-subtle)] transition cursor-pointer"
                   >
                     Return to Terminal
                   </button>
@@ -950,5 +1007,6 @@ export default function App() {
       {/* shadcn Sonner Toast Provider */}
       <Toaster position="top-right" richColors />
     </div>
-  );
+  </CentralMarketProvider>
+);
 }

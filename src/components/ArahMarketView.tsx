@@ -3,35 +3,22 @@ import {
   ArahMarketTodayData,
   IntradayPairConfluence,
   TripleConfluenceStatus,
-  IntermarketSpreadItem,
 } from '../types';
 import {
   Target,
   RefreshCw,
   Clock,
-  Compass,
   Zap,
-  TrendingUp,
-  TrendingDown,
   AlertTriangle,
-  Layers,
-  ArrowRight,
-  ShieldCheck,
-  ShieldAlert,
-  GitMerge,
-  HelpCircle,
   ExternalLink,
-  ChevronRight,
-  Filter,
   Flame,
-  CheckCircle2,
   Activity,
 } from 'lucide-react';
+import { NavTabId } from './Sidebar';
 import { getCurrencyFlagUrl } from '../lib/assets';
-import { Button } from './ui/button';
-import { Badge } from './ui/badge';
 import { EmptyState } from './shared/EmptyState';
 import { LoadingState } from './shared/LoadingState';
+import { PageHeader } from './shared/PageHeader';
 
 interface ArahMarketViewProps {
   data: ArahMarketTodayData | null;
@@ -39,6 +26,7 @@ interface ArahMarketViewProps {
   onRefresh: () => Promise<void>;
   isRefreshing: boolean;
   onOpenChart: (symbol: string) => void;
+  onNavigateTab?: (tab: NavTabId) => void;
 }
 
 export const ArahMarketView: React.FC<ArahMarketViewProps> = React.memo(({
@@ -47,12 +35,10 @@ export const ArahMarketView: React.FC<ArahMarketViewProps> = React.memo(({
   onRefresh,
   isRefreshing,
   onOpenChart,
+  onNavigateTab,
 }) => {
   const [selectedPairFilter, setSelectedPairFilter] = useState<'ALL' | 'HIGH_CONVICTION' | 'MODERATE' | 'CAUTION'>('ALL');
-  const [activeSpreadTab, setActiveSpreadTab] = useState<string>('all');
-  const [selectedPairDetail, setSelectedPairDetail] = useState<IntradayPairConfluence | null>(null);
 
-  // Filter pairs based on selector
   const filteredPairs = useMemo(() => {
     if (!data?.pairs) return [];
     if (selectedPairFilter === 'HIGH_CONVICTION') {
@@ -73,7 +59,7 @@ export const ArahMarketView: React.FC<ArahMarketViewProps> = React.memo(({
         <LoadingState
           variant="cards"
           count={3}
-          message="Memuat Sintesis Arah Market Hari Ini..."
+          message="Compiling Intraday Triple-Confluence Dossier..."
         />
       </div>
     );
@@ -83,11 +69,11 @@ export const ArahMarketView: React.FC<ArahMarketViewProps> = React.memo(({
     return (
       <div className="py-8">
         <EmptyState
-          icon={<AlertTriangle className="w-8 h-8 text-amber-400" />}
-          title="Data Arah Market Belum Tersedia"
-          description="Sistem sedang menyelaraskan pilar data fundamental, intermarket, dan harga sesi."
+          icon={<AlertTriangle className="w-8 h-8 text-[var(--warning)]" />}
+          title="Market Bias Dossier Unavailable"
+          description="Synchronizing fundamental pillars, intermarket spreads, and session volume profile."
           action={{
-            label: 'Muat Ulang',
+            label: 'Refresh Dossier',
             onClick: onRefresh,
           }}
         />
@@ -101,484 +87,412 @@ export const ArahMarketView: React.FC<ArahMarketViewProps> = React.memo(({
     switch (status) {
       case 'HIGH_CONVICTION':
         return {
-          label: '3/3 HIGH CONVICTION',
-          bg: 'bg-emerald-950/90 text-emerald-300 border-emerald-700/80',
-          dot: 'bg-emerald-400',
+          label: '3/3 ALIGNED',
+          badgeClass: 'badge-bullish',
         };
       case 'MODERATE':
         return {
-          label: '2/3 MODERATE CONFLUENCE',
-          bg: 'bg-cyan-950/90 text-cyan-300 border-cyan-700/80',
-          dot: 'bg-cyan-400',
+          label: '2/3 PARTIAL',
+          badgeClass: 'badge-neutral',
         };
       case 'CAUTION_TRAP':
         return {
-          label: '1/3 CAUTION / POTENTIAL TRAP',
-          bg: 'bg-rose-950/90 text-rose-300 border-rose-700/80',
-          dot: 'bg-rose-400 animate-pulse',
+          label: '1/3 DIVERGENT',
+          badgeClass: 'badge-bearish',
         };
       case 'NEUTRAL_CHOP':
       default:
         return {
-          label: 'CHOPPY / MIXED FLOWS',
-          bg: 'bg-slate-800/80 text-slate-300 border-slate-700/80',
-          dot: 'bg-slate-400',
+          label: 'MIXED / NO EDGE',
+          badgeClass: 'badge-neutral',
         };
     }
   };
 
   return (
-    <div className="space-y-3.5">
+    <div className="space-y-4" id="arah-market-dossier-view">
       {/* 1. TOP HEADER & SESSION BAROMETER */}
-      <div className="bg-[#0b0d14] border border-white/[0.08] rounded-xl p-3.5 sm:p-5 shadow-xs">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 flex-wrap mb-1.5">
-              <span className="px-2 py-0.5 rounded-md bg-white/[0.04] border border-white/[0.08] text-cyan-300 text-[10px] font-mono font-bold tracking-wider uppercase flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_6px_rgba(6,182,212,0.8)]" />
-                <span>INTRADAY TRIPLE-CONFLUENCE</span>
+      <section className="space-y-5">
+        <PageHeader
+          eyebrow="RESEARCH · MARKET BIAS"
+          accentNote={
+            <span className="flex items-center gap-1">
+              <Clock className="w-3 h-3" />
+              <span>{activeSession.charAt(0).toUpperCase() + activeSession.slice(1)} session active</span>
+            </span>
+          }
+          title="Market bias and confluence"
+          description={`${sessionStatusText} — macro catalysts, intermarket transmission through US10Y and DXY, and intraday auction structure, read together.`}
+          actions={
+            <div className="flex items-center gap-2">
+              <span className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-mono text-[var(--text-muted)] bg-[var(--bg-section)] border border-[var(--border-subtle)] px-2.5 py-1.5 rounded">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span>Live Reactive Stream</span>
               </span>
-              <span className="px-2 py-0.5 rounded-md bg-white/[0.02] border border-white/[0.06] text-slate-300 text-[10px] font-mono flex items-center gap-1">
-                <Clock className="w-3 h-3 text-cyan-400" />
-                <span className="font-bold text-white">{activeSession} SESSION</span>
+              <button
+                onClick={onRefresh}
+                disabled={isRefreshing}
+                className="h-9 px-3.5 rounded-md text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-section-alt)] border border-[var(--border-subtle)] flex items-center gap-1.5 transition cursor-pointer shrink-0 disabled:opacity-50"
+                title="Force refresh current session bias"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-[var(--accent)]' : ''}`} />
+                <span>Sync session</span>
+              </button>
+            </div>
+          }
+        />
+
+        {/* Global Regime & DXY Position Bar */}
+        <div className="pt-3 border-t grid grid-cols-1 md:grid-cols-3 gap-3" style={{ borderColor: 'var(--border-hairline)' }}>
+          <div className="md:col-span-2 rounded-lg p-3.5 flex flex-col justify-between gap-2.5" style={{ backgroundColor: 'var(--bg-section-alt)' }}>
+            <div className="flex items-center justify-between">
+              <span className="metadata-label text-[9px] text-[var(--text-muted)]">
+                Global intraday regime
+              </span>
+              <span className="text-[9px] px-2 py-0.5 rounded-full font-semibold badge-bullish">
+                {globalRegime.title}
               </span>
             </div>
-            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-2">
-              <span>ARAH MARKET HARI INI</span>
-              <Target className="w-5 h-5 text-cyan-400" />
-            </h1>
-            <p className="text-xs text-slate-400 mt-1 max-w-2xl leading-relaxed font-sans">
-              {sessionStatusText} — Mengintegrasikan arah fundamental, transmisi intermarket (yields & DXY), serta struktur pergerakan harga sesi berjalan.
+            <p className="text-xs text-[var(--text-primary)] leading-relaxed font-sans">
+              {globalRegime.summaryNarrative}
             </p>
-          </div>
-
-          <div className="flex items-center gap-2 shrink-0">
-            <button
-              onClick={onRefresh}
-              disabled={isRefreshing}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-white/[0.04] border border-white/[0.08] hover:border-white/[0.15] text-xs font-mono font-semibold text-slate-300 hover:text-white transition disabled:opacity-50 cursor-pointer"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-cyan-400' : 'text-slate-400'}`} />
-              <span>Sinkronkan Sesi</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Global Regime Banner */}
-        <div className="mt-4 pt-3.5 border-t border-white/[0.06] grid grid-cols-1 md:grid-cols-3 gap-3">
-          <div className="md:col-span-2 p-3 rounded-lg bg-white/[0.02] border border-white/[0.06] flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between gap-2 mb-1.5">
-                <span className="text-[10px] font-mono text-slate-500 uppercase font-bold tracking-wider">
-                  GLOBAL INTRADAY REGIME
-                </span>
-                <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${globalRegime.badgeColor}`}>
-                  {globalRegime.title}
-                </span>
-              </div>
-              <p className="text-xs text-slate-300 leading-relaxed font-medium">
-                {globalRegime.summaryNarrative}
-              </p>
-            </div>
-
             {globalRegime.topCatalystHeadline && (
-              <div className="mt-2.5 pt-2 border-t border-white/[0.04] flex items-center gap-2 text-[11px] text-slate-400">
-                <Flame className="w-3 h-3 text-amber-400 shrink-0" />
-                <span className="truncate">
-                  <strong className="text-slate-200">Katalis Penggerak:</strong> {globalRegime.topCatalystHeadline}
-                </span>
+              <div className="pt-2 border-t text-[11px] text-[var(--text-secondary)] flex items-center gap-1.5" style={{ borderColor: 'var(--border-hairline)' }}>
+                <Flame className="w-3 h-3 text-[var(--accent)] shrink-0" />
+                <span className="truncate">{globalRegime.topCatalystHeadline}</span>
               </div>
             )}
           </div>
 
-          {/* DXY Session Open Position & Risk Gauge */}
-          <div className="p-3 rounded-lg bg-white/[0.02] border border-white/[0.06] flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between text-[10px] font-mono text-slate-500 mb-2">
-                <span className="uppercase font-bold">DXY vs Session Open:</span>
-                <span className={`font-black px-1.5 py-0.2 rounded ${
-                  globalRegime.dxyBiasVsOpen === 'ABOVE_OPEN'
-                    ? 'bg-rose-950/80 text-rose-300 border border-rose-800/80'
-                    : 'bg-emerald-950/80 text-emerald-300 border border-emerald-800/80'
-                }`}>
-                  {globalRegime.dxyBiasVsOpen === 'ABOVE_OPEN' ? '▲ DI ATAS OPEN (DOLLAR BULLISH)' : '▼ DI BAWAH OPEN (DOLLAR BEARISH)'}
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-400 leading-snug font-sans">
-                Posisi DXY relatif terhadap harga pembukaan sesi menentukan arah tarikan gravitasi seluruh pasangan valuta mayor.
-              </p>
+          <div className="rounded-lg p-3.5 flex flex-col justify-between gap-2.5" style={{ backgroundColor: 'var(--bg-section-alt)' }}>
+            <div className="flex items-center justify-between">
+              <span className="metadata-label text-[9px] text-[var(--text-muted)]">
+                DXY session open
+              </span>
+              <span className={`text-[9px] px-2 py-0.5 rounded-full font-semibold ${
+                globalRegime.dxyBiasVsOpen === 'ABOVE_OPEN' ? 'badge-bearish' : 'badge-bullish'
+              }`}>
+                {globalRegime.dxyBiasVsOpen === 'ABOVE_OPEN' ? 'Above open' : 'Below open'}
+              </span>
             </div>
-
-            <div className="mt-2 pt-2 border-t border-white/[0.04] flex items-center justify-between text-[10px] font-mono text-slate-400">
-              <span>Risk Appetite Score:</span>
-              <span className={`font-bold ${globalRegime.riskScore > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+            <p className="text-[11px] text-[var(--text-secondary)] font-sans leading-snug">
+              Dollar index direction relative to session open sets the gravitational pull across major foreign exchange crosses.
+            </p>
+            <div className="pt-2 border-t flex items-center justify-between text-[10px] text-[var(--text-muted)]" style={{ borderColor: 'var(--border-hairline)' }}>
+              <span>Risk appetite</span>
+              <span className="font-bold text-[var(--text-primary)]">
                 {globalRegime.riskScore > 0 ? `+${globalRegime.riskScore}` : globalRegime.riskScore} / 100
               </span>
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* 2. INTERMARKET SPREAD ENGINE & ANOMALY ALERTS */}
+      {/* 2. INTERMARKET SPREAD ENGINE & ANOMALY RADAR */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-3">
-        {/* Anomaly Alerts Strip (1 col on large) */}
-        <div className="lg:col-span-1 bg-[#0b0d14] border border-white/[0.08] rounded-xl p-3.5 space-y-2.5 flex flex-col justify-between shadow-xs">
+        {/* Anomaly Alerts (1 column) */}
+        <div className="lg:col-span-1 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4 flex flex-col justify-between gap-3">
           <div>
-            <div className="flex items-center gap-1.5 text-xs font-mono font-bold text-slate-300 uppercase tracking-wider mb-2">
-              <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
-              <span>RADAR ANOMALI SESI</span>
+            <div className="flex items-center gap-1.5 text-[13px] font-semibold text-[var(--text-primary)] mb-2">
+              <AlertTriangle className="w-3.5 h-3.5 text-[var(--accent)]" />
+              <span>Session anomaly radar</span>
             </div>
-            {anomalyAlerts.map(alert => (
-              <div
-                key={alert.id}
-                className={`p-2.5 rounded-lg border text-xs space-y-1.5 ${
-                  alert.severity === 'WARNING'
-                    ? 'bg-amber-950/30 border-amber-800/50 text-amber-200'
-                    : 'bg-emerald-950/30 border-emerald-800/50 text-emerald-200'
-                }`}
-              >
-                <div className="font-bold text-[11px] leading-tight flex items-center gap-1">
-                  <span>{alert.title}</span>
+            <div className="space-y-2">
+              {anomalyAlerts.map(alert => (
+                <div
+                  key={alert.id}
+                  className={`p-2.5 rounded border text-xs space-y-1 font-mono ${
+                    alert.severity === 'WARNING' ? 'badge-warning' : 'badge-bullish'
+                  }`}
+                >
+                  <div className="font-bold text-[11px] leading-tight">
+                    {alert.title}
+                  </div>
+                  <p className="text-[10px] leading-relaxed opacity-90 font-sans">
+                    {alert.description}
+                  </p>
+                  <div className="pt-1 border-t text-[10px] border-current opacity-80">
+                    <strong>ACTION:</strong> {alert.actionAdvice}
+                  </div>
                 </div>
-                <p className="text-[10px] leading-relaxed opacity-90 font-sans">
-                  {alert.description}
-                </p>
-                <div className="pt-1 border-t border-white/[0.06] text-[10px] font-mono text-slate-300">
-                  <strong className="text-white">Panduan:</strong> {alert.actionAdvice}
+              ))}
+            </div>
+          </div>
+          <span className="text-[9.5px] font-mono text-[var(--text-muted)] pt-1">
+            *Anomaly filters prevent liquidity traps & falseouts.
+          </span>
+        </div>
+
+        {/* Intermarket channels, condensed. The Intermarket Flows page carries the
+            full transmission detail, so this stays a one-line pulse per channel. */}
+        <div className="lg:col-span-3 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-[13px] font-semibold text-[var(--text-primary)]">Intermarket pulse</span>
+            {onNavigateTab && (
+              <button
+                onClick={() => onNavigateTab('intermarket')}
+                className="text-[11px] font-medium text-[var(--accent)] hover:underline cursor-pointer"
+              >
+                Full transmission
+              </button>
+            )}
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+            {intermarketSpreads.map(spread => (
+              <div key={spread.id} className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="text-[11px] text-[var(--text-primary)] font-medium truncate" title={spread.name}>
+                    {spread.name}
+                  </div>
+                  <div className="text-[10px] text-[var(--text-muted)] truncate">{spread.targetPair}</div>
+                </div>
+                <div className="text-right shrink-0 tabular-nums">
+                  <div className="text-[13px] font-semibold text-[var(--text-primary)]">
+                    {spread.currentValue > 0 ? `+${spread.currentValue}` : spread.currentValue}{spread.unit}
+                  </div>
+                  <div className={`text-[10px] font-medium ${
+                    spread.changeSessionBps >= 0 ? 'text-[var(--bullish)]' : 'text-[var(--bearish)]'
+                  }`}>
+                    {spread.changeSessionBps >= 0 ? '+' : ''}{spread.changeSessionBps} bps
+                  </div>
                 </div>
               </div>
             ))}
           </div>
-          <div className="text-[10px] font-mono text-slate-500 pt-1">
-            *Deteksi anomali memfilter jebakan likuiditas (*fakeouts*).
-          </div>
-        </div>
-
-        {/* 4 Intermarket Spreads Cards (3 cols on large) */}
-        <div className="lg:col-span-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
-          {intermarketSpreads.map(spread => (
-            <div
-              key={spread.id}
-              className="p-3 rounded-xl bg-[#0b0d14] border border-white/[0.08] hover:border-white/[0.16] transition flex flex-col justify-between shadow-xs"
-            >
-              <div>
-                <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 mb-1">
-                  <span className="font-bold uppercase tracking-wider">{spread.formulaLabel}</span>
-                  <span className="px-1.5 py-0.2 rounded bg-white/[0.04] text-cyan-300 border border-white/[0.08] font-bold">
-                    {spread.targetPair}
-                  </span>
-                </div>
-                <div className="text-xs font-bold text-white truncate mb-1.5 font-mono" title={spread.name}>
-                  {spread.name}
-                </div>
-                <div className="flex items-baseline gap-2 mb-2">
-                  <span className="text-xl font-mono font-black text-white">
-                    {spread.currentValue > 0 ? `+${spread.currentValue}` : spread.currentValue}{spread.unit}
-                  </span>
-                  <span className={`text-[10px] font-mono font-bold ${spread.changeSessionBps >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                    {spread.changeSessionBps >= 0 ? `+${spread.changeSessionBps} bps` : `${spread.changeSessionBps} bps`}
-                  </span>
-                </div>
-              </div>
-
-              <div className="pt-2 border-t border-white/[0.06] text-[10px] text-slate-400 leading-snug font-sans">
-                {spread.interpretation}
-              </div>
-            </div>
-          ))}
         </div>
       </div>
 
       {/* 3. PRIMARY CONFLUENCE PAIRS BOARD */}
-      <div className="bg-[#0b0d14] border border-white/[0.08] rounded-xl p-3.5 sm:p-5 shadow-xs">
-        {/* Filter Toolbar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-white/[0.06]">
+      <section className="space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b" style={{ borderColor: 'var(--border-hairline)' }}>
           <div>
-            <h2 className="text-base font-bold text-white flex items-center gap-2">
-              <span>Papan Konfluensi Pasangan Intraday</span>
-              <span className="text-xs font-mono font-normal text-slate-400">
-                ({filteredPairs.length} instrumen aktif)
+            <h2 className="headline-h3 text-[var(--text-primary)] flex items-center gap-2">
+              <span>INTRADAY PAIRS CONFLUENCE BOARD</span>
+              <span className="text-xs font-mono font-normal text-[var(--text-muted)]">
+                ({filteredPairs.length} ACTIVE ASSETS)
               </span>
             </h2>
-            <p className="text-xs text-slate-400 font-sans">
-              Setiap aset dianalisis melalui 3 saringan: Fundamental, Intermarket, dan Struktur Price Action.
+            <p className="text-xs text-[var(--text-secondary)] font-sans">
+              Triangulated analysis across Fundamental catalysts, Intermarket yields/DXY, and Technical price action.
             </p>
           </div>
 
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
-            <Button
-              variant={selectedPairFilter === 'ALL' ? 'secondary' : 'ghost'}
-              size="sm"
-              onClick={() => setSelectedPairFilter('ALL')}
-              className={`h-7 px-2.5 text-xs font-mono font-semibold ${
-                selectedPairFilter === 'ALL'
-                  ? 'bg-white/[0.12] text-cyan-300 font-bold border border-cyan-400/40'
-                  : 'bg-white/[0.02] text-neutral-400 hover:text-white border border-white/[0.06]'
-              }`}
-            >
-              Semua ({pairs.length})
-            </Button>
-            <Button
-              variant={selectedPairFilter === 'HIGH_CONVICTION' ? 'secondary' : 'ghost'}
-              size="sm"
-              onClick={() => setSelectedPairFilter('HIGH_CONVICTION')}
-              className={`h-7 px-2.5 text-xs font-mono font-semibold ${
-                selectedPairFilter === 'HIGH_CONVICTION'
-                  ? 'bg-emerald-950/80 text-emerald-300 font-bold border border-emerald-500/50'
-                  : 'bg-white/[0.02] text-neutral-400 hover:text-white border border-white/[0.06]'
-              }`}
-            >
-              3/3 High Conviction
-            </Button>
-            <Button
-              variant={selectedPairFilter === 'MODERATE' ? 'secondary' : 'ghost'}
-              size="sm"
-              onClick={() => setSelectedPairFilter('MODERATE')}
-              className={`h-7 px-2.5 text-xs font-mono font-semibold ${
-                selectedPairFilter === 'MODERATE'
-                  ? 'bg-cyan-950/80 text-cyan-300 font-bold border border-cyan-500/50'
-                  : 'bg-white/[0.02] text-neutral-400 hover:text-white border border-white/[0.06]'
-              }`}
-            >
-              2/3 Moderate
-            </Button>
-            <Button
-              variant={selectedPairFilter === 'CAUTION' ? 'secondary' : 'ghost'}
-              size="sm"
-              onClick={() => setSelectedPairFilter('CAUTION')}
-              className={`h-7 px-2.5 text-xs font-mono font-semibold ${
-                selectedPairFilter === 'CAUTION'
-                  ? 'bg-amber-950/80 text-amber-300 font-bold border border-amber-500/50'
-                  : 'bg-white/[0.02] text-neutral-400 hover:text-white border border-white/[0.06]'
-              }`}
-            >
-              Waspada / Trap
-            </Button>
+          <div className="flex items-center gap-1 border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] p-0.5 rounded text-xs font-mono shrink-0 overflow-x-auto">
+            {(['ALL', 'HIGH_CONVICTION', 'MODERATE', 'CAUTION'] as const).map(filter => (
+              <button
+                key={filter}
+                onClick={() => setSelectedPairFilter(filter)}
+                className={`px-2.5 py-1 rounded transition cursor-pointer text-[10.5px] font-semibold ${
+                  selectedPairFilter === filter
+                    ? 'bg-[var(--active-bg)] text-[var(--active-text)] border border-[var(--active-border)] shadow-xs'
+                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                }`}
+              >
+                {filter === 'ALL'
+                  ? `ALL (${pairs.length})`
+                  : filter === 'HIGH_CONVICTION'
+                  ? '3/3 ALIGNED'
+                  : filter === 'MODERATE'
+                  ? '2/3 PARTIAL'
+                  : 'DIVERGENT / MIXED'}
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Pair Grid */}
+        {/* Pairs Grid */}
         {filteredPairs.length === 0 ? (
           <EmptyState
-            icon={<Target className="w-6 h-6 text-neutral-400" />}
-            title="Tidak Ada Pasangan Sesuai Filter"
-            description="Coba ubah kriteria filter konfluensi untuk menampilkan instrumen lain."
+            icon={<Target className="w-6 h-6 text-[var(--text-muted)]" />}
+            title="No pairs matched selected filter"
+            description="Adjust your confluence filter criteria to display other instruments."
             action={{
-              label: 'Tampilkan Semua Instrumen',
+              label: 'Show All Instruments',
               onClick: () => setSelectedPairFilter('ALL'),
             }}
           />
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3.5">
-          {filteredPairs.map(p => {
-            const badge = getConfluenceBadge(p.confluenceStatus);
-            const isBullish = p.directionalBias.includes('BULLISH');
-            const isBearish = p.directionalBias.includes('BEARISH');
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+            {filteredPairs.map(p => {
+              const badge = getConfluenceBadge(p.confluenceStatus);
+              const c1 = p.pair.length === 6 ? p.pair.slice(0, 3) : null;
+              const c2 = p.pair.length === 6 ? p.pair.slice(3, 6) : null;
 
-            // Flag URLs for dual currencies
-            const c1 = p.pair.length === 6 ? p.pair.slice(0, 3) : null;
-            const c2 = p.pair.length === 6 ? p.pair.slice(3, 6) : null;
+              return (
+                <div
+                  key={p.pair}
+                  className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-3.5 flex flex-col justify-between gap-3 hover:border-[var(--border-strong)] hover:shadow-[var(--shadow-raised)] transition"
+                >
+                  <div>
+                    {/* Top Row: Symbol, Price, & 24h Change */}
+                    <div className="flex items-center justify-between gap-2 mb-2 font-mono">
+                      <div className="flex items-center gap-2">
+                        {c1 && c2 ? (
+                          <div className="flex items-center -space-x-1 shrink-0">
+                            <img
+                              src={getCurrencyFlagUrl(c1)}
+                              alt={c1}
+                              referrerPolicy="no-referrer"
+                              className="w-3.5 h-2.5 object-cover rounded-xs border border-[var(--border-subtle)]"
+                            />
+                            <img
+                              src={getCurrencyFlagUrl(c2)}
+                              alt={c2}
+                              referrerPolicy="no-referrer"
+                              className="w-3.5 h-2.5 object-cover rounded-xs border border-[var(--border-subtle)]"
+                            />
+                          </div>
+                        ) : (
+                          <span className="w-5 h-5 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] flex items-center justify-center text-[10px] font-bold text-[var(--text-primary)] shrink-0">
+                            {p.pair.slice(0, 2)}
+                          </span>
+                        )}
+                        <div>
+                          <h3 className="text-sm font-bold text-[var(--text-primary)]">
+                            {p.pair}
+                          </h3>
+                          <div className="text-[10px] text-[var(--text-muted)] font-sans truncate max-w-[120px]">
+                            {p.displayName}
+                          </div>
+                        </div>
+                      </div>
 
-            return (
-              <div
-                key={p.pair}
-                className="rounded-xl border border-white/[0.08] bg-[#07090e] hover:border-cyan-400/40 transition-all duration-200 p-3.5 flex flex-col justify-between group shadow-xs hover:shadow-[0_0_20px_rgba(6,182,212,0.08)]"
-              >
-                <div>
-                  {/* Top Bar: Flags, Pair, & Bias Badge */}
-                  <div className="flex items-center justify-between gap-2 mb-2">
-                    <div className="flex items-center gap-2">
-                      {c1 && c2 ? (
-                        <div className="flex items-center -space-x-1 shrink-0">
-                          <img
-                            src={getCurrencyFlagUrl(c1)}
-                            alt={c1}
-                            referrerPolicy="no-referrer"
-                            className="w-3.5 h-2.5 object-cover rounded-xs border border-white/[0.1] shadow-xs"
-                          />
-                          <img
-                            src={getCurrencyFlagUrl(c2)}
-                            alt={c2}
-                            referrerPolicy="no-referrer"
-                            className="w-3.5 h-2.5 object-cover rounded-xs border border-white/[0.1] shadow-xs"
-                          />
+                      <div className="text-right tabular-nums">
+                        <div className="text-xs font-bold text-[var(--text-primary)]">
+                          {p.currentPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
                         </div>
-                      ) : (
-                        <div className="w-5 h-5 rounded bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-[9px] font-mono font-bold text-cyan-400 shrink-0">
-                          {p.pair === 'BTC' ? '₿' : p.pair === 'US100' ? 'NQ' : p.pair === 'US30' ? 'YM' : p.pair === 'US500' ? 'ES' : '●'}
-                        </div>
-                      )}
-                      <div>
-                        <h3 className="text-sm font-black font-mono text-white group-hover:text-cyan-300 transition">
-                          {p.pair}
-                        </h3>
-                        <div className="text-[10px] text-slate-400 truncate max-w-[120px]">
-                          {p.displayName}
+                        <div className={`text-[10px] font-semibold ${
+                          p.change24hPct >= 0 ? 'text-[var(--bullish)]' : 'text-[var(--bearish)]'
+                        }`}>
+                          {p.change24hPct >= 0 ? `+${p.change24hPct.toFixed(2)}%` : `${p.change24hPct.toFixed(2)}%`}
                         </div>
                       </div>
                     </div>
 
-                    <div className="text-right">
-                      <div className="text-xs font-mono font-bold text-white">
-                        {p.currentPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 5 })}
-                      </div>
-                      <div className={`text-[10px] font-mono font-bold ${p.change24hPct >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                        {p.change24hPct >= 0 ? `+${p.change24hPct.toFixed(2)}%` : `${p.change24hPct.toFixed(2)}%`}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Confluence Status Banner */}
-                  <div className={`mb-3 px-2 py-1 rounded-md border text-[10px] font-mono font-bold flex items-center justify-between ${badge.bg}`}>
-                    <div className="flex items-center gap-1.5">
-                      <span className={`w-1.5 h-1.5 rounded-full ${badge.dot}`} />
+                    {/* Confluence Status Banner */}
+                    <div className={`mb-2.5 px-2 py-1 rounded border text-[10px] font-mono font-bold flex items-center justify-between ${badge.badgeClass}`}>
                       <span>{badge.label}</span>
+                      <span className="tabular-nums">{p.convictionScore}%</span>
                     </div>
-                    <span className="font-extrabold">{p.convictionScore}%</span>
-                  </div>
 
-                  {/* Currency Strength Confluence (Khusus Forex Pairs) */}
-                  {p.currencyStrength ? (
-                    <div className="mb-2.5 p-2 rounded-lg bg-white/[0.02] border border-white/[0.06] text-[10px] font-mono">
-                      <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-slate-400 font-bold flex items-center gap-1 text-[9px] uppercase tracking-wider">
-                          <Activity className="w-3 h-3 text-cyan-400" />
-                          CURRENCY STRENGTH:
-                        </span>
-                        <span className={`px-1.5 py-0.2 rounded font-extrabold text-[9px] ${
-                          p.currencyStrength.alignment === 'CONFIRMED'
-                            ? 'bg-emerald-950/90 text-emerald-300 border border-emerald-800/80'
-                            : p.currencyStrength.alignment === 'DIVERGENCE'
-                            ? 'bg-amber-950/90 text-amber-300 border border-amber-800/80 animate-pulse'
-                            : 'bg-white/[0.06] text-slate-300 border border-white/[0.1]'
-                        }`}>
-                          {p.currencyStrength.alignment === 'CONFIRMED' ? '✓ CS CONFIRMED' : p.currencyStrength.alignment === 'DIVERGENCE' ? '⚠ CS DIVERGENCE' : 'CS NEUTRAL'}
-                        </span>
-                      </div>
-
-                      {/* Base vs Quote Meters */}
-                      <div className="flex items-center justify-between gap-1 text-[10px] py-1 px-1.5 rounded bg-black/40 border border-white/[0.04]">
-                        <div className="flex items-center gap-1">
-                          <span className="font-extrabold text-white">{p.currencyStrength.baseCurrency}</span>
-                          <span className="text-slate-500 text-[9px]">#{p.currencyStrength.baseRank}</span>
-                          <span className={`font-bold ${p.currencyStrength.baseScore >= 5.5 ? 'text-emerald-400' : p.currencyStrength.baseScore <= 3.5 ? 'text-rose-400' : 'text-slate-300'}`}>
-                            {p.currencyStrength.baseScore.toFixed(1)}
+                    {/* Currency Strength Confluence Pillar (Forex Pairs) */}
+                    {p.currencyStrength ? (
+                      <div className="mb-2.5 p-2 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] text-[10px] font-mono">
+                        <div className="flex items-center justify-between mb-1.5 text-[9.5px]">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[var(--text-muted)] uppercase tracking-wider font-semibold">CS Pillar</span>
+                            <span className={`px-1.5 py-0.2 rounded font-bold text-[9px] ${
+                              p.currencyStrength.bias === 'BULLISH'
+                                ? 'bg-[var(--bullish)]/15 text-[var(--bullish)] border border-[var(--bullish)]/30'
+                                : p.currencyStrength.bias === 'BEARISH'
+                                ? 'bg-[var(--bearish)]/15 text-[var(--bearish)] border border-[var(--bearish)]/30'
+                                : 'bg-[var(--bg-card)] text-[var(--text-muted)] border border-[var(--border-subtle)]'
+                            }`}>
+                              {p.currencyStrength.bias}
+                            </span>
+                          </div>
+                          <span className={`text-[9px] font-semibold px-1 rounded ${
+                            p.currencyStrength.alignment === 'CONFIRMED'
+                              ? 'text-[var(--bullish)]'
+                              : p.currencyStrength.alignment === 'DIVERGENCE'
+                              ? 'text-[var(--bearish)] bg-[var(--bearish)]/10'
+                              : 'text-[var(--text-muted)]'
+                          }`}>
+                            {p.currencyStrength.alignment}
                           </span>
                         </div>
-
-                        <div className={`px-1.5 py-0.5 rounded text-[9px] font-mono font-extrabold ${
-                          p.currencyStrength.netDifferential > 0.3
-                            ? 'bg-emerald-950 text-emerald-300 border border-emerald-800/80'
-                            : p.currencyStrength.netDifferential < -0.3
-                            ? 'bg-rose-950 text-rose-300 border border-rose-800/80'
-                            : 'bg-white/[0.06] text-slate-400 border border-white/[0.08]'
-                        }`}>
-                          Δ {p.currencyStrength.netDifferential > 0 ? `+${p.currencyStrength.netDifferential.toFixed(1)}` : p.currencyStrength.netDifferential.toFixed(1)}
-                        </div>
-
-                        <div className="flex items-center gap-1">
-                          <span className={`font-bold ${p.currencyStrength.quoteScore >= 5.5 ? 'text-emerald-400' : p.currencyStrength.quoteScore <= 3.5 ? 'text-rose-400' : 'text-slate-300'}`}>
-                            {p.currencyStrength.quoteScore.toFixed(1)}
+                        <div className="flex items-center justify-between tabular-nums">
+                          <span className="font-bold text-[var(--text-primary)]">
+                            {p.currencyStrength.baseCurrency} ({p.currencyStrength.baseScore.toFixed(1)})
                           </span>
-                          <span className="text-slate-500 text-[9px]">#{p.currencyStrength.quoteRank}</span>
-                          <span className="font-extrabold text-white">{p.currencyStrength.quoteCurrency}</span>
+                          <span className={`px-1.5 py-0.2 rounded font-bold ${
+                            p.currencyStrength.netDifferential > 0 ? 'text-[var(--bullish)]' : 'text-[var(--bearish)]'
+                          }`}>
+                            Δ {p.currencyStrength.netDifferential > 0 ? `+${p.currencyStrength.netDifferential.toFixed(1)}` : p.currencyStrength.netDifferential.toFixed(1)}
+                          </span>
+                          <span className="font-bold text-[var(--text-primary)]">
+                            {p.currencyStrength.quoteCurrency} ({p.currencyStrength.quoteScore.toFixed(1)})
+                          </span>
                         </div>
                       </div>
+                    ) : null}
 
-                      <div className="text-[9px] text-slate-400 mt-1 truncate">
-                        {p.currencyStrength.advantageLabel}
+                    {/* Confluence Pillars Breakdown */}
+                    <div className="space-y-1.5 text-[10.5px] font-mono p-2 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)]">
+                      <div>
+                        <div className="flex items-center justify-between text-[9.5px] text-[var(--text-muted)]">
+                          <span>{p.currencyStrength ? 'CS Flow / Macro Driver' : 'Fundamental'}</span>
+                          <span className={`font-bold ${p.fundamental.bias === 'BULLISH' ? 'text-[var(--bullish)]' : p.fundamental.bias === 'BEARISH' ? 'text-[var(--bearish)]' : 'text-[var(--text-muted)]'}`}>
+                            {p.fundamental.bias}
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-[var(--text-secondary)] font-sans line-clamp-1">
+                          {p.currencyStrength ? p.currencyStrength.summary : p.fundamental.keyDriver}
+                        </p>
+                      </div>
+
+                      <div className="pt-1 border-t" style={{ borderColor: 'var(--border-hairline)' }}>
+                        <div className="flex items-center justify-between text-[9.5px] text-[var(--text-muted)]">
+                          <span>Intermarket</span>
+                          <span className={`font-bold ${p.intermarket.bias === 'BULLISH' ? 'text-[var(--bullish)]' : p.intermarket.bias === 'BEARISH' ? 'text-[var(--bearish)]' : 'text-[var(--text-muted)]'}`}>
+                            {p.intermarket.bias}
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-[var(--text-secondary)] font-sans line-clamp-1">
+                          {p.intermarket.primarySymptom}
+                        </p>
+                      </div>
+
+                      <div className="pt-1 border-t" style={{ borderColor: 'var(--border-hairline)' }}>
+                        <div className="flex items-center justify-between text-[9.5px] text-[var(--text-muted)]">
+                          <span>Price action</span>
+                          <span className={`font-bold ${p.priceAction.bias === 'BULLISH' ? 'text-[var(--bullish)]' : p.priceAction.bias === 'BEARISH' ? 'text-[var(--bearish)]' : 'text-[var(--text-muted)]'}`}>
+                            {p.priceAction.bias}
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-[var(--text-secondary)] font-sans line-clamp-1">
+                          {p.priceAction.actionableZone}
+                        </p>
                       </div>
                     </div>
-                  ) : (
-                    <div className="mb-2.5 px-2 py-1 rounded-md bg-white/[0.02] border border-white/[0.06] text-[9px] font-mono text-slate-400 flex items-center justify-between">
-                      <span className="text-slate-500 uppercase">DRIVER BENCHMARK:</span>
-                      <span className="font-bold text-cyan-400">
-                        {p.pair === 'XAUUSD' ? 'Real Yields & DXY' : p.pair === 'BTC' ? 'M2 & Risk Appetite' : 'Yields & Earnings Rotation'}
-                      </span>
-                    </div>
-                  )}
-
-                  {/* 3 Pillars Breakdown */}
-                  <div className="space-y-1.5 mb-3 text-[11px] font-mono bg-white/[0.02] p-2.5 rounded-lg border border-white/[0.06]">
-                    {/* Fundamental */}
-                    <div className="flex items-start justify-between gap-1">
-                      <span className="text-slate-400 text-[10px] shrink-0">1. FUNDAMENTAL:</span>
-                      <span className={`text-[10px] font-bold text-right truncate ${
-                        p.fundamental.bias === 'BULLISH' ? 'text-emerald-300' : p.fundamental.bias === 'BEARISH' ? 'text-rose-300' : 'text-slate-300'
-                      }`}>
-                        {p.fundamental.bias}
-                      </span>
-                    </div>
-                    <div className="text-[10px] text-slate-400 line-clamp-1 leading-tight mb-1">
-                      {p.fundamental.keyDriver}
-                    </div>
-
-                    {/* Intermarket */}
-                    <div className="flex items-start justify-between gap-1 pt-1 border-t border-white/[0.06]">
-                      <span className="text-slate-400 text-[10px] shrink-0">2. INTERMARKET:</span>
-                      <span className={`text-[10px] font-bold text-right truncate ${
-                        p.intermarket.bias === 'BULLISH' ? 'text-emerald-300' : p.intermarket.bias === 'BEARISH' ? 'text-rose-300' : 'text-slate-300'
-                      }`}>
-                        {p.intermarket.bias}
-                      </span>
-                    </div>
-                    <div className="text-[10px] text-slate-400 line-clamp-1 leading-tight mb-1">
-                      {p.intermarket.primarySymptom}
-                    </div>
-
-                    {/* Price Action */}
-                    <div className="flex items-start justify-between gap-1 pt-1 border-t border-white/[0.06]">
-                      <span className="text-slate-400 text-[10px] shrink-0">3. PRICE ACTION:</span>
-                      <span className={`text-[10px] font-bold text-right truncate ${
-                        p.priceAction.bias === 'BULLISH' ? 'text-emerald-300' : p.priceAction.bias === 'BEARISH' ? 'text-rose-300' : 'text-slate-300'
-                      }`}>
-                        {p.priceAction.bias}
-                      </span>
-                    </div>
-                    <div className="text-[10px] text-slate-400 line-clamp-1 leading-tight">
-                      {p.priceAction.actionableZone}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Bottom Gameplan & Actions */}
-                <div className="pt-2 border-t border-white/[0.06]">
-                  {p.intradayPlan.warningNote && (
-                    <div className="mb-2 p-1.5 rounded bg-amber-950/50 border border-amber-800/60 text-[9px] font-mono text-amber-300 flex items-start gap-1">
-                      <AlertTriangle className="w-3 h-3 text-amber-400 shrink-0 mt-0.5" />
-                      <span className="leading-tight">{p.intradayPlan.warningNote}</span>
-                    </div>
-                  )}
-
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-[10px] font-mono text-slate-500 uppercase">Intraday Plan:</span>
-                    <span className={`text-[10px] font-mono font-bold px-1.5 py-0.2 rounded ${
-                      p.intradayPlan.recommendedAction === 'LOOK_FOR_BUY'
-                        ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-800/80'
-                        : p.intradayPlan.recommendedAction === 'LOOK_FOR_SELL'
-                        ? 'bg-rose-950/80 text-rose-300 border border-rose-800/80'
-                        : 'bg-white/[0.06] text-slate-300 border border-white/[0.08]'
-                    }`}>
-                      {p.intradayPlan.recommendedAction.replace(/_/g, ' ')}
-                    </span>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  {/* Footer Action */}
+                  <div className="pt-2 border-t font-mono" style={{ borderColor: 'var(--border-hairline)' }}>
+                    <div className="flex items-center justify-between mb-2 text-[10px]">
+                      <span className="text-[var(--text-muted)]">Plan</span>
+                      <span className="font-bold text-[var(--text-primary)]">
+                        {p.intradayPlan.recommendedAction.replace(/_/g, ' ')}
+                      </span>
+                    </div>
+
+                    <div className="mb-2 p-2 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)]">
+                      <span className="text-[9.5px] text-[var(--text-muted)] block">INVALIDATION</span>
+                      <span className="text-[10.5px] text-[var(--text-secondary)] font-sans leading-snug block">
+                        {p.intradayPlan.invalidationTrigger}
+                      </span>
+                    </div>
+
+                    {p.intradayPlan.warningNote && (
+                      <div className="mb-2 p-2 rounded border border-[var(--warning-border)] bg-[var(--warning-bg)] text-[10px] text-[var(--warning-strong)] font-sans leading-snug">
+                        {p.intradayPlan.warningNote}
+                      </div>
+                    )}
+
                     <button
                       onClick={() => onOpenChart(p.tvSymbol || p.pair)}
-                      className="flex-1 py-1.5 rounded-md bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] hover:border-cyan-400/50 text-cyan-400 hover:text-cyan-300 text-[11px] font-mono font-semibold transition flex items-center justify-center gap-1 cursor-pointer"
+                      className="w-full py-1.5 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] hover:bg-[var(--border-subtle)] text-[var(--text-primary)] text-[10.5px] font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer"
                     >
-                      <span>Buka Chart</span>
-                      <ExternalLink className="w-3 h-3" />
+                      <ExternalLink className="w-3 h-3 text-[var(--accent)]" />
+                      <span>OPEN CHART</span>
                     </button>
                   </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
         )}
-      </div>
+      </section>
     </div>
   );
 });

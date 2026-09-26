@@ -1,35 +1,31 @@
 import React from 'react';
 import {
   LayoutDashboard,
-  Compass,
-  Zap,
   Activity,
   TrendingUp,
   Calendar,
   Radio,
-  Brain,
+  Sparkles,
   Star,
   Settings,
   ChevronLeft,
   ChevronRight,
-  ShieldCheck,
   X,
-  Layers,
   User as UserIcon,
   LogOut,
   History,
   GitMerge,
   Target,
+  FileText,
+  CircleDollarSign,
 } from 'lucide-react';
 import { User } from '../types';
-import { Badge } from './ui/badge';
-import { Separator } from './ui/separator';
+import { ThemeToggle } from './ThemeToggle';
 
 export type NavTabId =
   | 'terminal'
   | 'arah_market'
-  | 'intraday_map'
-  | 'today_catalysts'
+  | 'daily_report'
   | 'markets'
   | 'intermarket'
   | 'currency'
@@ -43,15 +39,15 @@ export type NavTabId =
 interface SidebarProps {
   activeTab: NavTabId;
   setActiveTab: (tab: NavTabId) => void;
-  isOpen: boolean; // mobile drawer open state
+  isOpen: boolean; // mobile drawer
   onClose: () => void;
   isCollapsed: boolean;
   onToggleCollapse: () => void;
-  marketMapCount?: number;
-  catalystsCount?: number;
   user?: User | null;
   onOpenAuth?: () => void;
   onLogout?: () => void;
+  theme?: 'dark' | 'light';
+  onToggleTheme?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = React.memo(({
@@ -61,130 +57,112 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
   onClose,
   isCollapsed,
   onToggleCollapse,
-  marketMapCount = 13,
-  catalystsCount,
   user,
   onOpenAuth,
   onLogout,
+  theme = 'light',
+  onToggleTheme,
 }) => {
-  const navGroups = [
+  // Navigation structure: DASHBOARD, MARKET, INTELLIGENCE, RESEARCH, SYSTEM
+  const navSections = [
     {
-      label: 'SURVEILLANCE & BIAS',
+      group: 'DASHBOARD',
       items: [
         {
           id: 'terminal' as NavTabId,
-          label: 'Overview Dashboard',
-          shortLabel: 'Overview',
+          label: 'Overview',
           icon: LayoutDashboard,
           badge: null,
-        },
-        {
-          id: 'arah_market' as NavTabId,
-          label: 'Arah Market Hari Ini',
-          shortLabel: 'Arah Market',
-          icon: Target,
-          badge: 'INTRADAY',
-          badgeColor: 'bg-cyan-950/80 text-cyan-300 border-cyan-800/60',
-        },
-        {
-          id: 'intraday_map' as NavTabId,
-          label: "Today's Market Map",
-          shortLabel: 'Market Map',
-          icon: Compass,
-          badge: `${marketMapCount}`,
-          badgeColor: 'bg-slate-900 text-slate-400 border-slate-800',
-        },
-        {
-          id: 'today_catalysts' as NavTabId,
-          label: "Today's Catalysts",
-          shortLabel: 'Catalysts',
-          icon: Zap,
-          badge: catalystsCount !== undefined ? `${catalystsCount}` : null,
-          badgeColor: 'bg-amber-950/80 text-amber-300 border-amber-800/60',
         },
       ],
     },
     {
-      label: 'MARKETS & FLOWS',
+      group: 'MARKET',
       items: [
         {
           id: 'markets' as NavTabId,
-          label: 'Market Surveillance',
-          shortLabel: 'Markets',
+          label: 'Markets',
           icon: Activity,
           badge: null,
         },
         {
+          id: 'arah_market' as NavTabId,
+          label: 'Market Bias',
+          icon: Target,
+          badge: null,
+        },
+        {
           id: 'intermarket' as NavTabId,
-          label: 'Intermarket Matrix',
-          shortLabel: 'Intermarket',
+          label: 'Intermarket Flows',
           icon: GitMerge,
-          badge: 'FLOWS',
-          badgeColor: 'bg-indigo-950/70 text-indigo-300 border-indigo-850/60',
+          badge: null,
         },
         {
           id: 'currency' as NavTabId,
-          label: 'Currency Strength (G8)',
-          shortLabel: 'Currency',
-          icon: TrendingUp,
-          badge: 'G8',
-          badgeColor: 'bg-slate-900 text-slate-400 border-slate-800',
+          label: 'Currency Strength',
+          icon: CircleDollarSign,
+          badge: null,
         },
       ],
     },
     {
-      label: 'INTELLIGENCE & WIRE',
+      group: 'INTELLIGENCE',
       items: [
         {
+          id: 'events' as NavTabId,
+          label: 'News Wire',
+          icon: Radio,
+          badge: 'LIVE',
+          badgeClass: 'badge-bullish',
+        },
+        {
           id: 'macro' as NavTabId,
-          label: 'Macro Calendar',
-          shortLabel: 'Macro',
+          label: 'Economic Calendar',
           icon: Calendar,
           badge: null,
         },
         {
-          id: 'events' as NavTabId,
-          label: 'Canonical Wire',
-          shortLabel: 'News Wire',
-          icon: Radio,
-          badge: 'LIVE',
-          badgeColor: 'bg-emerald-950/80 text-emerald-400 border-emerald-800/60',
-        },
-        {
           id: 'intelligence' as NavTabId,
-          label: 'AI Market Intelligence',
-          shortLabel: 'AI Intel',
-          icon: Brain,
+          label: 'AI Analysis',
+          icon: Sparkles,
           badge: null,
         },
         {
-          id: 'history' as NavTabId,
-          label: 'Market History & Memory',
-          shortLabel: 'History',
-          icon: History,
-          badge: 'Dossier',
-          badgeColor: 'bg-slate-900 text-slate-400 border-slate-800',
+          id: 'daily_report' as NavTabId,
+          label: 'Market Report',
+          icon: FileText,
+          badge: 'AI',
+          badgeClass: 'badge-neutral',
         },
       ],
     },
     {
-      label: 'ACCOUNT & SYSTEM',
+      group: 'RESEARCH',
       items: [
         {
+          id: 'history' as NavTabId,
+          label: 'Historical Data',
+          icon: History,
+          badge: null,
+        },
+        {
           id: 'watchlist' as NavTabId,
-          label: 'My Watchlist',
-          shortLabel: 'Watchlist',
+          label: 'Watchlist',
           icon: Star,
           badge: null,
         },
-        ...(user?.role === 'ADMIN' ? [{
+      ],
+    },
+    {
+      group: 'SYSTEM',
+      items: [
+        {
           id: 'admin' as NavTabId,
-          label: 'Feeds & System Health',
-          shortLabel: 'Admin',
+          label: 'Data & Feeds',
           icon: Settings,
           badge: 'ADMIN',
-          badgeColor: 'bg-amber-950/80 text-amber-300 border-amber-800/60',
-        }] : []),
+          badgeClass: 'badge-warning',
+        },
       ],
     },
   ];
@@ -200,53 +178,56 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
       {isOpen && (
         <div
           onClick={onClose}
-          className="fixed inset-0 bg-black/70 backdrop-blur-xs z-40 lg:hidden"
+          className="fixed inset-0 bg-black/60 z-40 lg:hidden"
           aria-hidden="true"
         />
       )}
 
-      {/* Sidebar Container */}
+      {/* Institutional Sidebar Container */}
       <aside
         id="arah-market-sidebar"
-        className={`fixed top-0 bottom-0 left-0 z-50 bg-[#0b0d14] border-r border-white/[0.08] flex flex-col transition-all duration-200 ease-in-out lg:static ${
-          isOpen ? 'translate-x-0 w-64' : '-translate-x-full lg:translate-x-0'
-        } ${isCollapsed ? 'lg:w-18' : 'lg:w-64'}`}
+        className={`fixed top-0 bottom-0 left-0 z-50 flex flex-col transition-all duration-150 ease-in-out lg:static border-r select-none terminal-sidebar ${
+          isOpen ? 'translate-x-0 w-60' : '-translate-x-full lg:translate-x-0'
+        } ${isCollapsed ? 'lg:w-14' : 'lg:w-60'}`}
+        style={{
+          background: 'var(--bg-sidebar)',
+          borderColor: 'var(--border-subtle)',
+        }}
       >
         {/* Brand Header */}
-        <div className="h-14 border-b border-white/[0.08] px-4 flex items-center justify-between shrink-0 bg-[#0b0d14]">
+        <div
+          className="h-14 px-4 flex items-center justify-between shrink-0 border-b"
+          style={{ borderColor: 'var(--border-hairline)' }}
+        >
           <div className="flex items-center gap-2.5 overflow-hidden">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center text-slate-950 font-black shrink-0 shadow-sm shadow-cyan-500/25">
-              <Compass className="w-4.5 h-4.5 text-slate-950 stroke-[2.5]" />
+            <div className="w-6 h-6 rounded flex items-center justify-center font-mono font-bold text-xs bg-[var(--accent)] text-[var(--accent-contrast)] shrink-0 shadow-xs">
+              <span className="text-[13px] leading-none">▣</span>
             </div>
             {(!isCollapsed || isOpen) && (
               <div className="truncate">
-                <div className="font-mono font-bold text-xs tracking-wider text-white flex items-center gap-1.5">
-                  <span>ARAH MARKET</span>
-                  <Badge variant="cyan" className="text-[9px] px-1 py-0 font-bold">
-                    PRO
-                  </Badge>
+                <div className="font-display font-semibold text-[13px] tracking-tight text-[var(--text-primary)] leading-tight">
+                  Arah Market
                 </div>
-                <div className="text-[9.5px] text-slate-400 font-mono flex items-center gap-1 mt-0.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  <span>TERMINAL v2.5</span>
+                <div className="metadata-label text-[9px] text-[var(--text-muted)] tracking-wider">
+                  MACRO &amp; FX
                 </div>
               </div>
             )}
           </div>
 
-          {/* Close for mobile, collapse toggle for desktop */}
+          {/* Close mobile, collapse toggle desktop */}
           <div className="flex items-center">
             <button
               onClick={onClose}
-              className="p-1 rounded text-slate-400 hover:text-slate-200 lg:hidden cursor-pointer"
+              className="p-1 rounded text-[var(--text-muted)] hover:text-[var(--text-primary)] lg:hidden cursor-pointer"
               title="Close Menu"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </button>
             <button
               onClick={onToggleCollapse}
-              className="hidden lg:flex p-1.5 rounded-md bg-white/[0.04] hover:bg-white/[0.08] text-slate-400 hover:text-slate-200 border border-white/[0.08] transition cursor-pointer"
-              title={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+              className="hidden lg:flex p-1 rounded text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-section-alt)] transition cursor-pointer"
+              title={isCollapsed ? 'Expand Navigation' : 'Collapse Navigation'}
               id="toggle-sidebar-collapse-btn"
             >
               {isCollapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
@@ -255,16 +236,16 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
         </div>
 
         {/* Navigation Sections */}
-        <nav className="flex-1 overflow-y-auto px-2 py-3.5 space-y-4 scrollbar-thin">
-          {navGroups.map((group, gIdx) => (
-            <div key={gIdx} className="space-y-0.5">
+        <nav className="flex-1 overflow-y-auto px-2 py-4 space-y-5">
+          {navSections.map((sec, sIdx) => (
+            <div key={sIdx} className="space-y-1">
               {(!isCollapsed || isOpen) && (
-                <div className="px-2 pb-1 text-[9px] font-mono uppercase tracking-widest text-slate-500 font-semibold">
-                  {group.label}
+                <div className="px-2.5 pb-1 metadata-label text-[9px] text-[var(--text-muted)]">
+                  {sec.group}
                 </div>
               )}
 
-              {group.items.map(item => {
+              {sec.items.map(item => {
                 const isActive = activeTab === item.id;
                 const Icon = item.icon;
 
@@ -272,44 +253,41 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
                   <button
                     key={item.id}
                     onClick={() => handleSelect(item.id)}
-                    className={`w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer group relative ${
+                    className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded transition cursor-pointer group relative ${
                       isActive
-                        ? 'bg-white/[0.08] text-white border border-white/[0.12] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08)]'
-                        : 'text-slate-400 hover:text-slate-200 hover:bg-white/[0.03] border border-transparent'
+                        ? 'bg-[var(--active-bg)] text-[var(--text-primary)] font-semibold'
+                        : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-section-alt)]'
                     }`}
                     title={isCollapsed && !isOpen ? item.label : undefined}
                     id={`nav-item-${item.id}`}
                   >
-                    {/* Left Accent Bar for Active State */}
+                    {/* Active Accent Bar */}
                     {isActive && (
-                      <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-r bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]" />
+                      <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-r bg-[var(--accent)]" />
                     )}
 
                     <Icon
                       className={`w-4 h-4 shrink-0 transition ${
-                        isActive ? 'text-cyan-400' : 'text-slate-400 group-hover:text-slate-200'
+                        isActive ? 'text-[var(--accent)]' : 'text-[var(--text-muted)] group-hover:text-[var(--text-primary)]'
                       }`}
                     />
 
                     {(!isCollapsed || isOpen) && (
-                      <span className="truncate flex-1 text-left font-sans">
+                      <span className="truncate flex-1 text-left font-sans text-[13px]">
                         {item.label}
                       </span>
                     )}
 
                     {(!isCollapsed || isOpen) && item.badge && (
                       <span
-                        className={`text-[9px] font-mono px-1.5 py-0.2 rounded border ${
-                          item.badgeColor || 'bg-white/[0.04] text-slate-300 border-white/[0.08]'
+                        className={`text-[9px] font-mono px-1.5 py-0.5 rounded-full border ${
+                          isActive
+                            ? 'bg-[var(--bg-canvas)] text-[var(--text-secondary)] border-[var(--border-subtle)]'
+                            : item.badgeClass || 'badge-neutral'
                         }`}
                       >
                         {item.badge}
                       </span>
-                    )}
-
-                    {/* Active Indicator Bar on Collapsed View */}
-                    {isCollapsed && !isOpen && isActive && (
-                      <span className="absolute right-0 top-1.5 bottom-1.5 w-1 rounded-l bg-cyan-400" />
                     )}
                   </button>
                 );
@@ -318,40 +296,44 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
           ))}
         </nav>
 
-        {/* Sidebar Footer: Feed System & User Profile (Bottom Left Corner) */}
-        <div className="p-3 border-t border-white/[0.08] bg-[#090b12] shrink-0 font-mono text-[11px] text-slate-400" id="sidebar-footer-corner">
+        {/* Sidebar Footer: Feed Status & User Account Profile */}
+        <div
+          className="px-3 py-3 border-t shrink-0"
+          style={{ borderColor: 'var(--border-hairline)' }}
+          id="sidebar-footer-corner"
+        >
           {(!isCollapsed || isOpen) ? (
-            <div className="space-y-2">
-              {/* Feed System Status */}
-              <div className="flex items-center justify-between pb-1.5 border-b border-white/[0.06]">
+            <div className="space-y-2.5">
+              {/* Telemetry Indicator */}
+              <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--bullish)]" />
+                  <span className="metadata-label text-[9px] text-[var(--text-secondary)]">
+                    Feed active
                   </span>
-                  <span className="text-slate-300 font-semibold text-[10px] tracking-wider font-mono">FEED: LIVE</span>
                 </div>
-                <span className="text-[9px] text-slate-400 bg-white/[0.04] px-1.5 py-0.5 rounded border border-white/[0.08]">PORT 3000</span>
+                <span className="text-[10px] font-mono text-[var(--text-muted)]">
+                  100ms
+                </span>
               </div>
 
-              {/* User Profile / Auth Control below Feed System */}
+              {/* User Account / Profile Box */}
               {user ? (
-                <div className="flex items-center justify-between gap-2 p-1.5 rounded-lg bg-white/[0.03] border border-white/[0.08]" id="sidebar-user-card">
+                <div
+                  className="flex items-center justify-between gap-2 pt-2.5 border-t"
+                  style={{ borderColor: 'var(--border-hairline)' }}
+                  id="sidebar-user-card"
+                >
                   <div className="flex items-center gap-2 min-w-0">
-                    <div className="w-6.5 h-6.5 rounded-md bg-gradient-to-br from-cyan-600 to-blue-700 text-white font-bold flex items-center justify-center text-[10.5px] shrink-0 shadow-xs border border-cyan-400/30">
-                      {user.name ? user.name.slice(0, 2).toUpperCase() : 'US'}
+                    <div className="w-7 h-7 rounded-full flex items-center justify-center font-mono font-bold text-[10px] bg-[var(--accent)] text-white shrink-0">
+                      {user.name ? user.name.slice(0, 2).toUpperCase() : 'TR'}
                     </div>
                     <div className="truncate">
-                      <div className="text-xs font-semibold text-slate-100 truncate leading-tight font-sans">
+                      <div className="text-xs font-semibold text-[var(--text-primary)] truncate font-sans">
                         {user.name}
                       </div>
-                      <div className="flex items-center gap-1.5 mt-0.5">
-                        <span className="text-[9px] text-cyan-400 font-mono leading-tight">
-                          {user.role || 'TRADER'}
-                        </span>
-                        <span className="text-[8px] font-mono font-bold px-1.5 py-0.2 rounded border bg-emerald-500/15 text-emerald-400 border-emerald-500/30">
-                          PRO
-                        </span>
+                      <div className="text-[9px] text-[var(--text-muted)] font-mono">
+                        {user.role || 'TRADER'} · {user.plan || 'PRO'}
                       </div>
                     </div>
                   </div>
@@ -359,7 +341,7 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
                   {onLogout && (
                     <button
                       onClick={onLogout}
-                      className="p-1.5 rounded-md hover:bg-white/[0.06] text-slate-400 hover:text-rose-400 transition cursor-pointer shrink-0"
+                      className="p-1 rounded text-[var(--text-muted)] hover:text-[var(--bearish)] transition cursor-pointer"
                       title="Sign out"
                       id="sidebar-logout-btn"
                     >
@@ -370,47 +352,42 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
               ) : (
                 <button
                   onClick={onOpenAuth}
-                  className="w-full flex items-center justify-center gap-2 py-1.5 px-3 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs font-bold transition cursor-pointer shadow-xs font-sans"
+                  className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded text-xs font-semibold bg-[var(--accent)] text-white hover:opacity-90 transition cursor-pointer"
                   id="sidebar-login-btn"
                 >
-                  <UserIcon className="w-3.5 h-3.5 text-slate-950" />
-                  <span>Trader Login</span>
+                  <UserIcon className="w-3.5 h-3.5" />
+                  <span>Trader login</span>
                 </button>
+              )}
+              {/* Theme Switcher Row */}
+              {onToggleTheme && (
+                <div className="flex items-center justify-between pt-1">
+                  <span className="metadata-label text-[9px] text-[var(--text-muted)]">Tema</span>
+                  <ThemeToggle theme={theme} onToggle={onToggleTheme} variant="pill" />
+                </div>
               )}
             </div>
           ) : (
-            <div className="flex flex-col items-center gap-2.5">
-              {/* Collapsed Feed Dot */}
-              <div className="flex justify-center pb-2 border-b border-white/[0.08] w-full" title="Feed: LIVE (Port 3000)">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
-              </div>
-
-              {/* Collapsed User Avatar or Login Button */}
+            <div className="flex flex-col items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-[var(--bullish)]" title="Feed: ACTIVE" />
+              {onToggleTheme && (
+                <ThemeToggle theme={theme} onToggle={onToggleTheme} variant="button" />
+              )}
               {user ? (
-                <div className="flex flex-col items-center gap-1.5">
-                  <div
-                    className="w-7 h-7 rounded-md bg-gradient-to-br from-cyan-600 to-blue-700 text-white font-bold flex items-center justify-center text-[10px] shrink-0 border border-cyan-400/30 cursor-default"
-                    title={`${user.name} (${user.role || 'TRADER'})`}
-                  >
-                    {user.name ? user.name.slice(0, 2).toUpperCase() : 'US'}
-                  </div>
-                  {onLogout && (
-                    <button
-                      onClick={onLogout}
-                      className="p-1 rounded text-slate-500 hover:text-rose-400 transition cursor-pointer"
-                      title="Sign out"
-                    >
-                      <LogOut className="w-3 h-3" />
-                    </button>
-                  )}
+                <div
+                  className="w-7 h-7 rounded-full flex items-center justify-center font-mono font-bold text-[10px] bg-[var(--accent)] text-white cursor-pointer"
+                  title={`${user.name} (${user.role})`}
+                  onClick={onLogout}
+                >
+                  {user.name ? user.name.slice(0, 2).toUpperCase() : 'TR'}
                 </div>
               ) : (
                 <button
                   onClick={onOpenAuth}
-                  className="p-1.5 rounded-md bg-white/[0.04] hover:bg-white/[0.08] text-cyan-300 border border-white/[0.08] transition cursor-pointer"
+                  className="p-1 rounded text-[var(--text-primary)]"
                   title="Trader Login"
                 >
-                  <UserIcon className="w-3.5 h-3.5" />
+                  <UserIcon className="w-4 h-4" />
                 </button>
               )}
             </div>
