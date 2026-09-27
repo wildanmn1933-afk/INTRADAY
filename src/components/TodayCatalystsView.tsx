@@ -18,6 +18,7 @@ import { TodayCatalyst, ImpactLevel } from '../types';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { EmptyState } from './shared/EmptyState';
+import { useLanguage } from '../lib/LanguageContext';
 
 interface TodayCatalystsViewProps {
   catalysts: TodayCatalyst[];
@@ -34,6 +35,7 @@ export const TodayCatalystsView: React.FC<TodayCatalystsViewProps> = React.memo(
   onSelectAsset,
   onOpenChart,
 }) => {
+  const { t, isId } = useLanguage();
   const [filterStatus, setFilterStatus] = useState<'ALL' | 'UPCOMING' | 'RELEASED'>('ALL');
   const [filterImportance, setFilterImportance] = useState<'ALL' | 'CRITICAL' | 'HIGH'>('ALL');
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -93,13 +95,17 @@ export const TodayCatalystsView: React.FC<TodayCatalystsViewProps> = React.memo(
     if (diff > 0) {
       const hours = Math.floor(diff / 3600000);
       const mins = Math.floor((diff % 3600000) / 60000);
-      if (hours > 0) return `In ${hours}h ${mins}m`;
-      return `In ${mins}m`;
+      if (hours > 0) {
+        return isId ? `Dalam ${hours}j ${mins}m` : `In ${hours}h ${mins}m`;
+      }
+      return isId ? `Dalam ${mins}m` : `In ${mins}m`;
     } else {
       const pastMin = Math.floor(Math.abs(diff) / 60000);
-      if (pastMin < 60) return `${pastMin}m ago`;
+      if (pastMin < 60) {
+        return isId ? `${pastMin}m lalu` : `${pastMin}m ago`;
+      }
       const pastHours = Math.floor(pastMin / 60);
-      return `${pastHours}h ago`;
+      return isId ? `${pastHours}j lalu` : `${pastHours}h ago`;
     }
   };
 
@@ -111,23 +117,26 @@ export const TodayCatalystsView: React.FC<TodayCatalystsViewProps> = React.memo(
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 bg-[var(--accent)] rounded-xs" />
             <h2 className="section-title text-sm sm:text-base text-[var(--text-primary)]">
-              TODAY'S KEY CATALYSTS
+              {t('KATALIS UTAMA HARI INI', "TODAY'S KEY CATALYSTS")}
             </h2>
             <span className="badge-warning text-[9.5px]">
-              CURRENT SESSION
+              {t('SESI AKTIF', 'CURRENT SESSION')}
             </span>
           </div>
           <p className="text-xs text-[var(--text-secondary)] max-w-2xl font-mono">
-            High-impact economic data releases, rate decisions, and central bank speeches scheduled for today with surprise tracking and transmission analysis.
+            {t(
+              'Rilis data ekonomi berdampak tinggi, keputusan suku bunga, dan pidato bank sentral yang dijadwalkan hari ini dengan pelacakan deviasi surprise dan analisis transmisi.',
+              'High-impact economic data releases, rate decisions, and central bank speeches scheduled for today with surprise tracking and transmission analysis.'
+            )}
           </p>
         </div>
 
         <div className="flex items-center gap-2 text-xs font-mono">
           <div className="flex items-center gap-2 px-3 py-1.5 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] text-[var(--text-secondary)]">
-            <span className="text-[var(--text-muted)]">TODAY:</span>
-            <span className="text-[var(--text-primary)] font-bold">{stats.upcoming} Upcoming</span>
+            <span className="text-[var(--text-muted)]">{t('HARI INI:', 'TODAY:')}</span>
+            <span className="text-[var(--text-primary)] font-bold">{stats.upcoming} {t('Akan Datang', 'Upcoming')}</span>
             <span className="text-[var(--border-strong)]">|</span>
-            <span className="text-[var(--bullish)] font-bold">{stats.released} Released</span>
+            <span className="text-[var(--bullish)] font-bold">{stats.released} {t('Dirilis', 'Released')}</span>
           </div>
 
           <button
@@ -137,7 +146,7 @@ export const TodayCatalystsView: React.FC<TodayCatalystsViewProps> = React.memo(
             id="refresh-today-catalysts-btn"
           >
             <RefreshCw className={`w-3 h-3 ${isRefreshing ? 'animate-spin text-[var(--accent)]' : ''}`} />
-            <span>SYNC</span>
+            <span>{t('SINKRONISASI', 'SYNC')}</span>
           </button>
         </div>
       </div>
@@ -145,7 +154,7 @@ export const TodayCatalystsView: React.FC<TodayCatalystsViewProps> = React.memo(
       {/* 2. Filter Ribbon */}
       <div className="terminal-panel p-2.5 flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-1.5 text-xs font-mono">
-          <span className="metadata-label text-[10px] text-[var(--text-muted)] mr-1">STATUS:</span>
+          <span className="metadata-label text-[10px] text-[var(--text-muted)] mr-1">{t('STATUS:', 'STATUS:')}</span>
           {(['ALL', 'UPCOMING', 'RELEASED'] as const).map(st => (
             <button
               key={st}
@@ -156,13 +165,13 @@ export const TodayCatalystsView: React.FC<TodayCatalystsViewProps> = React.memo(
                   : 'bg-[var(--bg-section-alt)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-subtle)]'
               }`}
             >
-              {st}
+              {st === 'ALL' ? t('SEMUA', 'ALL') : st === 'UPCOMING' ? t('AKAN DATANG', 'UPCOMING') : t('DIRILIS', 'RELEASED')}
             </button>
           ))}
         </div>
 
         <div className="flex items-center gap-1.5 text-xs font-mono">
-          <span className="metadata-label text-[10px] text-[var(--text-muted)] mr-1">SEVERITY:</span>
+          <span className="metadata-label text-[10px] text-[var(--text-muted)] mr-1">{t('URGENSI:', 'SEVERITY:')}</span>
           {(['ALL', 'CRITICAL', 'HIGH'] as const).map(imp => (
             <button
               key={imp}
@@ -173,7 +182,7 @@ export const TodayCatalystsView: React.FC<TodayCatalystsViewProps> = React.memo(
                   : 'bg-[var(--bg-section-alt)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-subtle)]'
               }`}
             >
-              {imp}
+              {imp === 'ALL' ? t('SEMUA', 'ALL') : imp === 'CRITICAL' ? t('KRITIS', 'CRITICAL') : t('TINGGI', 'HIGH')}
             </button>
           ))}
         </div>
@@ -184,10 +193,10 @@ export const TodayCatalystsView: React.FC<TodayCatalystsViewProps> = React.memo(
         {filtered.length === 0 ? (
           <EmptyState
             icon={<Zap className="w-6 h-6 text-[var(--text-muted)]" />}
-            title="No Catalysts Matching Filter"
-            description="No economic releases or events match the currently selected criteria."
+            title={t('Tidak Ada Katalis yang Cocok', 'No Catalysts Matching Filter')}
+            description={t('Tidak ada rilis data atau peristiwa ekonomi yang sesuai dengan kriteria yang dipilih.', 'No economic releases or events match the currently selected criteria.')}
             action={{
-              label: 'Reset Filters',
+              label: t('Reset Semua Filter', 'Reset Filters'),
               onClick: () => {
                 setFilterStatus('ALL');
                 setFilterImportance('ALL');
@@ -223,19 +232,19 @@ export const TodayCatalystsView: React.FC<TodayCatalystsViewProps> = React.memo(
                             ? 'badge-warning'
                             : 'badge-neutral'
                         }`}>
-                          {item.importance}
+                          {isCritical ? t('KRITIS', 'CRITICAL') : isHigh ? t('TINGGI', 'HIGH') : t('MODERAT', 'MODERATE')}
                         </span>
                       </h3>
                       <div className="text-[11px] font-mono text-[var(--text-secondary)] flex items-center gap-2 mt-0.5 flex-wrap">
                         <Clock className="w-3 h-3 text-[var(--accent)]" />
                         <span>
-                          {new Date(item.date_time_utc).toLocaleDateString('en-US', {
+                          {new Date(item.date_time_utc).toLocaleDateString(isId ? 'id-ID' : 'en-US', {
                             weekday: 'short',
                             day: 'numeric',
                             month: 'short',
                           })},{' '}
                           <strong className="text-[var(--text-primary)] font-bold">
-                            {new Date(item.date_time_utc).toLocaleTimeString('en-US', {
+                            {new Date(item.date_time_utc).toLocaleTimeString(isId ? 'id-ID' : 'en-US', {
                               hour12: false,
                               hour: '2-digit',
                               minute: '2-digit',
@@ -254,7 +263,7 @@ export const TodayCatalystsView: React.FC<TodayCatalystsViewProps> = React.memo(
                         ? 'badge-bullish'
                         : 'badge-warning'
                     }`}>
-                      {item.status}
+                      {item.status === 'RELEASED' ? t('DIRILIS', 'RELEASED') : t('AKAN DATANG', 'UPCOMING')}
                     </span>
 
                     {item.surprise && formatSurpriseBadge(item.surprise)}
@@ -264,36 +273,36 @@ export const TodayCatalystsView: React.FC<TodayCatalystsViewProps> = React.memo(
                 {/* Macro Release Metrics: Actual / Forecast / Previous / Surprise / Change */}
                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 rounded p-2.5 border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] text-center font-mono text-xs">
                   <div>
-                    <div className="metadata-label text-[9.5px] text-[var(--text-muted)]">ACTUAL</div>
+                    <div className="metadata-label text-[9.5px] text-[var(--text-muted)]">{t('AKTUAL', 'ACTUAL')}</div>
                     <div className={`font-bold text-sm tabular-nums ${item.actual ? 'text-[var(--text-primary)]' : 'text-[var(--text-muted)]'}`}>
                       {item.actual ?? '—'}
                     </div>
                   </div>
 
                   <div>
-                    <div className="metadata-label text-[9.5px] text-[var(--text-muted)]">FORECAST</div>
+                    <div className="metadata-label text-[9.5px] text-[var(--text-muted)]">{t('KONSENSUS', 'FORECAST')}</div>
                     <div className="text-[var(--text-secondary)] text-sm font-medium tabular-nums">{item.forecast ?? '—'}</div>
                   </div>
 
                   <div>
-                    <div className="metadata-label text-[9.5px] text-[var(--text-muted)]">PREVIOUS</div>
+                    <div className="metadata-label text-[9.5px] text-[var(--text-muted)]">{t('SEBELUMNYA', 'PREVIOUS')}</div>
                     <div className="text-[var(--text-muted)] text-sm tabular-nums">{item.previous ?? '—'}</div>
                   </div>
 
                   <div>
-                    <div className="metadata-label text-[9.5px] text-[var(--text-muted)]">SURPRISE</div>
+                    <div className="metadata-label text-[9.5px] text-[var(--text-muted)]">{t('DEVIASI', 'SURPRISE')}</div>
                     <div className="font-semibold text-[var(--text-primary)]">{item.surprise ?? '—'}</div>
                   </div>
 
                   <div>
-                    <div className="metadata-label text-[9.5px] text-[var(--text-muted)]">CHANGE</div>
+                    <div className="metadata-label text-[9.5px] text-[var(--text-muted)]">{t('PERUBAHAN', 'CHANGE')}</div>
                     <div className="text-[var(--text-secondary)] font-medium tabular-nums">{item.change ?? '—'}</div>
                   </div>
                 </div>
 
                 {/* Related Assets (Clickable) */}
                 <div className="flex flex-wrap items-center gap-1.5 text-xs font-mono">
-                  <span className="metadata-label text-[10px] text-[var(--text-muted)]">AFFECTED ASSETS:</span>
+                  <span className="metadata-label text-[10px] text-[var(--text-muted)]">{t('ASET TERDAMPAK:', 'AFFECTED ASSETS:')}</span>
                   {item.related_assets.map(asset => (
                     <button
                       key={asset}
@@ -314,7 +323,7 @@ export const TodayCatalystsView: React.FC<TodayCatalystsViewProps> = React.memo(
                 <div className="rounded p-2.5 border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] space-y-1.5 text-xs">
                   <div>
                     <span className="metadata-label text-[10px] text-[var(--accent)] font-semibold block mb-0.5">
-                      {item.status === 'RELEASED' ? 'ACTUAL MARKET REACTION:' : 'TRANSMISSION MECHANISM:'}
+                      {item.status === 'RELEASED' ? t('REAKSI PASAR AKTUAL:', 'ACTUAL MARKET REACTION:') : t('MEKANISME TRANSMISI:', 'TRANSMISSION MECHANISM:')}
                     </span>
                     <p className="text-[var(--text-primary)] leading-relaxed font-sans">
                       {item.actual_market_reaction}
@@ -324,16 +333,16 @@ export const TodayCatalystsView: React.FC<TodayCatalystsViewProps> = React.memo(
                   {isExpanded && (
                     <div className="pt-2 border-t space-y-1" style={{ borderColor: 'var(--border-hairline)' }}>
                       <span className="metadata-label text-[10px] text-[var(--text-muted)] block">
-                        FUNDAMENTAL IMPLICATION:
+                        {t('IMPLIKASI FUNDAMENTAL:', 'FUNDAMENTAL IMPLICATION:')}
                       </span>
                       <p className="text-[var(--text-secondary)] leading-relaxed font-sans">
                         {item.fundamental_implication}
                       </p>
                       <div className="text-[10px] font-mono text-[var(--text-muted)] pt-1 flex items-center justify-between">
-                        <span>Source: {item.source}</span>
+                        <span>{t('Sumber:', 'Source:')} {item.source}</span>
                         <span>
-                          Updated:{' '}
-                          {new Date(item.last_updated).toLocaleTimeString('en-US', {
+                          {t('Diperbarui:', 'Updated:')}{' '}
+                          {new Date(item.last_updated).toLocaleTimeString(isId ? 'id-ID' : 'en-US', {
                             hour12: false,
                             hour: '2-digit',
                             minute: '2-digit',
@@ -352,7 +361,7 @@ export const TodayCatalystsView: React.FC<TodayCatalystsViewProps> = React.memo(
                     onClick={() => setExpandedId(isExpanded ? null : item.id)}
                     className="text-[var(--text-secondary)] hover:text-[var(--accent)] transition cursor-pointer flex items-center gap-1 text-[11px]"
                   >
-                    <span>{isExpanded ? 'Hide Implication' : 'Deep Dive Implication'}</span>
+                    <span>{isExpanded ? t('Tutup Implikasi', 'Hide Implication') : t('Buka Analisis Implikasi', 'Deep Dive Implication')}</span>
                     <ChevronRight className={`w-3 h-3 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
                   </button>
                 </div>

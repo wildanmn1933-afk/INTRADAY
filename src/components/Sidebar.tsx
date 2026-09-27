@@ -21,6 +21,8 @@ import {
 } from 'lucide-react';
 import { User } from '../types';
 import { ThemeToggle } from './ThemeToggle';
+import { LanguageToggle } from './LanguageToggle';
+import { useLanguage } from '../lib/LanguageContext';
 
 export type NavTabId =
   | 'terminal'
@@ -63,73 +65,75 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
   theme = 'light',
   onToggleTheme,
 }) => {
+  const { t } = useLanguage();
+
   // Navigation structure: DASHBOARD, MARKET, INTELLIGENCE, RESEARCH, SYSTEM
   const navSections = [
     {
-      group: 'DASHBOARD',
+      group: t('DASHBOARD', 'DASHBOARD'),
       items: [
         {
           id: 'terminal' as NavTabId,
-          label: 'Overview',
+          label: t('Ringkasan', 'Overview'),
           icon: LayoutDashboard,
           badge: null,
         },
       ],
     },
     {
-      group: 'MARKET',
+      group: t('PASAR', 'MARKET'),
       items: [
         {
           id: 'markets' as NavTabId,
-          label: 'Markets',
+          label: t('Pasar & Aset', 'Markets'),
           icon: Activity,
           badge: null,
         },
         {
           id: 'arah_market' as NavTabId,
-          label: 'Market Bias',
+          label: t('Bias Pasar', 'Market Bias'),
           icon: Target,
           badge: null,
         },
         {
           id: 'intermarket' as NavTabId,
-          label: 'Intermarket Flows',
+          label: t('Aliran Antar-Pasar', 'Intermarket Flows'),
           icon: GitMerge,
           badge: null,
         },
         {
           id: 'currency' as NavTabId,
-          label: 'Currency Strength',
+          label: t('Kekuatan Valuta', 'Currency Strength'),
           icon: CircleDollarSign,
           badge: null,
         },
       ],
     },
     {
-      group: 'INTELLIGENCE',
+      group: t('INTELIJEN', 'INTELLIGENCE'),
       items: [
         {
           id: 'events' as NavTabId,
-          label: 'News Wire',
+          label: t('Wire Berita', 'News Wire'),
           icon: Radio,
           badge: 'LIVE',
           badgeClass: 'badge-bullish',
         },
         {
           id: 'macro' as NavTabId,
-          label: 'Economic Calendar',
+          label: t('Kalender Makro', 'Economic Calendar'),
           icon: Calendar,
           badge: null,
         },
         {
           id: 'intelligence' as NavTabId,
-          label: 'AI Analysis',
+          label: t('Analisis AI', 'AI Analysis'),
           icon: Sparkles,
           badge: null,
         },
         {
           id: 'daily_report' as NavTabId,
-          label: 'Market Report',
+          label: t('Laporan Pasar', 'Market Report'),
           icon: FileText,
           badge: 'AI',
           badgeClass: 'badge-neutral',
@@ -137,28 +141,28 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
       ],
     },
     {
-      group: 'RESEARCH',
+      group: t('RISET & ARSIP', 'RESEARCH & ARCHIVE'),
       items: [
         {
           id: 'history' as NavTabId,
-          label: 'Historical Data',
+          label: t('Memori Historis', 'Historical Data'),
           icon: History,
           badge: null,
         },
         {
           id: 'watchlist' as NavTabId,
-          label: 'Watchlist',
+          label: t('Daftar Pantau', 'Watchlist'),
           icon: Star,
           badge: null,
         },
       ],
     },
     {
-      group: 'SYSTEM',
+      group: t('SISTEM', 'SYSTEM'),
       items: [
         {
           id: 'admin' as NavTabId,
-          label: 'Data & Feeds',
+          label: t('Data & Feeds', 'Data & Feeds'),
           icon: Settings,
           badge: 'ADMIN',
           badgeClass: 'badge-warning',
@@ -220,14 +224,14 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
             <button
               onClick={onClose}
               className="p-1 rounded text-[var(--text-muted)] hover:text-[var(--text-primary)] lg:hidden cursor-pointer"
-              title="Close Menu"
+              title={t('sidebar.closeMenu')}
             >
               <X className="w-4 h-4" />
             </button>
             <button
               onClick={onToggleCollapse}
               className="hidden lg:flex p-1 rounded text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-section-alt)] transition cursor-pointer"
-              title={isCollapsed ? 'Expand Navigation' : 'Collapse Navigation'}
+              title={isCollapsed ? t('sidebar.expandNav') : t('sidebar.collapseNav')}
               id="toggle-sidebar-collapse-btn"
             >
               {isCollapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
@@ -309,7 +313,7 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
                 <div className="flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-[var(--bullish)]" />
                   <span className="metadata-label text-[9px] text-[var(--text-secondary)]">
-                    Feed active
+                    {t('sidebar.feedActive')}
                   </span>
                 </div>
                 <span className="text-[10px] font-mono text-[var(--text-muted)]">
@@ -342,7 +346,7 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
                     <button
                       onClick={onLogout}
                       className="p-1 rounded text-[var(--text-muted)] hover:text-[var(--bearish)] transition cursor-pointer"
-                      title="Sign out"
+                      title={t('sidebar.signOut')}
                       id="sidebar-logout-btn"
                     >
                       <LogOut className="w-3.5 h-3.5" />
@@ -356,13 +360,23 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({
                   id="sidebar-login-btn"
                 >
                   <UserIcon className="w-3.5 h-3.5" />
-                  <span>Trader login</span>
+                  <span>{t('sidebar.traderLogin')}</span>
                 </button>
               )}
+              {/* Language Switcher Row */}
+              <div className="flex items-center justify-between pt-1">
+                <span className="metadata-label text-[9px] text-[var(--text-muted)] font-mono">
+                  {t('Bahasa', 'Language')}
+                </span>
+                <LanguageToggle variant="pill" />
+              </div>
+
               {/* Theme Switcher Row */}
               {onToggleTheme && (
                 <div className="flex items-center justify-between pt-1">
-                  <span className="metadata-label text-[9px] text-[var(--text-muted)]">Tema</span>
+                  <span className="metadata-label text-[9px] text-[var(--text-muted)] font-mono">
+                    {t('Tema', 'Theme')}
+                  </span>
                   <ThemeToggle theme={theme} onToggle={onToggleTheme} variant="pill" />
                 </div>
               )}

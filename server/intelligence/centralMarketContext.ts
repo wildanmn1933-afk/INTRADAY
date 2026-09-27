@@ -202,37 +202,37 @@ export class CentralMarketContextEngine {
     let regimeTitle = 'BALANCED ROTATIONAL REGIME';
     let badgeColor = 'text-cyan-700 bg-cyan-50 border-cyan-200';
     let riskScore = 10;
-    let summaryNarrative = 'Aliran modal berotasi wajar antar-kelas aset. Belum terdapat kepanikan atau eforia ekstrem menjelang rilis data sesi berikutnya.';
-    let dominantCatalyst = 'Konsolidasi batas sesi dan penantian rilis data inflasi / ketenagakerjaan';
+    let summaryNarrative = 'Capital flows are rotating orderly across asset classes. Neither acute panic nor speculative euphoria dominates ahead of key session data.';
+    let dominantCatalyst = 'Session range consolidation awaiting inflation and employment releases';
 
     if (us10yChangePct > 0.3 && dxyChangePct > 0.15) {
       regimeId = 'HAWKISH_YIELD_PRESSURE';
       regimeTitle = 'HAWKISH YIELD PRESSURE';
       badgeColor = 'text-amber-700 bg-amber-50 border-amber-200';
       riskScore = -45;
-      summaryNarrative = 'Kenaikan imbal hasil US10Y dan Dolar Index di atas open sesi mendominasi arah pasar. Valuta non-USD dan aset ber-yield rendah berada dalam tekanan beban oportunitas.';
-      dominantCatalyst = 'Ekspektasi pengetatan suku bunga atau ketahanan data ekonomi AS';
+      summaryNarrative = 'Rising US10Y yields and a firmer US Dollar Index above the session open dominate market direction. Non-USD currencies and zero-yielding assets face persistent opportunity cost drag.';
+      dominantCatalyst = 'Higher-for-longer monetary policy pricing or resilient US economic data';
     } else if (sp500ChangePct > 0.3 && dxyChangePct < -0.1) {
       regimeId = 'RISK_ON_EXPANSION';
       regimeTitle = 'RISK-ON EXPANSION';
       badgeColor = 'text-emerald-700 bg-emerald-50 border-emerald-200';
       riskScore = 65;
-      summaryNarrative = 'Selera risiko global meningkat tinggi. Dolar melemah seiring arus modal global masuk ke bursa saham Wall Street dan mata uang komoditas (AUD, CAD, NZD).';
-      dominantCatalyst = 'Pelegaan likuiditas global dan ekspansi laba korporasi';
+      summaryNarrative = 'Global risk appetite is expanding. The dollar softens as institutional liquidity shifts into Wall Street equity benchmarks and high-beta commodity currencies (AUD, CAD, NZD).';
+      dominantCatalyst = 'Global liquidity easing and corporate earnings multiple expansion';
     } else if (sp500ChangePct < -0.4 && goldChangePct > 0.3) {
       regimeId = 'GLOBAL_FLIGHT_TO_SAFETY';
       regimeTitle = 'GLOBAL FLIGHT TO SAFETY';
       badgeColor = 'text-rose-700 bg-rose-50 border-rose-200';
       riskScore = -75;
-      summaryNarrative = 'Kekhawatiran geopolitik atau perlambatan ekonomi global memicu aksi jual di bursa saham dan perburuan agresif ke aset lindung nilai (Emas fisik dan safe haven).';
-      dominantCatalyst = 'Eskalasi tensi geopolitik atau lonjakan volatilitas pasar ekuitas';
+      summaryNarrative = 'Geopolitical anxieties or global growth concerns trigger equity liquidation and aggressive bids into sovereign safe-haven assets (Physical Gold and Treasuries).';
+      dominantCatalyst = 'Geopolitical escalation or equity market volatility spike';
     } else if (dxyChangePct < -0.2 && us10yChangePct < -0.3) {
       regimeId = 'DOVISH_LIQUIDITY_EASING';
       regimeTitle = 'DOVISH LIQUIDITY EASING';
       badgeColor = 'text-sky-700 bg-sky-50 border-sky-200';
       riskScore = 55;
-      summaryNarrative = 'Pelemahan yield obligasi AS melonggarkan discount rate global. Menjadi angin segar bagi penguatan Emas (XAU/USD) dan saham-saham teknologi (US100).';
-      dominantCatalyst = 'Pelonggaran inflasi dan proyeksi pemangkasan suku bunga acuan Fed';
+      summaryNarrative = 'Easing US Treasury yields relieve the global discount rate. Providing a constructive tailwind for Gold (XAU/USD) and mega-cap technology growth equities (US100).';
+      dominantCatalyst = 'Disinflationary prints and forward Fed rate cut repricing';
     }
 
     const globalRegime = {
@@ -246,10 +246,10 @@ export class CentralMarketContextEngine {
     };
 
     // 7. DETEKSI DIVERGENSI INTER-INSTRUMEN OTENTIK (NO FORCED HARMONY!)
-    // "Jika ada perbedaan antar-instrumen, jangan dipaksa sama; deteksi sebagai divergence dan jelaskan penyebabnya."
+    // "If instruments diverge, do not force them into false harmony; detect divergence and clarify structural drivers."
     const divergences: DetectedMarketDivergence[] = [];
 
-    // Divergensi 1: Emas vs Yield US10Y
+    // Divergence 1: Gold vs US10Y Yield
     const isYieldRising = us10yChangePct >= 0.05 || us10yChangeBps >= 1.5;
     const isYieldEasing = us10yChangePct <= -0.05 || us10yChangeBps <= -1.5;
     const isGoldRising = goldChangePct >= 0.15;
@@ -261,16 +261,16 @@ export class CentralMarketContextEngine {
         type: 'GOLD_YIELD_DIVERGENCE',
         severity: 'WARNING',
         instruments: ['XAUUSD', 'US10Y'],
-        title: 'Anomali Intermarket: Emas Naik Bersama Kenaikan Yield US10Y',
-        observedCondition: `Yield US10Y naik (+${ratesAndYields.us10yChangeBps} bps / ${ratesAndYields.us10yPrice.toFixed(3)}%) tetapi Gold tetap menguat (+${goldChangePct.toFixed(2)}% di $${goldPrice.toFixed(1)}).`,
-        structuralCause: 'Permintaan aset cadangan devisa berdaulat (de-dollarization) dan akumulasi safe-haven geopolitik melampaui beban opportunity cost kenaikan suku bunga nominal obligasi.',
-        marketImplication: 'Emas menunjukkan kekuatan struktural institusional (decoupling dari real yield). Penjualan di resisten berisiko tinggi terkena squeeze.',
-        actionableContext: 'Fokus buy on dip saat retest support struktur intraday; jangan tergesa-gesa short emas hanya karena yield naik.',
+        title: 'Intermarket Divergence: Gold Rallies Alongside Rising US10Y Yield',
+        observedCondition: `US10Y yield climbed (+${ratesAndYields.us10yChangeBps} bps / ${ratesAndYields.us10yPrice.toFixed(3)}%) yet Gold remains resilient (+${goldChangePct.toFixed(2)}% at $${goldPrice.toFixed(1)}).`,
+        structuralCause: 'Sovereign reserve diversification (de-dollarization) and geopolitical safe-haven accumulation override the nominal bond yield opportunity cost.',
+        marketImplication: 'Gold demonstrates deep institutional bid absorption (decoupling from real yields). Selling into resistance carries heightened short-squeeze risk.',
+        actionableContext: 'Focus on buying dips upon retests of intraday structural support; do not short blindly solely based on rising yields.',
         detectedAt: nowIso,
       });
     }
 
-    // Divergensi 2: Emas vs US Dollar (DXY)
+    // Divergence 2: Gold vs US Dollar (DXY)
     const isDxyRising = dxyChangePct >= 0.1;
     if (isDxyRising && isGoldRising) {
       divergences.push({
@@ -278,16 +278,16 @@ export class CentralMarketContextEngine {
         type: 'GOLD_DXY_DIVERGENCE',
         severity: 'NOTE',
         instruments: ['XAUUSD', 'USD'],
-        title: 'Divergensi Moneter: Emas & Dolar Menguat Bersamaan',
-        observedCondition: `DXY menguat (+${dxyChangePct.toFixed(2)}%) dan XAUUSD juga menguat (+${goldChangePct.toFixed(2)}%).`,
-        structuralCause: 'Ketidakpastian likuiditas global memicu alokasi ganda: investor menumpuk likuiditas kas Dolar AS sekaligus memborong Emas fisik sebagai lindung nilai depresiasi mata uang fiat.',
-        marketImplication: 'Tekanan jual terberat dialihkan ke valuta rival (EUR, GBP, JPY) yang melemah terhadap USD dan XAU secara simultan.',
-        actionableContext: 'Pasangan non-USD (seperti EUR/USD atau GBP/USD) lebih rentan sell rally daripada shorting XAU/USD.',
+        title: 'Monetary Divergence: Gold & US Dollar Rallying Concurrently',
+        observedCondition: `DXY is firm (+${dxyChangePct.toFixed(2)}%) while XAUUSD also gains (+${goldChangePct.toFixed(2)}%).`,
+        structuralCause: 'Global liquidity stress prompts dual allocation: investors hoard USD cash liquidity while acquiring bullion as a fiat debasement hedge.',
+        marketImplication: 'Selling pressure concentrates on secondary currencies (EUR, GBP, JPY) which weaken against USD and XAU simultaneously.',
+        actionableContext: 'Non-USD majors (e.g., EUR/USD or GBP/USD) offer cleaner short opportunities than fading XAU/USD.',
         detectedAt: nowIso,
       });
     }
 
-    // Divergensi 3: Saham Teknologi (US100) vs Kenaikan Yield
+    // Divergence 3: Tech Equities (US100) vs Rising Yields
     const isTechRising = us100ChangePct >= 0.2;
     if (isYieldRising && isTechRising) {
       divergences.push({
@@ -295,16 +295,16 @@ export class CentralMarketContextEngine {
         type: 'EQUITY_YIELD_DIVERGENCE',
         severity: 'NOTE',
         instruments: ['US100', 'US10Y'],
-        title: 'Divergensi Saham Pertumbuhan vs Discount Rate',
-        observedCondition: `US10Y yield naik (+${ratesAndYields.us10yChangeBps} bps) namun Nasdaq 100 tetap reli (+${us100ChangePct.toFixed(2)}%).`,
-        structuralCause: 'Kekuatan belanja infrastruktur kecerdasan buatan (AI capex) dan revisi proyeksi laba korporasi raksasa teknologi mengimbangi tekanan kompresi valuasi P/E dari suku bunga.',
-        marketImplication: 'Pasar saham memperlakukan mega-cap teknologi sebagai aset berkualitas tinggi yang kebal siklus kenaikan suku bunga moderat.',
-        actionableContext: 'Pilih saham pemimpin teknologi (AI hyperscalers/semis) daripada saham mid-cap yang sensitif terhadap beban utang.',
+        title: 'Growth Equity vs Discount Rate Divergence',
+        observedCondition: `US10Y yield gained (+${ratesAndYields.us10yChangeBps} bps) yet Nasdaq 100 rallied (+${us100ChangePct.toFixed(2)}%).`,
+        structuralCause: 'Substantial AI capex spending commitments and mega-cap tech earnings revisions offset standard P/E multiple compression from interest rates.',
+        marketImplication: 'Equity markets treat mega-cap hyperscalers as quality secular compounders insulated from moderate rate fluctuations.',
+        actionableContext: 'Favor market leaders (AI hyperscalers/semiconductors) over debt-heavy, rate-sensitive small/mid-caps.',
         detectedAt: nowIso,
       });
     }
 
-    // Divergensi 4: Carry Trade USD/JPY vs Spread Yield US-Jepang
+    // Divergence 4: USD/JPY Carry vs US-JP Yield Differential
     const usdjpyObj = priceMap.get('USDJPY');
     const usdjpyChangePct = usdjpyObj?.change_24h_pct || 0;
     if (ratesAndYields.usJpSpread >= 2.8 && usdjpyChangePct <= -0.2) {
@@ -313,11 +313,11 @@ export class CentralMarketContextEngine {
         type: 'CARRY_SPREAD_DIVERGENCE',
         severity: 'WARNING',
         instruments: ['USDJPY', 'US10Y'],
-        title: 'Divergensi Carry Trade: USD/JPY Melemah Meski Spread Suku Bunga Lebar',
-        observedCondition: `Spread yield US10Y vs JGB sangat lebar (${ratesAndYields.usJpSpread}%), namun USD/JPY terkoreksi turun (${usdjpyChangePct.toFixed(2)}%).`,
-        structuralCause: 'Kekhawatiran intervensi valas otoritas Jepang (MoF/BoJ) atau rotasi sentimen de-risking memicu unwinding posisi spekulatif yen carry trade.',
-        marketImplication: 'Posisi long USD/JPY rentan mengalami likuidasi tajam jika volatilitas global melonjak.',
-        actionableContext: 'Waspadai trailing stop ketat pada buy USD/JPY; pantau level support harian secara disiplin.',
+        title: 'Carry Divergence: USD/JPY Pulls Back Despite Wide Yield Spread',
+        observedCondition: `US10Y vs JGB yield spread remains wide (${ratesAndYields.usJpSpread}%), yet USD/JPY is retracing lower (${usdjpyChangePct.toFixed(2)}%).`,
+        structuralCause: 'Verbal intervention warnings from Japan (MoF/BoJ) or broader de-risking sentiment trigger speculative yen carry unwinding.',
+        marketImplication: 'Long USD/JPY exposures are vulnerable to cascade liquidations if volatility spikes.',
+        actionableContext: 'Enforce tight trailing stops on long USD/JPY; respect session support thresholds.',
         detectedAt: nowIso,
       });
     }
@@ -325,51 +325,50 @@ export class CentralMarketContextEngine {
     // 8. CROSS-ASSET YIELD TRANSMISSION TABLE
     const crossAssetTransmissions = [
       {
-        asset: 'Emas (XAU/USD)',
-        relationshipWithYield: 'Korelasi Negatif Kuat (-0.82) dengan Real Yield TIPS',
-        expectedBehavior: isYieldEasing ? 'Potensi Reli Penguatan' : isYieldRising ? 'Tekanan Resisten / Beban Oportunitas' : 'Konsolidasi Terukur',
+        asset: 'Gold (XAU/USD)',
+        relationshipWithYield: 'Strong Inverse Correlation (-0.82) with TIPS Real Yields',
+        expectedBehavior: isYieldEasing ? 'Bullish Expansion' : isYieldRising ? 'Resistance Drag / Opportunity Cost' : 'Consolidation',
         actualBehavior: `${goldChangePct >= 0 ? '+' : ''}${goldChangePct.toFixed(2)}% ($${goldPrice.toFixed(1)})`,
         alignmentStatus: (isYieldEasing && isGoldRising) || (isYieldRising && isGoldFalling) ? ('ALIGNED' as const) : ('DIVERGENT' as const),
         tacticalNote: isYieldEasing
-          ? 'Yield melemah melenyapkan opportunity cost emas fisik. Momentum pro-bullish.'
+          ? 'Softening yields eliminate the opportunity cost of holding non-yielding bullion. Pro-bullish tailwind.'
           : isYieldRising && isGoldRising
-          ? 'Divergensi aktif: Pembelian fisik bank sentral menyerap kenaikan kupon obligasi.'
-          : 'Yield menguat menekan aset nir-kupon.',
+          ? 'Active divergence: Central bank physical absorption offsets rising coupon competition.'
+          : 'Yield firming exerts mechanical drag on non-interest bearing assets.',
       },
       {
         asset: 'Nasdaq 100 (US100)',
-        relationshipWithYield: 'Discount Rate P/E Multiple Saham Pertumbuhan',
-        expectedBehavior: isYieldEasing ? 'Ekspansi Valuasi Tech' : isYieldRising ? 'Kompresi P/E Multiple' : 'Rotasi Sektor Seimbang',
+        relationshipWithYield: 'Discount Rate Valuation Anchor for Growth Equities',
+        expectedBehavior: isYieldEasing ? 'Multiple Expansion' : isYieldRising ? 'Multiple Compression' : 'Orderly Sector Rotation',
         actualBehavior: `${us100ChangePct >= 0 ? '+' : ''}${us100ChangePct.toFixed(2)}%`,
         alignmentStatus: (isYieldEasing && us100ChangePct >= 0) || (isYieldRising && us100ChangePct <= 0) ? ('ALIGNED' as const) : ('DIVERGENT' as const),
         tacticalNote: isYieldEasing
-          ? 'Discount rate turun mendukung arus modal ke saham software & semi.'
+          ? 'Lower discount rates support capital deployment into software and semiconductor leaders.'
           : isTechRising
-          ? 'Katalis AI capex mengimbangi kenaikan suku bunga pinjaman.'
-          : 'Kenaikan imbal hasil membatasi ruang kenaikan saham growth.',
+          ? 'AI capex earnings momentum outpaces moderate interest rate drag.'
+          : 'Yield firming restricts aggressive valuation expansion in growth equities.',
       },
       {
         asset: 'US Dollar (DXY)',
-        relationshipWithYield: 'Diferensial Suku Bunga Global (Interest Parity)',
-        expectedBehavior: isYieldRising ? 'Dukungan Penguatan Dolar' : isYieldEasing ? 'Pelemahan Dolar / Ruang Valas Rival' : 'Range-bound',
+        relationshipWithYield: 'Global Interest Rate Differential (Interest Rate Parity)',
+        expectedBehavior: isYieldRising ? 'Dollar Bullish Support' : isYieldEasing ? 'Dollar Softening / FX Relief' : 'Range-bound',
         actualBehavior: `${dxyChangePct >= 0 ? '+' : ''}${dxyChangePct.toFixed(2)}% (${dxyPrice.toFixed(2)})`,
         alignmentStatus: (isYieldRising && dxyChangePct >= 0) || (isYieldEasing && dxyChangePct <= 0) ? ('ALIGNED' as const) : ('DIVERGENT' as const),
         tacticalNote: dxyBiasVsOpen === 'ABOVE_OPEN'
-          ? 'Dolar diperdagangkan di atas open sesi; tekanan berlanjut ke EUR & GBP.'
-          : 'Dolar di bawah open sesi; peluang pelegaan bagi valuta utama.',
+          ? 'Dollar trades above session open; sustains gravity on EUR/USD & GBP/USD.'
+          : 'Dollar below session open; provides breathing room for foreign exchange majors.',
       },
       {
         asset: 'USD/JPY (Carry)',
-        relationshipWithYield: 'Mesin Carry Trade US-JP Yield Spread',
-        expectedBehavior: ratesAndYields.usJpSpread >= 3.0 ? 'Bahan Bakar Bullish Carry' : 'Penyempitan Spread Membantu JPY',
+        relationshipWithYield: 'US-JP Sovereign Yield Spread Engine',
+        expectedBehavior: ratesAndYields.usJpSpread >= 3.0 ? 'Bullish Carry Fuel' : 'Narrowing Spread Strengthens JPY',
         actualBehavior: `${usdjpyChangePct >= 0 ? '+' : ''}${usdjpyChangePct.toFixed(2)}%`,
         alignmentStatus: (ratesAndYields.usJpSpread >= 2.5 && usdjpyChangePct >= 0) ? ('ALIGNED' as const) : ('DIVERGENT' as const),
-        tacticalNote: `Spread US-JP di level ${ratesAndYields.usJpSpread}%. Selisih bunga tinggi menahan penurunan drastis USD/JPY.`,
+        tacticalNote: `US-JP spread at ${ratesAndYields.usJpSpread}%. Substantial carry gap limits sustained downward extension in USD/JPY.`,
       },
     ];
 
     // 9. CANONICAL ASSET BIAS REGISTRY (SINGLE SOURCE OF TRUTH FOR ALL TRACKED INSTRUMENTS)
-    // Semua modul (Markets, Bias, AI Analysis, Daily Report, Matrix) membaca registry yang sama persis!
     const targetAssets = [
       { symbol: 'XAUUSD', name: 'Gold / US Dollar', type: 'COMMODITY' as const },
       { symbol: 'EURUSD', name: 'Euro / US Dollar', type: 'FOREX' as const },
@@ -413,42 +412,42 @@ export class CentralMarketContextEngine {
           bias = 'STRONG_BULLISH';
           convictionScore = 88;
           confluenceStatus = isYieldEasing ? 'HIGH_CONVICTION' : 'MODERATE';
-          fundamentalDriver = 'Arus lindung nilai risiko geopolitik dan diversifikasi cadangan devisa bank sentral.';
-          intermarketDriver = isYieldEasing ? 'Yield US10Y melonggar, memotong biaya oportunitas memegang emas nir-bunga.' : 'Emas decoupling dari kenaikan nominal bond yield.';
+          fundamentalDriver = 'Geopolitical hedging flows and central bank sovereign reserve diversification.';
+          intermarketDriver = isYieldEasing ? 'Softening US10Y yields reduce the opportunity cost of non-yielding bullion.' : 'Gold decoupling from nominal yield increases.';
           technicalStructure = 'SESSION_BREAKOUT';
-          invalidationTrigger = 'Jika US10Y mendadak surge naik menembus batas atas sesi dan DXY breakout di atas 102.50.';
+          invalidationTrigger = 'Sudden US10Y spike above session highs paired with a DXY breakout above 102.50.';
         } else if (changePct > 0.05) {
           bias = 'BULLISH';
           convictionScore = 72;
           confluenceStatus = 'MODERATE';
-          fundamentalDriver = 'Dukungan institusional stabil di atas level kunci mingguan.';
-          intermarketDriver = 'Stabilitas imbal hasil riil memberi ruang ekspansi tren.';
+          fundamentalDriver = 'Steady institutional accumulation above key weekly support zones.';
+          intermarketDriver = 'Stable real yields permit gradual trend expansion.';
           technicalStructure = 'RETEST_SUPPORT';
-          invalidationTrigger = 'Penembusan ke bawah level support sesi terdekat.';
+          invalidationTrigger = 'Clean breakdown below immediate session demand.';
         } else if (changePct < -0.4) {
           bias = 'STRONG_BEARISH';
           convictionScore = 82;
           confluenceStatus = 'HIGH_CONVICTION';
-          fundamentalDriver = 'Aset berbunga lebih atraktif akibat lonjakan suku bunga acuan.';
-          intermarketDriver = 'Yield US10Y melonjak tajam memicu arus likuidasi emas batangan.';
+          fundamentalDriver = 'Interest-bearing paper assets favored due to rising benchmark yields.';
+          intermarketDriver = 'Surging US10Y yield triggers liquidation outflows from bullion.';
           technicalStructure = 'SESSION_BREAKOUT';
-          invalidationTrigger = 'Reversal mendadak yield obligasi ke bawah level pembukaan hari ini.';
+          invalidationTrigger = 'Abrupt yield reversal below the daily opening benchmark.';
         } else if (changePct < -0.05) {
           bias = 'BEARISH';
           convictionScore = 65;
           confluenceStatus = 'MODERATE';
-          fundamentalDriver = 'Tekanan profit taking di zona resisten puncak.';
-          intermarketDriver = 'Dolar AS menguat di sesi London/New York.';
+          fundamentalDriver = 'Profit-taking pressure at overhead resistance.';
+          intermarketDriver = 'US Dollar firming across London and New York sessions.';
           technicalStructure = 'RETEST_RESISTANCE';
-          invalidationTrigger = 'Breakout volume tinggi di atas level tertinggi sesi.';
+          invalidationTrigger = 'High-volume breakout above session highs.';
         } else {
           bias = 'NEUTRAL';
           convictionScore = 50;
           confluenceStatus = 'NEUTRAL_CHOP';
-          fundamentalDriver = 'Keseimbangan arus likuiditas jelang katalis utama.';
-          intermarketDriver = 'Yield dan DXY bergerak dalam koridor sempit.';
+          fundamentalDriver = 'Balanced liquidity flows ahead of primary macro catalysts.';
+          intermarketDriver = 'Yields and DXY oscillating in narrow consolidation bands.';
           technicalStructure = 'CHOP_RANGE';
-          invalidationTrigger = 'Penembusan rentang konsolidasi.';
+          invalidationTrigger = 'Decisive break from the consolidation range.';
         }
       } else if (asset.type === 'FOREX' && asset.symbol !== 'USD') {
         const base = asset.symbol.substring(0, 3);
@@ -457,41 +456,87 @@ export class CentralMarketContextEngine {
         const quoteScore = strengthMap.get(quote)?.strength_score ?? 5.0;
         const diff = Number((baseScore - quoteScore).toFixed(1));
 
-        if (diff >= 1.5 && changePct >= 0) {
-          bias = diff >= 3.0 ? 'STRONG_BULLISH' : 'BULLISH';
-          convictionScore = Math.min(95, 60 + Math.round(diff * 8));
-          confluenceStatus = 'HIGH_CONVICTION';
-          fundamentalDriver = `${base} (#${strengthMap.get(base)?.rank || 1}, ${baseScore}) unggul telak +${diff}pt atas ${quote}.`;
-          intermarketDriver = 'Diferensial suku bunga dan sentimen risiko global searah dengan paritas valas.';
-          technicalStructure = changePct > 0.3 ? 'SESSION_BREAKOUT' : 'RETEST_SUPPORT';
-          invalidationTrigger = `Jika ${quote} berbalik menguat atau rilis data ekonomi ${base} meleset jauh dari proyeksi.`;
-        } else if (diff <= -1.5 && changePct <= 0) {
-          bias = diff <= -3.0 ? 'STRONG_BEARISH' : 'BEARISH';
-          convictionScore = Math.min(95, 60 + Math.round(Math.abs(diff) * 8));
-          confluenceStatus = 'HIGH_CONVICTION';
-          fundamentalDriver = `${quote} unggul +${Math.abs(diff)}pt atas ${base} (${base} tertinggal di skor ${baseScore}).`;
-          intermarketDriver = 'Arus keluar modal dari mata uang ber-imbal hasil rendah ke mata uang berkinerja unggul.';
-          technicalStructure = changePct < -0.3 ? 'SESSION_BREAKOUT' : 'RETEST_RESISTANCE';
-          invalidationTrigger = `Perubahan mendadak pada skor G8 atau penembusan resisten intraday.`;
-        } else if (Math.abs(diff) >= 1.5 && ((diff > 0 && changePct < 0) || (diff < 0 && changePct > 0))) {
-          // Divergensi Forex vs Skor Paritas
+        // Evaluate Intermarket transmission (DXY relationship)
+        // For USD as quote (EURUSD, GBPUSD, AUDUSD, NZDUSD): DXY below open is BULLISH, above open is BEARISH
+        // For USD as base (USDJPY, USDCAD, USDCHF): DXY above open is BULLISH, below open is BEARISH
+        const isUsdQuote = quote === 'USD';
+        const isUsdBase = base === 'USD';
+        const intermarketPairBias: 'BULLISH' | 'BEARISH' | 'NEUTRAL' =
+          isUsdQuote
+            ? (dxyBiasVsOpen === 'BELOW_OPEN' ? 'BULLISH' : dxyBiasVsOpen === 'ABOVE_OPEN' ? 'BEARISH' : 'NEUTRAL')
+            : isUsdBase
+            ? (dxyBiasVsOpen === 'ABOVE_OPEN' ? 'BULLISH' : dxyBiasVsOpen === 'BELOW_OPEN' ? 'BEARISH' : 'NEUTRAL')
+            : 'NEUTRAL';
+
+        const csPairBias: 'BULLISH' | 'BEARISH' | 'NEUTRAL' =
+          diff >= 0.4 ? 'BULLISH' : diff <= -0.4 ? 'BEARISH' : 'NEUTRAL';
+
+        const paPairBias: 'BULLISH' | 'BEARISH' | 'NEUTRAL' =
+          changePct > 0.08 ? 'BULLISH' : changePct < -0.08 ? 'BEARISH' : 'NEUTRAL';
+
+        const bulls = [csPairBias, intermarketPairBias, paPairBias].filter(b => b === 'BULLISH').length;
+        const bears = [csPairBias, intermarketPairBias, paPairBias].filter(b => b === 'BEARISH').length;
+        const isCsPaDivergent = (csPairBias === 'BULLISH' && paPairBias === 'BEARISH' && Math.abs(diff) >= 0.8) ||
+                                (csPairBias === 'BEARISH' && paPairBias === 'BULLISH' && Math.abs(diff) >= 0.8);
+
+        if (isCsPaDivergent) {
           hasActiveDivergence = true;
-          divergenceSummary = `Harga ${asset.symbol} bergerak berlawanan dengan selisih skor G8 (${diff > 0 ? '+' : ''}${diff}pt)`;
-          bias = diff > 0 ? 'BULLISH' : 'BEARISH';
-          convictionScore = 55;
+          divergenceSummary = `${asset.symbol} price action diverges from G8 score differential (${diff > 0 ? '+' : ''}${diff}pt)`;
+          bias = paPairBias === 'BULLISH' ? 'BULLISH' : 'BEARISH';
+          convictionScore = 42;
           confluenceStatus = 'CAUTION_TRAP';
-          fundamentalDriver = `Skor paritas mendukung ${diff > 0 ? base : quote}, namun pergerakan harga intraday sedang mengalami koreksi/pullback.`;
-          intermarketDriver = 'Penyesuaian posisi order flow jangka pendek di batas sesi.';
+          fundamentalDriver = `Currency strength favors ${diff > 0 ? base : quote} (Δ${diff > 0 ? '+' : ''}${diff}), but price action is undergoing counter-trend pressure.`;
+          intermarketDriver = 'Short-term order flow rebalancing at session liquidity boundaries.';
           technicalStructure = 'CHOP_RANGE';
-          invalidationTrigger = 'Waspadai jebakan pergerakan berlawanan sebelum struktur harga mengonfirmasi arah tren.';
+          invalidationTrigger = 'Beware fakeouts until market structure confirms directional expansion.';
+        } else if (bulls === 3) {
+          bias = 'STRONG_BULLISH';
+          convictionScore = Math.min(95, 88 + Math.round(Math.abs(diff) * 3));
+          confluenceStatus = 'HIGH_CONVICTION';
+          fundamentalDriver = `${base} (#${strengthMap.get(base)?.rank || 1}, ${baseScore}) dominates over ${quote} by +${diff}pts.`;
+          intermarketDriver = isUsdQuote
+            ? `Softer DXY below session open confirms dollar outflow into ${base}.`
+            : `Firmer DXY above session open fuels upside momentum in ${asset.symbol}.`;
+          technicalStructure = 'SESSION_BREAKOUT';
+          invalidationTrigger = `${quote} sharply rebounding or DXY reversing through session open.`;
+        } else if (bears === 3) {
+          bias = 'STRONG_BEARISH';
+          convictionScore = Math.min(95, 88 + Math.round(Math.abs(diff) * 3));
+          confluenceStatus = 'HIGH_CONVICTION';
+          fundamentalDriver = `${quote} (#${strengthMap.get(quote)?.rank || 1}, ${quoteScore}) dominates over ${base} by +${Math.abs(diff)}pts.`;
+          intermarketDriver = isUsdQuote
+            ? `Firm DXY above session open sustains mechanical pressure on ${base}.`
+            : `Soft DXY below session open triggers unwinding in ${asset.symbol}.`;
+          technicalStructure = 'SESSION_BREAKOUT';
+          invalidationTrigger = `Sudden shift in G8 rankings or break of key intraday resistance.`;
+        } else if (bulls === 2) {
+          bias = 'BULLISH';
+          convictionScore = Math.min(85, 72 + Math.round(Math.abs(diff) * 4));
+          confluenceStatus = 'MODERATE';
+          fundamentalDriver = diff >= 0.4
+            ? `${base} holds relative currency strength advantage over ${quote} (+${diff}pts).`
+            : `Capital flows and session risk tone constructively favor ${asset.symbol}.`;
+          intermarketDriver = 'Macro and currency flows provide 2/3 directional confirmation.';
+          technicalStructure = changePct > 0 ? 'SESSION_BREAKOUT' : 'RETEST_SUPPORT';
+          invalidationTrigger = 'Clean breakdown below immediate session demand.';
+        } else if (bears === 2) {
+          bias = 'BEARISH';
+          convictionScore = Math.min(85, 72 + Math.round(Math.abs(diff) * 4));
+          confluenceStatus = 'MODERATE';
+          fundamentalDriver = diff <= -0.4
+            ? `${quote} maintains currency strength lead against ${base} (+${Math.abs(diff)}pts).`
+            : `Overhead supply and macro headwinds weigh on ${asset.symbol}.`;
+          intermarketDriver = 'Yield or dollar dynamics restrict sustained upside.';
+          technicalStructure = changePct < 0 ? 'SESSION_BREAKOUT' : 'RETEST_RESISTANCE';
+          invalidationTrigger = 'High-volume breakout above session resistance.';
         } else {
           bias = 'NEUTRAL';
           convictionScore = 50;
           confluenceStatus = 'NEUTRAL_CHOP';
-          fundamentalDriver = `Selisih kekuatan ${base} vs ${quote} sangat tipis (${diff}pt).`;
-          intermarketDriver = 'Tidak ada arah dominan yang jelas antara kedua mata uang.';
+          fundamentalDriver = `Strength differential between ${base} and ${quote} is minimal (${diff}pt).`;
+          intermarketDriver = 'No distinct directional dominance between the currency pair.';
           technicalStructure = 'CHOP_RANGE';
-          invalidationTrigger = 'Tunggu rilis katalis ekonomi terdekat untuk menentukan arah breakout.';
+          invalidationTrigger = 'Await catalyst release for structural breakout confirmation.';
         }
       } else if (asset.symbol === 'US100' || asset.symbol === 'US500' || asset.symbol === 'US30') {
         const div = divergences.find(d => d.instruments.includes(asset.symbol));
@@ -502,69 +547,69 @@ export class CentralMarketContextEngine {
           bias = 'BULLISH';
           convictionScore = 78;
           confluenceStatus = isYieldEasing ? 'HIGH_CONVICTION' : 'MODERATE';
-          fundamentalDriver = 'Momentum beli di bursa Wall Street dengan partisipasi kuat di saham pertumbuhan.';
-          intermarketDriver = isYieldEasing ? 'Yield obligasi melonggar memperluas valuasi ekuitas.' : 'Kekuatan fundamental korporasi mengimbangi suku bunga.';
+          fundamentalDriver = 'Broad Wall Street buying momentum with robust participation in growth equities.';
+          intermarketDriver = isYieldEasing ? 'Softening bond yields expand equity valuation multiples.' : 'Corporate fundamentals offset interest rate headwind.';
           technicalStructure = 'SESSION_BREAKOUT';
-          invalidationTrigger = 'Aksi jual serentak menembus support harian jika US10Y melesat.';
+          invalidationTrigger = 'Aggressive liquidation breaking daily support if US10Y spikes.';
         } else if (changePct < -0.3) {
           bias = 'BEARISH';
           convictionScore = 75;
           confluenceStatus = 'HIGH_CONVICTION';
-          fundamentalDriver = 'De-risking global dan tekanan valuasi di tengah ketidakpastian makro.';
-          intermarketDriver = isYieldRising ? 'Lonjakan yield US10Y menekan discount rate valuasi saham.' : 'Penurunan selera risiko global.';
+          fundamentalDriver = 'Global de-risking and valuation compression amid macro uncertainty.';
+          intermarketDriver = isYieldRising ? 'Surging US10Y yields compress discount rate multiples.' : 'Weakening global risk appetite.';
           technicalStructure = 'SESSION_BREAKOUT';
-          invalidationTrigger = 'Pemulihan risk-on di sesi New York.';
+          invalidationTrigger = 'Risk-on recovery in the New York afternoon session.';
         } else {
           bias = 'NEUTRAL';
           convictionScore = 52;
           confluenceStatus = 'NEUTRAL_CHOP';
-          fundamentalDriver = 'Bursa Wall Street konsolidasi seimbang.';
-          intermarketDriver = 'Imbal hasil obligasi stabil di koridor sesi.';
+          fundamentalDriver = 'Wall Street consolidating in balanced rotational conditions.';
+          intermarketDriver = 'Treasury yields steady within session ranges.';
           technicalStructure = 'CHOP_RANGE';
-          invalidationTrigger = 'Breakout range sesi.';
+          invalidationTrigger = 'Clean breakout from the session range.';
         }
       } else if (asset.symbol === 'BTC') {
         if (changePct > 0.5) {
           bias = 'BULLISH';
           convictionScore = 76;
           confluenceStatus = 'MODERATE';
-          fundamentalDriver = 'Arus akumulasi institusional dan peningkatan selera risiko aset digital.';
-          intermarketDriver = 'Likuiditas global M2 dan pelemahan DXY memberi dorongan aset kripto.';
+          fundamentalDriver = 'Institutional accumulation and elevated digital asset risk appetite.';
+          intermarketDriver = 'Global M2 liquidity growth and a softening DXY support crypto assets.';
           technicalStructure = 'SESSION_BREAKOUT';
-          invalidationTrigger = 'Reversal Dolar AS atau de-risking bursa teknologi.';
+          invalidationTrigger = 'US Dollar sharp reversal or tech equity de-risking.';
         } else if (changePct < -0.5) {
           bias = 'BEARISH';
           convictionScore = 74;
           confluenceStatus = 'MODERATE';
-          fundamentalDriver = 'Tekanan likuiditas dan aksi ambil untung di resisten.';
-          intermarketDriver = 'DXY menguat membatasi ekspansi likuiditas spekulatif.';
+          fundamentalDriver = 'Liquidity drain and profit-taking at psychological resistance.';
+          intermarketDriver = 'Firm DXY restricts speculative liquidity expansion.';
           technicalStructure = 'SESSION_BREAKOUT';
-          invalidationTrigger = 'Pantul beli kuat di area support psikologis.';
+          invalidationTrigger = 'Strong buying bounce at key psychological support.';
         } else {
           bias = 'NEUTRAL';
           convictionScore = 50;
           confluenceStatus = 'NEUTRAL_CHOP';
-          fundamentalDriver = 'Konsolidasi sideways dalam rentang akumulasi.';
-          intermarketDriver = 'Arus modal menunggu pemicu volatilitas.';
+          fundamentalDriver = 'Sideways consolidation within multi-session accumulation range.';
+          intermarketDriver = 'Capital sidelined awaiting directional volatility catalyst.';
           technicalStructure = 'CHOP_RANGE';
-          invalidationTrigger = 'Penembusan zona batas sideways.';
+          invalidationTrigger = 'Breakout beyond range extremes.';
         }
       } else if (asset.symbol === 'US10Y') {
         bias = isYieldRising ? 'BULLISH' : isYieldEasing ? 'BEARISH' : 'NEUTRAL';
         convictionScore = Math.abs(us10yChangeBps) >= 3 ? 85 : 65;
         confluenceStatus = 'HIGH_CONVICTION';
-        fundamentalDriver = isYieldRising ? 'Ekspektasi suku bunga tinggi lebih lama atau lelang Treasury menyerap likuiditas.' : 'Ekspektasi pemangkasan suku bunga acuan dan pendinginan inflasi.';
-        intermarketDriver = 'Pergeseran kurva imbal hasil obligasi negara AS.';
+        fundamentalDriver = isYieldRising ? 'Expectations of sustained policy restraint or heavy Treasury supply.' : 'Easing policy rate path expectations and cooling inflation.';
+        intermarketDriver = 'Shifts across the US benchmark yield curve.';
         technicalStructure = Math.abs(us10yChangePct) > 0.2 ? 'SESSION_BREAKOUT' : 'CHOP_RANGE';
-        invalidationTrigger = 'Rilis data CPI/NFP atau pernyataan tak terduga pejabat FOMC.';
+        invalidationTrigger = 'CPI/NFP data surprises or unexpected FOMC policy guidance.';
       } else if (asset.symbol === 'USD') {
         bias = dxyBiasVsOpen === 'ABOVE_OPEN' ? 'BULLISH' : dxyBiasVsOpen === 'BELOW_OPEN' ? 'BEARISH' : 'NEUTRAL';
         convictionScore = Math.abs(dxyChangePct) >= 0.2 ? 80 : 60;
         confluenceStatus = 'HIGH_CONVICTION';
-        fundamentalDriver = dxyBiasVsOpen === 'ABOVE_OPEN' ? 'Kekuatan ekonomi relatif AS terhadap Eropa dan Asia.' : 'Pelemahan dolar akibat perbaikan selera risiko global.';
-        intermarketDriver = 'Diferensial suku bunga yield obligasi 10 tahun.';
+        fundamentalDriver = dxyBiasVsOpen === 'ABOVE_OPEN' ? 'Relative US economic resilience versus European and Asian economies.' : 'Dollar weakness driven by broad global risk appetite.';
+        intermarketDriver = '10-year sovereign interest rate differentials.';
         technicalStructure = Math.abs(dxyChangePct) > 0.2 ? 'SESSION_BREAKOUT' : 'CHOP_RANGE';
-        invalidationTrigger = 'Penembusan resisten/support harian DXY.';
+        invalidationTrigger = 'Break of daily DXY session support or resistance.';
       }
 
       canonicalBiases[asset.symbol] = {
@@ -585,6 +630,15 @@ export class CentralMarketContextEngine {
         lastUpdated: nowIso,
       };
     });
+
+    // Populate currency aliases for modules using 3-letter codes (e.g. IntradayMarketMapEngine)
+    if (canonicalBiases['EURUSD']) canonicalBiases['EUR'] = { ...canonicalBiases['EURUSD'], symbol: 'EUR' };
+    if (canonicalBiases['GBPUSD']) canonicalBiases['GBP'] = { ...canonicalBiases['GBPUSD'], symbol: 'GBP' };
+    if (canonicalBiases['USDJPY']) canonicalBiases['JPY'] = { ...canonicalBiases['USDJPY'], symbol: 'JPY' };
+    if (canonicalBiases['AUDUSD']) canonicalBiases['AUD'] = { ...canonicalBiases['AUDUSD'], symbol: 'AUD' };
+    if (canonicalBiases['USDCAD']) canonicalBiases['CAD'] = { ...canonicalBiases['USDCAD'], symbol: 'CAD' };
+    if (canonicalBiases['USDCHF']) canonicalBiases['CHF'] = { ...canonicalBiases['USDCHF'], symbol: 'CHF' };
+    if (canonicalBiases['NZDUSD']) canonicalBiases['NZD'] = { ...canonicalBiases['NZDUSD'], symbol: 'NZD' };
 
     // 10. SYNCHRONIZED CATALYSTS DARI KALENDER
     const upcomingHigh = macroCalendar.find(
@@ -615,8 +669,8 @@ export class CentralMarketContextEngine {
       change: c.change || null,
       related_assets: [c.currency],
       status: c.status,
-      actual_market_reaction: c.actual_market_reaction || c.fundamental_implication || (c.status === 'RELEASED' ? 'Reaksi pasar terserap ke harga' : 'Menunggu publikasi resmi'),
-      fundamental_implication: c.fundamental_implication || 'Mempengaruhi ekspektasi suku bunga bank sentral',
+      actual_market_reaction: c.actual_market_reaction || c.fundamental_implication || (c.status === 'RELEASED' ? 'Market reaction absorbed into price action' : 'Awaiting official publication'),
+      fundamental_implication: c.fundamental_implication || 'Influences central bank policy rate expectations',
       source: c.source || 'Economic Calendar Wire',
       last_updated: c.last_updated || nowIso,
       data_status: c.status === 'RELEASED' ? 'LIVE' : 'RECENT',

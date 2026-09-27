@@ -2,6 +2,7 @@ import React from 'react';
 import { MarketEvent } from '../types';
 import { Layers, Clock, ArrowRight, Flame, Zap, Newspaper } from 'lucide-react';
 import { getCurrencyFlagUrl } from '../lib/assets';
+import { useLanguage } from '../lib/LanguageContext';
 
 interface EventCardProps {
   event: MarketEvent;
@@ -10,6 +11,8 @@ interface EventCardProps {
 }
 
 export const EventCard: React.FC<EventCardProps> = React.memo(({ event, onClick, isSelected }) => {
+  const { t } = useLanguage();
+
   const getImpactBadgeClass = (level: string) => {
     switch (level) {
       case 'CRITICAL':
@@ -25,13 +28,13 @@ export const EventCard: React.FC<EventCardProps> = React.memo(({ event, onClick,
 
   const timeAgo = (dateStr: string) => {
     const time = new Date(dateStr).getTime();
-    if (isNaN(time)) return 'recently';
+    if (isNaN(time)) return t('baru saja', 'just now');
     const diff = Math.floor((Date.now() - time) / 1000);
-    if (diff <= 15) return 'just now';
-    if (diff < 60) return `${diff}s ago`;
-    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-    return `${Math.floor(diff / 86400)}d ago`;
+    if (diff <= 15) return t('baru saja', 'just now');
+    if (diff < 60) return t(`${diff}d lalu`, `${diff}s ago`);
+    if (diff < 3600) return t(`${Math.floor(diff / 60)}m lalu`, `${Math.floor(diff / 60)}m ago`);
+    if (diff < 86400) return t(`${Math.floor(diff / 3600)}j lalu`, `${Math.floor(diff / 3600)}h ago`);
+    return t(`${Math.floor(diff / 86400)}h lalu`, `${Math.floor(diff / 86400)}d ago`);
   };
 
   return (
@@ -56,7 +59,7 @@ export const EventCard: React.FC<EventCardProps> = React.memo(({ event, onClick,
             </span>
             {event.source_count > 1 && (
               <span className="text-[9.5px] text-[var(--text-muted)]">
-                {event.source_count} sources
+                {event.source_count} {t('sumber', 'sources')}
               </span>
             )}
           </div>
@@ -81,8 +84,12 @@ export const EventCard: React.FC<EventCardProps> = React.memo(({ event, onClick,
         {(event.pair_impacts || []).length > 0 && (
           <div className="mb-2.5">
             <div className="flex items-center justify-between mb-1.5">
-              <span className="metadata-label text-[9px] text-[var(--text-muted)]">Pair transmission</span>
-              <span className="metadata-label text-[9px] text-[var(--accent)]">Direct bias</span>
+              <span className="metadata-label text-[9px] text-[var(--text-muted)]">
+                {t('Transmisi Pair', 'Pair Transmission')}
+              </span>
+              <span className="metadata-label text-[9px] text-[var(--accent)]">
+                {t('Bias Langsung', 'Direct Bias')}
+              </span>
             </div>
             <div className="flex items-center gap-1.5 flex-wrap">
               {event.pair_impacts!.slice(0, 4).map((pi) => {
@@ -132,10 +139,10 @@ export const EventCard: React.FC<EventCardProps> = React.memo(({ event, onClick,
       {/* Footer Details */}
       <div className="pt-2 border-t text-[10px] flex items-center justify-between text-[var(--text-muted)]" style={{ borderColor: 'var(--border-hairline)' }}>
         <span className="truncate max-w-[150px]">
-          {event.source_names?.[0] || 'Institutional wire'}
+          {event.source_names?.[0] || t('Kawat institusional', 'Institutional wire')}
         </span>
         <span className="text-[var(--accent)] font-semibold flex items-center gap-1 group-hover:gap-1.5 transition-all">
-          <span>Read dossier</span>
+          <span>{t('Buka Berkas', 'Open Dossier')}</span>
           <ArrowRight className="w-3 h-3" />
         </span>
       </div>

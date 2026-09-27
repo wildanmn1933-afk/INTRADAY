@@ -11,24 +11,13 @@ import {
 import {
   Compass,
   Zap,
-  ArrowUpRight,
-  ArrowDownRight,
   Flame,
-  Activity,
-  Sparkles,
-  TrendingUp,
-  TrendingDown,
-  ArrowRight,
-  Target,
-  BarChart3,
-  ExternalLink,
   ShieldAlert,
-  Info,
   AlertTriangle,
-  HelpCircle,
 } from 'lucide-react';
 import { D3Sparkline } from './ui/D3Sparkline';
 import { NavTabId } from './Sidebar';
+import { useLanguage } from '../lib/LanguageContext';
 
 interface ExecutiveMarketBriefProps {
   strengths: CurrencyStrength[];
@@ -59,6 +48,7 @@ export const ExecutiveMarketBrief: React.FC<ExecutiveMarketBriefProps> = ({
   onNavigateDailyReport,
   onNavigateTab,
 }) => {
+  const { t } = useLanguage();
   const activeViewTab = 'ALL_IN_ONE';
 
   // Price lookup map
@@ -100,10 +90,10 @@ export const ExecutiveMarketBrief: React.FC<ExecutiveMarketBriefProps> = ({
   const isYieldEasing = us10yChangePct < -0.05;
   const isYieldRising = us10yChangePct > 0.05;
   const yieldStatusLabel = isYieldEasing
-    ? 'YIELD MELEMAH (EASING)'
+    ? t('YIELD MELUNAK', 'YIELD EASING')
     : isYieldRising
-    ? 'YIELD MENGUAT (TIGHTENING)'
-    : 'YIELD KONSOLIDASI (FLAT)';
+    ? t('YIELD MENGETAT', 'YIELD TIGHTENING')
+    : t('YIELD KONSOLIDASI (FLAT)', 'YIELD CONSOLIDATING (FLAT)');
 
   // Real Yield Proxy (Nominal 10Y minus assumed 2.25% breakeven)
   const realYieldEstimate = Number((us10yPrice - 2.25).toFixed(2));
@@ -113,7 +103,7 @@ export const ExecutiveMarketBrief: React.FC<ExecutiveMarketBriefProps> = ({
   const usJpSpread = arahMarketData?.intermarketSpreads?.find(s => s.id === 'spread-us-jp')?.currentValue ?? Number((us10yPrice - 0.98).toFixed(2));
 
   // Global Regime from ArahMarketData or fallback
-  const regimeTitle = globalRegime?.title || arahMarketData?.globalRegime?.title || 'BALANCED ROTATIONAL REGIME';
+  const regimeTitle = globalRegime?.title || arahMarketData?.globalRegime?.title || t('ROTASI SEIMBANG', 'BALANCED ROTATIONAL REGIME');
   const riskScore = globalRegime?.riskScore ?? arahMarketData?.globalRegime?.riskScore ?? 15;
   const dxyBiasVsOpen = globalRegime?.dxyBiasVsOpen || arahMarketData?.globalRegime?.dxyBiasVsOpen || 'AT_OPEN';
 
@@ -132,25 +122,46 @@ export const ExecutiveMarketBrief: React.FC<ExecutiveMarketBriefProps> = ({
   const goldDirectionalBias = goldConfluence?.directionalBias || (isYieldEasing && dxyBiasVsOpen === 'BELOW_OPEN' ? 'BULLISH' : isYieldRising ? 'BEARISH' : 'NEUTRAL');
   const goldTransmissionStory = useMemo(() => {
     if (isGoldYieldAnomaly) {
-      return `ANOMALI SAFE-HAVEN: Emas tetap menguat (+${(gold.change_24h_pct || 0).toFixed(2)}%) meskipun yield US10Y naik (+${us10yChangeBps} bps). Hal ini menandakan premi risiko geopolitik atau akumulasi cadangan devisa bank sentral (de-dolarisasi) sedang mengesampingkan beban suku bunga obligasi.`;
+      return t(
+        `SAFE-HAVEN DIVERGENCE: Emas tetap kokoh (+${(gold.change_24h_pct || 0).toFixed(2)}%) meski yield US10Y naik (+${us10yChangeBps} bps). Ini nunjukin premi risiko geopolitik atau akumulasi cadangan emas bank sentral (dedolarisasi) lagi lebih dominan ngalahin beban opportunity cost obligasi.`,
+        `SAFE-HAVEN DIVERGENCE: Gold remains firm (+${(gold.change_24h_pct || 0).toFixed(2)}%) despite rising US10Y yields (+${us10yChangeBps} bps). This indicates that geopolitical risk premiums or central bank sovereign reserve accumulation (de-dollarization) are overriding bond yield opportunity costs.`
+      );
     }
     if (isYieldEasing) {
-      return `Imbal hasil US10Y melemah ke ${us10yPrice.toFixed(3)}% (${us10yChangeBps > 0 ? '+' : ''}${us10yChangeBps} bps). Penurunan yield ini melonggarkan opportunity cost memegang emas fisik tanpa imbal hasil, memberi dorongan beli langsung (bullish tailwind) ke XAU/USD.`;
+      return t(
+        `Yield US10Y melunak ke ${us10yPrice.toFixed(3)}% (${us10yChangeBps > 0 ? '+' : ''}${us10yChangeBps} bps). Yield yang turun ngeringanin beban opportunity cost megang emas fisik, ngasih dorongan bullish langsung buat XAU/USD.`,
+        `US10Y yields softening to ${us10yPrice.toFixed(3)}% (${us10yChangeBps > 0 ? '+' : ''}${us10yChangeBps} bps). Yield easing lowers the opportunity cost of holding non-yielding physical bullion, providing a direct bullish tailwind to XAU/USD.`
+      );
     } else if (isYieldRising) {
-      return `Imbal hasil US10Y menguat ke ${us10yPrice.toFixed(3)}% (+${us10yChangeBps} bps). Kenaikan yield riil meningkatkan opportunity cost emas, memicu aksi ambil untung atau tekanan resisten pada reli intraday XAU/USD.`;
+      return t(
+        `Yield US10Y menguat ke ${us10yPrice.toFixed(3)}% (+${us10yChangeBps} bps). Real yield yang naik bikin opportunity cost emas tambah berat, memicu aksi ambil untung (profit-taking) atau resisten pas XAU/USD reli intraday.`,
+        `US10Y yields firming to ${us10yPrice.toFixed(3)}% (+${us10yChangeBps} bps). Rising real yields increase gold's opportunity cost, triggering profit-taking or resistance on intraday XAU/USD rallies.`
+      );
     }
-    return `Imbal hasil US10Y stabil di kisaran ${us10yPrice.toFixed(3)}%. Pergerakan Gold (XAU/USD) bergantung pada pergeseran tensi geopolitik dan arah DXY terhadap pembukaan sesi.`;
-  }, [isGoldYieldAnomaly, isYieldEasing, isYieldRising, us10yPrice, us10yChangeBps, gold.change_24h_pct]);
+    return t(
+      `Yield US10Y terpantau stabil dekat ${us10yPrice.toFixed(3)}%. Pergerakan emas (XAU/USD) bergantung pada headline geopolitik dan momentum DXY relatif terhadap open sesi.`,
+      `US10Y yields steady near ${us10yPrice.toFixed(3)}%. Gold (XAU/USD) action depends on geopolitical headlines and DXY momentum relative to the session open.`
+    );
+  }, [isGoldYieldAnomaly, isYieldEasing, isYieldRising, us10yPrice, us10yChangeBps, gold.change_24h_pct, t]);
 
   // Dynamic Synthesis for Equities / Nasdaq
   const techTransmissionStory = useMemo(() => {
     if (isYieldEasing) {
-      return `Pelemahan yield obligasi melonggarkan tingkat diskonto (discount rate) arus kas masa depan, mendorong ekspansi valuasi saham teknologi mega-cap dan AI (US100 unggul).`;
+      return t(
+        'Yield obligasi yang melunak ngeringanin discount rate arus kas masa depan, ngedukung kenaikan valuasi saham-saham raksasa tech & AI (US100 unggul).',
+        'Softening bond yields relieve the discount rate on future cash flows, supporting multiple expansion across mega-cap tech and AI leaders (US100 outperforming).'
+      );
     } else if (isYieldRising) {
-      return `Kenaikan yield obligasi menaikkan discount rate, menekan kelipatan P/E saham growth ber-multiple tinggi (US100) dan memicu rotasi defensif ke saham siklikal/Dow 30 (US30).`;
+      return t(
+        'Yield obligasi yang naik ngangkat discount rate, nekan valuasi saham sektor pertumbuhan tinggi (US100) dan dorong rotasi dana ke saham defensif / siklikal (US30).',
+        'Rising bond yields elevate discount rates, pressuring high-multiple growth equities (US100) and prompting rotational flows into value/cyclicals (US30).'
+      );
     }
-    return `Kondisi yield yang seimbang menjaga rotasi wajar antara saham teknologi (US100) dan saham industrial/perbankan (US30).`;
-  }, [isYieldEasing, isYieldRising]);
+    return t(
+      'Kondisi yield yang seimbang ngejaga rotasi sektor tetap rapi antara teknologi (US100) dan saham perbankan / industrial (US30).',
+      'Balanced yield conditions maintain orderly sector rotation between technology (US100) and industrial/banking equities (US30).'
+    );
+  }, [isYieldEasing, isYieldRising, t]);
 
   return (
     <div className="terminal-panel p-4 sm:p-5 space-y-4 font-sans" id="executive-macro-yield-synthesis">
@@ -160,18 +171,18 @@ export const ExecutiveMarketBrief: React.FC<ExecutiveMarketBriefProps> = ({
           <div className="flex items-center gap-2 flex-wrap">
             <span className="metadata-label text-[10px] text-[var(--accent)] font-mono font-semibold flex items-center gap-1">
               <Compass className="w-3.5 h-3.5" />
-              <span>EXECUTIVE DAILY MACRO SYNTHESIS</span>
+              <span>{t('brief.badgeDossier')}</span>
             </span>
             <span className="text-[var(--border-subtle)]">·</span>
             <span className="text-[10px] font-mono text-[var(--text-muted)] bg-[var(--bg-section)] px-2 py-0.5 rounded border border-[var(--border-subtle)]">
-              {arahMarketData?.activeSession ? `${arahMarketData.activeSession} SESSION` : 'REAL-TIME WIB'}
+              {arahMarketData?.activeSession ? `${arahMarketData.activeSession} SESSION` : t('common.live', 'REAL-TIME')}
             </span>
           </div>
           <h2 className="text-sm sm:text-base font-mono font-bold text-[var(--text-primary)] uppercase tracking-wide">
-            Arah Fundamental, Imbal Hasil (Yield), & Transmisi Gold Lintas Aset
+            {t('brief.title')}
           </h2>
           <p className="text-xs text-[var(--text-secondary)] font-sans leading-relaxed max-w-3xl">
-            Sintesis intelijen harian yang mengintegrasikan katalis makro fundamental, pergerakan imbal hasil US10Y & yield riil, serta transmisi langsung ke Emas (XAU/USD), Nasdaq (US100), DXY, dan Valuta Asing.
+            {t('brief.desc')}
           </p>
         </div>
       </div>
@@ -182,10 +193,10 @@ export const ExecutiveMarketBrief: React.FC<ExecutiveMarketBriefProps> = ({
           <AlertTriangle className="w-4 h-4 text-[var(--warning)] shrink-0 mt-0.5" />
           <div className="space-y-0.5">
             <span className="font-mono font-bold text-[var(--warning)] block">
-              PERINGATAN ANOMALI INTERMARKET: EMAS & YIELD/DOLAR SAMA-SAMA MENGUAT
+              {t('brief.anomalyHeading')}
             </span>
             <p className="text-[11.5px] text-[var(--text-secondary)] leading-relaxed">
-              Emas (XAU/USD) naik berbarengan dengan penguatan Yield US10Y atau DXY. Secara teori intermarket klasik, kedua aset biasanya berlawanan arah. Anomali ini menandakan premi risiko perang/geopolitik darurat atau de-dolarisasi cadangan devisa bank sentral sedang mengesampingkan faktor discount rate imbal hasil obligasi.
+              {t('brief.anomalyBody')}
             </p>
           </div>
         </div>
@@ -196,16 +207,16 @@ export const ExecutiveMarketBrief: React.FC<ExecutiveMarketBriefProps> = ({
         <div className="flex items-center justify-between text-[10.5px] font-mono">
           <span className="font-bold text-[var(--accent)] flex items-center gap-1.5">
             <Zap className="w-3.5 h-3.5" />
-            <span>ALUR TRANSMISI INTERMARKET SEBAB-AKIBAT:</span>
+            <span>{t('brief.causalChainTitle')}</span>
           </span>
           <span className="text-[var(--text-muted)] font-semibold">
-            {isYieldEasing ? 'SKENARIO: YIELD MELEMAH (EASING)' : isYieldRising ? 'SKENARIO: YIELD MENGUAT (TIGHTENING)' : 'SKENARIO: YIELD KONSOLIDASI'}
+            {isYieldEasing ? t('brief.scenarioEasing') : isYieldRising ? t('brief.scenarioTightening') : t('brief.scenarioConsolidation')}
           </span>
         </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 text-xs font-mono">
           <div className="p-2.5 rounded bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-1">
-            <div className="text-[9.5px] text-[var(--text-muted)] font-bold">1. SUMBER BENCHMARK</div>
+            <div className="text-[9.5px] text-[var(--text-muted)] font-bold">{t('brief.step1Anchor')}</div>
             <div className="font-bold text-[var(--text-primary)] flex items-center justify-between">
               <span>US10Y ({us10yPrice.toFixed(3)}%)</span>
               <span className={isYieldEasing ? 'text-[var(--bullish)]' : isYieldRising ? 'text-[var(--bearish)]' : 'text-[var(--text-muted)]'}>
@@ -213,185 +224,61 @@ export const ExecutiveMarketBrief: React.FC<ExecutiveMarketBriefProps> = ({
               </span>
             </div>
             <div className="text-[10px] text-[var(--text-secondary)] font-sans">
-              {isYieldEasing ? 'Yield obligasi AS melandai (-bps)' : isYieldRising ? 'Yield obligasi AS melonjak (+bps)' : 'Suku bunga acuan stabil'}
+              {isYieldEasing ? t('brief.step1Easing') : isYieldRising ? t('brief.step1Tightening') : t('brief.step1Flat')}
             </div>
           </div>
 
           <div className="p-2.5 rounded bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-1">
-            <div className="text-[9.5px] text-[var(--text-muted)] font-bold">2. TRANSMISI REAL YIELD</div>
+            <div className="text-[9.5px] text-[var(--text-muted)] font-bold">{t('brief.step2RealYield')}</div>
             <div className="font-bold text-[var(--text-primary)] flex items-center justify-between">
               <span>Real Yield ({realYieldEstimate}%)</span>
               <span className={isYieldEasing ? 'text-[var(--bullish)]' : 'text-[var(--bearish)]'}>
-                {isYieldEasing ? '▼ Melonggar' : '▲ Mengetat'}
+                {isYieldEasing ? '▼ Softening' : '▲ Tightening'}
               </span>
             </div>
             <div className="text-[10px] text-[var(--text-secondary)] font-sans">
-              {isYieldEasing ? 'Discount rate & opportunity cost turun' : 'Discount rate & opportunity cost naik'}
+              {isYieldEasing ? t('brief.step2Easing') : t('brief.step2Tightening')}
             </div>
           </div>
 
           <div className="p-2.5 rounded bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-1">
-            <div className="text-[9.5px] text-[var(--text-muted)] font-bold">3. DAMPAK KE EMAS (XAU)</div>
+            <div className="text-[9.5px] text-[var(--text-muted)] font-bold">{t('brief.step3Bullion')}</div>
             <div className="font-bold text-[var(--text-primary)] flex items-center justify-between">
               <span>Gold (${gold.price.toFixed(1)})</span>
               <span className={goldDirectionalBias === 'BULLISH' ? 'text-[var(--bullish)]' : goldDirectionalBias === 'BEARISH' ? 'text-[var(--bearish)]' : 'text-[var(--text-muted)]'}>
-                {goldDirectionalBias === 'BULLISH' ? '▲ Bullish' : goldDirectionalBias === 'BEARISH' ? '▼ Bearish' : '● Netral'}
+                {goldDirectionalBias === 'BULLISH' ? '▲ Bullish' : goldDirectionalBias === 'BEARISH' ? '▼ Bearish' : '● Neutral'}
               </span>
             </div>
             <div className="text-[10px] text-[var(--text-secondary)] font-sans">
-              {isYieldEasing ? 'Beban oportunitas hilang, emas diburu' : 'Aset berbunga lebih menarik dari emas'}
+              {isYieldEasing ? t('brief.step3Easing') : t('brief.step3Tightening')}
             </div>
           </div>
 
           <div className="p-2.5 rounded bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-1">
-            <div className="text-[9.5px] text-[var(--text-muted)] font-bold">4. SAHAM TECH & VALAS</div>
+            <div className="text-[9.5px] text-[var(--text-muted)] font-bold">{t('brief.step4Tech')}</div>
             <div className="font-bold text-[var(--text-primary)] flex items-center justify-between">
               <span>US100 / DXY / JPY</span>
               <span className="text-[var(--accent)] font-semibold">Multiple P/E</span>
             </div>
             <div className="text-[10px] text-[var(--text-secondary)] font-sans">
-              {isYieldEasing ? 'Valuasi P/E tech longgar, Dolar melemah' : 'Kompresi P/E tech, Dolar menguat'}
+              {isYieldEasing ? t('brief.step4Easing') : t('brief.step4Tightening')}
             </div>
           </div>
         </div>
       </div>
 
-      {/* 2. THREE CORE PILLARS BANNER (FUNDAMENTAL, YIELD ANCHOR, GOLD VECTOR) */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        {/* PILLAR 1: ARAH FUNDAMENTAL */}
-        <div className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-3.5 flex flex-col justify-between gap-2.5">
-          <div className="flex items-center justify-between">
-            <span className="metadata-label text-[10px] text-[var(--text-muted)] flex items-center gap-1">
-              <Compass className="w-3.5 h-3.5 text-sky-400" />
-              <span>1. ARAH FUNDAMENTAL</span>
-            </span>
-            <span className={`text-[9px] px-2 py-0.5 rounded-full font-semibold font-mono ${
-              riskScore > 20 ? 'badge-bullish' : riskScore < -20 ? 'badge-bearish' : 'badge-neutral'
-            }`}>
-              {regimeTitle}
-            </span>
-          </div>
-
-          <div className="space-y-1">
-            <div className="flex items-baseline justify-between">
-              <span className="text-xs font-semibold text-[var(--text-primary)] font-mono">
-                Sentimen Risiko Global:
-              </span>
-              <span className={`text-xs font-bold font-mono ${riskScore > 0 ? 'text-[var(--bullish)]' : riskScore < 0 ? 'text-[var(--bearish)]' : 'text-[var(--text-muted)]'}`}>
-                {riskScore > 0 ? `+${riskScore}` : riskScore} / 100
-              </span>
-            </div>
-            <p className="text-[11.5px] text-[var(--text-secondary)] font-sans leading-relaxed line-clamp-3">
-              {arahMarketData?.globalRegime?.summaryNarrative ||
-                'Kondisi makro global digerakkan oleh ekspektasi suku bunga Federal Reserve, rilis data inflasi, serta arah transmisi US Dollar terhadap pembukaan sesi.'}
-            </p>
-          </div>
-
-          <div className="pt-2 border-t flex items-center justify-between text-[10.5px] font-mono text-[var(--text-muted)]" style={{ borderColor: 'var(--border-hairline)' }}>
-            <span>DXY VS OPEN:</span>
-            <span className={`font-bold ${dxyBiasVsOpen === 'ABOVE_OPEN' ? 'text-[var(--bearish)]' : dxyBiasVsOpen === 'BELOW_OPEN' ? 'text-[var(--bullish)]' : 'text-[var(--text-muted)]'}`}>
-              {dxyBiasVsOpen === 'ABOVE_OPEN' ? '▲ DI ATAS OPEN (TEKANAN USD)' : dxyBiasVsOpen === 'BELOW_OPEN' ? '▼ DI BAWAH OPEN (PELEMAHAN USD)' : '● SEIMBANG'}
-            </span>
-          </div>
-        </div>
-
-        {/* PILLAR 2: STATUS IMBAL HASIL (YIELD US10Y & REAL YIELD) */}
-        <div className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-3.5 flex flex-col justify-between gap-2.5">
-          <div className="flex items-center justify-between">
-            <span className="metadata-label text-[10px] text-[var(--text-muted)] flex items-center gap-1">
-              <Activity className="w-3.5 h-3.5 text-amber-400" />
-              <span>2. IMBAL HASIL (US10Y YIELD)</span>
-            </span>
-            <span className={`text-[9px] px-2 py-0.5 rounded-full font-semibold font-mono ${
-              isYieldEasing ? 'badge-bullish' : isYieldRising ? 'badge-bearish' : 'badge-neutral'
-            }`}>
-              {yieldStatusLabel}
-            </span>
-          </div>
-
-          <div className="space-y-1">
-            <div className="flex items-baseline justify-between font-mono">
-              <span className="text-lg font-bold text-[var(--text-primary)]">
-                {us10yPrice.toFixed(3)}%
-              </span>
-              <span className={`text-xs font-bold ${us10yChangePct <= 0 ? 'text-[var(--bullish)]' : 'text-[var(--bearish)]'}`}>
-                {us10yChangePct >= 0 ? '+' : ''}{us10yChangePct.toFixed(2)}% ({us10yChangeBps >= 0 ? '+' : ''}{us10yChangeBps} bps)
-              </span>
-            </div>
-            <p className="text-[11.5px] text-[var(--text-secondary)] font-sans leading-relaxed">
-              {isYieldEasing
-                ? 'Yield US10Y melemah. Penurunan imbal hasil melonggarkan discount rate dan meringankan beban opportunity cost aset tanpa bunga.'
-                : isYieldRising
-                ? 'Yield US10Y menguat. Kenaikan imbal hasil menaikkan opportunity cost emas dan menekan valuasi saham teknologi ber-multiple tinggi.'
-                : 'Yield US10Y berkonsolidasi di sekitar level acuan sesi; pasar menunggu katalis pidato bank sentral atau data inflasi berikutnya.'}
-            </p>
-          </div>
-
-          <div className="pt-2 border-t flex items-center justify-between text-[10.5px] font-mono text-[var(--text-muted)]" style={{ borderColor: 'var(--border-hairline)' }}>
-            <span>YIELD RIIL ESTIMASI:</span>
-            <span className="font-bold text-[var(--text-primary)]">
-              {realYieldEstimate}% {realYieldEstimate > 1.9 ? '(High Drag)' : '(Supportive)'}
-            </span>
-          </div>
-        </div>
-
-        {/* PILLAR 3: ARAH GOLD (XAUUSD) & VEKTOR YIELD */}
-        <div className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-3.5 flex flex-col justify-between gap-2.5">
-          <div className="flex items-center justify-between">
-            <span className="metadata-label text-[10px] text-[var(--text-muted)] flex items-center gap-1">
-              <Flame className="w-3.5 h-3.5 text-amber-500" />
-              <span>3. ARAH EMAS (XAU/USD)</span>
-            </span>
-            <span className={`text-[9px] px-2 py-0.5 rounded-full font-semibold font-mono ${
-              goldDirectionalBias === 'BULLISH' || goldDirectionalBias === 'STRONG_BULLISH'
-                ? 'badge-bullish'
-                : goldDirectionalBias === 'BEARISH' || goldDirectionalBias === 'STRONG_BEARISH'
-                ? 'badge-bearish'
-                : 'badge-neutral'
-            }`}>
-              BIAS: {goldDirectionalBias}
-            </span>
-          </div>
-
-          <div className="space-y-1">
-            <div className="flex items-baseline justify-between font-mono">
-              <span className="text-lg font-bold text-[var(--text-primary)]">
-                ${gold.price.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
-              </span>
-              <span className={`text-xs font-bold ${(gold.change_24h_pct || 0) >= 0 ? 'text-[var(--bullish)]' : 'text-[var(--bearish)]'}`}>
-                {(gold.change_24h_pct || 0) >= 0 ? '+' : ''}{(gold.change_24h_pct || 0).toFixed(2)}%
-              </span>
-            </div>
-            <p className="text-[11.5px] text-[var(--text-secondary)] font-sans leading-relaxed">
-              {isYieldEasing
-                ? 'Emas diuntungkan oleh pelemahan imbal hasil obligasi AS dan pelemahan DXY. Menghadirkan bias beli pada pullback ke area demand sesi.'
-                : isYieldRising
-                ? 'Emas tertekan oleh penguatan yield obligasi AS dan DXY yang kokoh. Waspadai resisten pada pantulan harga dan potensi retracement.'
-                : 'Emas berada dalam fase konsolidasi intraday; perhatikan level support/resistance batas sesi Asia-London.'}
-            </p>
-          </div>
-
-          <div className="pt-2 border-t flex items-center justify-between text-[10.5px] font-mono text-[var(--text-muted)]" style={{ borderColor: 'var(--border-hairline)' }}>
-            <span>REKOMENDASI DESK:</span>
-            <span className="font-bold text-[var(--accent)]">
-              {goldConfluence?.intradayPlan?.recommendedAction || (isYieldEasing ? 'LOOK FOR BUY' : isYieldRising ? 'LOOK FOR SELL' : 'WAIT ON SUPPORT')}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* 3. TRANSMISI IMBAL HASIL LINTAS ASET (CROSS-ASSET YIELD TRANSMISSION MATRIX) */}
+      {/* 2. CROSS-ASSET YIELD TRANSMISSION MATRIX */}
       {(activeViewTab === 'ALL_IN_ONE' || activeViewTab === 'YIELD_GOLD') && (
         <section className="space-y-3 pt-1">
           <div className="flex items-center justify-between pb-2 border-b" style={{ borderColor: 'var(--border-hairline)' }}>
             <div className="flex items-center gap-2">
               <Zap className="w-4 h-4 text-[var(--accent)]" />
               <h3 className="text-xs sm:text-sm font-mono font-bold text-[var(--text-primary)] uppercase tracking-wide">
-                Transmisi Imbal Hasil (Yield) ke Seluruh Aset Terkait
+                {t('brief.matrixTitle')}
               </h3>
             </div>
             <span className="text-[11px] font-mono text-[var(--text-muted)]">
-              Korelasi & Dampak Langsung ke XAU, US100, DXY, FX
+              {t('brief.matrixSubtitle')}
             </span>
           </div>
 
@@ -405,7 +292,7 @@ export const ExecutiveMarketBrief: React.FC<ExecutiveMarketBriefProps> = ({
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5 font-mono">
                   <span className="font-bold text-xs text-[var(--text-primary)]">XAU/USD</span>
-                  <span className="text-[10px] text-[var(--text-muted)]">Gold</span>
+                  <span className="text-[10px] text-[var(--text-muted)]">{t('Emas', 'Gold')}</span>
                 </div>
                 <span className={`text-[9px] px-1.5 py-0.5 rounded font-mono font-semibold ${
                   (gold.change_24h_pct || 0) >= 0 ? 'badge-bullish' : 'badge-bearish'
@@ -433,21 +320,21 @@ export const ExecutiveMarketBrief: React.FC<ExecutiveMarketBriefProps> = ({
 
               <div className="space-y-1 text-xs">
                 <div className="text-[10px] font-mono text-[var(--accent)] font-semibold">
-                  HUBUNGAN DENGAN YIELD:
+                  {t('brief.yieldMechanismLabel')}
                 </div>
                 <p className="text-[11px] text-[var(--text-secondary)] font-sans leading-snug">
                   {isYieldEasing
-                    ? 'Yield melemah = Emas menguat (beban opportunity cost berkurang, dorongan safe-haven).'
+                    ? t('Yield melunak = Emas diminati (beban opportunity cost turun, angin segar safe-haven).', 'Yields softening = Gold bid (opportunity cost lifts, safe-haven tailwind).')
                     : isYieldRising
-                    ? 'Yield menguat = Emas tertekan (yield obligasi menarik modal keluar dari emas).'
-                    : 'Korelasi imbal hasil riil stabil; perhatikan pergerakan indeks dolar (DXY).'}
+                    ? t('Yield naik = Emas tertekan (yield Treasury narik dana keluar dari emas batangan).', 'Yields firming = Gold pressured (Treasury yields draw capital away from bullion).')
+                    : t('Korelasi real yield stabil; pantau momentum DXY.', 'Real yield correlation steady; monitor US Dollar Index (DXY) momentum.')}
                 </p>
               </div>
 
               <div className="pt-2 border-t text-[10px] font-mono flex items-center justify-between" style={{ borderColor: 'var(--border-hairline)' }}>
-                <span className="text-[var(--text-muted)]">AKSI TRADER:</span>
+                <span className="text-[var(--text-muted)]">{t('brief.deskActionLabel')}</span>
                 <span className="font-bold text-[var(--bullish)]">
-                  {isYieldEasing ? 'Cari Posisi Buy (Dip)' : 'Waspada Resisten'}
+                  {isYieldEasing ? t('brief.buyOnPullback') : t('brief.fadeResistance')}
                 </span>
               </div>
             </div>
@@ -488,21 +375,21 @@ export const ExecutiveMarketBrief: React.FC<ExecutiveMarketBriefProps> = ({
 
               <div className="space-y-1 text-xs">
                 <div className="text-[10px] font-mono text-[var(--accent)] font-semibold">
-                  HUBUNGAN DENGAN YIELD:
+                  {t('brief.yieldMechanismLabel')}
                 </div>
                 <p className="text-[11px] text-[var(--text-secondary)] font-sans leading-snug">
                   {isYieldEasing
-                    ? 'Yield melemah = Valuasi saham tech longgar (multiple expansion, dorongan beli pada saham AI).'
+                    ? t('Yield melunak = Valuasi tech naik pesat (aliran dana masuk ke saham AI & software).', 'Yields softening = Tech valuation multiple expansion (bids into AI & software leaders).')
                     : isYieldRising
-                    ? 'Yield menguat = Kompresi valuasi P/E saham growth (tekanan jual pada saham ber-P/E tinggi).'
-                    : 'Rotasi seimbang antara teknologi (US100) dan saham siklikal/Dow (US30).'}
+                    ? t('Yield naik = Valuasi saham tech terkompresi (aksi jual di saham bernilai valuasi tinggi).', 'Yields firming = Valuation compression on growth equities (selling in high-multiple tech).')
+                    : t('Rotasi sektor teratur antara tech (US100) dan value (US30).', 'Orderly sector rotation between tech (US100) and cyclical/value (US30).')}
                 </p>
               </div>
 
               <div className="pt-2 border-t text-[10px] font-mono flex items-center justify-between" style={{ borderColor: 'var(--border-hairline)' }}>
-                <span className="text-[var(--text-muted)]">LEADERSHIP:</span>
+                <span className="text-[var(--text-muted)]">{t('brief.leadershipLabel')}</span>
                 <span className="font-bold text-[var(--text-primary)]">
-                  {arahMarketData?.indexCorrelation?.ratioTrend === 'OUTPERFORMING' ? 'US100 Unggul vs US30' : 'Rotasi Berimbang'}
+                  {arahMarketData?.indexCorrelation?.ratioTrend === 'OUTPERFORMING' ? t('brief.techOutperforming') : t('brief.balancedRotation')}
                 </span>
               </div>
             </div>
@@ -543,17 +430,19 @@ export const ExecutiveMarketBrief: React.FC<ExecutiveMarketBriefProps> = ({
 
               <div className="space-y-1 text-xs">
                 <div className="text-[10px] font-mono text-[var(--accent)] font-semibold">
-                  HUBUNGAN DENGAN YIELD:
+                  {t('brief.yieldMechanismLabel')}
                 </div>
                 <p className="text-[11px] text-[var(--text-secondary)] font-sans leading-snug">
-                  DXY berkorelasi positif dengan US10Y. DXY {dxyBiasVsOpen === 'ABOVE_OPEN' ? 'di atas pembukaan sesi menekan EUR/USD dan komoditas' : 'di bawah pembukaan memberi ruang pelegaan bagi mata uang rival dan emas'}.
+                  {dxyBiasVsOpen === 'ABOVE_OPEN'
+                    ? t('DXY di atas open sesi ngasih tekanan jual ke EUR/USD & komoditas.', 'DXY above session open exerts selling pressure on EUR/USD & commodities.')
+                    : t('DXY di bawah open sesi ngasih napas lega buat mata uang rival & emas.', 'DXY below session open provides relief rallies for rival currencies & bullion.')}
                 </p>
               </div>
 
               <div className="pt-2 border-t text-[10px] font-mono flex items-center justify-between" style={{ borderColor: 'var(--border-hairline)' }}>
-                <span className="text-[var(--text-muted)]">GRAVITASI MAJORS:</span>
+                <span className="text-[var(--text-muted)]">{t('brief.fxGravityLabel')}</span>
                 <span className={`font-bold ${dxyBiasVsOpen === 'ABOVE_OPEN' ? 'text-[var(--bearish)]' : 'text-[var(--bullish)]'}`}>
-                  {dxyBiasVsOpen === 'ABOVE_OPEN' ? 'Tekanan Kuat' : 'Pelegaan Maju'}
+                  {dxyBiasVsOpen === 'ABOVE_OPEN' ? t('brief.heavyPressure') : t('brief.constructiveRelief')}
                 </span>
               </div>
             </div>
@@ -594,164 +483,28 @@ export const ExecutiveMarketBrief: React.FC<ExecutiveMarketBriefProps> = ({
 
               <div className="space-y-1 text-xs">
                 <div className="text-[10px] font-mono text-[var(--accent)] font-semibold">
-                  HUBUNGAN DENGAN YIELD:
+                  {t('brief.yieldMechanismLabel')}
                 </div>
                 <p className="text-[11px] text-[var(--text-secondary)] font-sans leading-snug">
-                  Spread US-Japan sebesar {usJpSpread}% adalah bahan bakar utama carry trade. Jika yield US10Y turun, USD/JPY rentan koreksi tajam.
+                  {t(
+                    `Selisih yield US-Jepang di ${usJpSpread}% jadi mesin utama carry trade. Kalau yield US10Y turun, USD/JPY rawan likuidasi tajam.`,
+                    `US-Japan yield spread at ${usJpSpread}% is the primary engine for carry trades. If US10Y yields soften, USD/JPY is prone to sharp liquidation pullbacks.`
+                  )}
                 </p>
               </div>
 
               <div className="pt-2 border-t text-[10px] font-mono flex items-center justify-between" style={{ borderColor: 'var(--border-hairline)' }}>
-                <span className="text-[var(--text-muted)]">SPREAD US-JP:</span>
+                <span className="text-[var(--text-muted)]">{t('brief.spreadUsJpLabel')}</span>
                 <span className="font-bold text-[var(--text-primary)]">
-                  {usJpSpread}% (Lebar)
+                  {usJpSpread}% ({t('brief.wideGap')})
                 </span>
               </div>
-            </div>
-          </div>
-
-          {/* TABEL RINGKASAN TRANSMISI LINTAS ASET TERKAIT YIELD */}
-          <div className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-3.5 space-y-3">
-            <div className="flex items-center justify-between pb-2 border-b" style={{ borderColor: 'var(--border-hairline)' }}>
-              <div className="flex items-center gap-2">
-                <BarChart3 className="w-4 h-4 text-[var(--accent)]" />
-                <h4 className="text-xs font-mono font-bold text-[var(--text-primary)] uppercase">
-                  Tabel Sintesis Transmisi Yield & Korelasi Lintas Aset
-                </h4>
-              </div>
-              <span className="text-[10px] font-mono text-[var(--text-muted)]">
-                LOGIKA INTERMARKET CANONICAL
-              </span>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs font-mono">
-                <thead>
-                  <tr className="border-b text-[10px] text-[var(--text-muted)] uppercase tracking-wider" style={{ borderColor: 'var(--border-hairline)' }}>
-                    <th className="py-2 px-2.5">Instrumen</th>
-                    <th className="py-2 px-2.5">Kategori</th>
-                    <th className="py-2 px-2.5">Harga & Perubahan</th>
-                    <th className="py-2 px-2.5">Hubungan dengan Yield US10Y</th>
-                    <th className="py-2 px-2.5">Status Hari Ini</th>
-                    <th className="py-2 px-2.5">Bias / Aksi Desk</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[var(--border-hairline)] text-xs">
-                  {/* Row 1: XAUUSD */}
-                  <tr className="hover:bg-[var(--bg-section-alt)] transition">
-                    <td className="py-2.5 px-2.5 font-bold text-[var(--text-primary)]">
-                      <button onClick={() => onOpenChart('XAUUSD')} className="hover:underline flex items-center gap-1 cursor-pointer">
-                        <span>XAU/USD</span>
-                        <ExternalLink className="w-2.5 h-2.5 text-[var(--text-muted)]" />
-                      </button>
-                    </td>
-                    <td className="py-2.5 px-2.5 text-[var(--text-muted)]">Komoditas / Emas</td>
-                    <td className="py-2.5 px-2.5">
-                      <span className="font-bold text-[var(--text-primary)] mr-1.5">${gold.price.toFixed(1)}</span>
-                      <span className={`text-[10px] ${(gold.change_24h_pct || 0) >= 0 ? 'text-[var(--bullish)]' : 'text-[var(--bearish)]'}`}>
-                        {(gold.change_24h_pct || 0) >= 0 ? '+' : ''}{(gold.change_24h_pct || 0).toFixed(2)}%
-                      </span>
-                    </td>
-                    <td className="py-2.5 px-2.5 text-[11px] font-sans text-[var(--text-secondary)]">
-                      <strong>Terbalik Kuat (-0.82):</strong> Yield turun ➔ Real yield turun ➔ Beban opportunity cost emas berkurang ➔ Emas menguat.
-                    </td>
-                    <td className="py-2.5 px-2.5">
-                      {isGoldYieldAnomaly ? (
-                        <span className="badge-warning text-[9px] font-bold">⚠️ ANOMALI SAFE-HAVEN</span>
-                      ) : (
-                        <span className="badge-bullish text-[9px] font-bold">✓ SELARAS INTERMARKET</span>
-                      )}
-                    </td>
-                    <td className="py-2.5 px-2.5 font-bold text-[var(--bullish)]">
-                      {goldDirectionalBias === 'BULLISH' ? 'BUY ON PULLBACK' : goldDirectionalBias === 'BEARISH' ? 'FADE THE RALLY' : 'RANGE BOUND'}
-                    </td>
-                  </tr>
-
-                  {/* Row 2: US100 */}
-                  <tr className="hover:bg-[var(--bg-section-alt)] transition">
-                    <td className="py-2.5 px-2.5 font-bold text-[var(--text-primary)]">
-                      <button onClick={() => onOpenChart('US100')} className="hover:underline flex items-center gap-1 cursor-pointer">
-                        <span>US100</span>
-                        <ExternalLink className="w-2.5 h-2.5 text-[var(--text-muted)]" />
-                      </button>
-                    </td>
-                    <td className="py-2.5 px-2.5 text-[var(--text-muted)]">Ekuitas / Tech Growth</td>
-                    <td className="py-2.5 px-2.5">
-                      <span className="font-bold text-[var(--text-primary)] mr-1.5">{us100.price.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
-                      <span className={`text-[10px] ${(us100.change_24h_pct || 0) >= 0 ? 'text-[var(--bullish)]' : 'text-[var(--bearish)]'}`}>
-                        {(us100.change_24h_pct || 0) >= 0 ? '+' : ''}{(us100.change_24h_pct || 0).toFixed(2)}%
-                      </span>
-                    </td>
-                    <td className="py-2.5 px-2.5 text-[11px] font-sans text-[var(--text-secondary)]">
-                      <strong>Terbalik (-0.68):</strong> Yield turun ➔ Discount rate turun ➔ Kelipatan valuasi forward P/E saham AI & teknologi mengembang.
-                    </td>
-                    <td className="py-2.5 px-2.5">
-                      <span className="badge-bullish text-[9px] font-bold">✓ SELARAS INTERMARKET</span>
-                    </td>
-                    <td className="py-2.5 px-2.5 font-bold text-[var(--bullish)]">
-                      {isYieldEasing ? 'FAVOR TECH (LONG)' : 'DEFENSIVE ROTATION (US30)'}
-                    </td>
-                  </tr>
-
-                  {/* Row 3: DXY */}
-                  <tr className="hover:bg-[var(--bg-section-alt)] transition">
-                    <td className="py-2.5 px-2.5 font-bold text-[var(--text-primary)]">
-                      <button onClick={() => onOpenChart('USD')} className="hover:underline flex items-center gap-1 cursor-pointer">
-                        <span>DXY</span>
-                        <ExternalLink className="w-2.5 h-2.5 text-[var(--text-muted)]" />
-                      </button>
-                    </td>
-                    <td className="py-2.5 px-2.5 text-[var(--text-muted)]">Indeks Dolar AS</td>
-                    <td className="py-2.5 px-2.5">
-                      <span className="font-bold text-[var(--text-primary)] mr-1.5">{dxy.price.toFixed(2)}</span>
-                      <span className={`text-[10px] ${(dxy.change_24h_pct || 0) >= 0 ? 'text-[var(--bullish)]' : 'text-[var(--bearish)]'}`}>
-                        {(dxy.change_24h_pct || 0) >= 0 ? '+' : ''}{(dxy.change_24h_pct || 0).toFixed(2)}%
-                      </span>
-                    </td>
-                    <td className="py-2.5 px-2.5 text-[11px] font-sans text-[var(--text-secondary)]">
-                      <strong>Searah (+0.65):</strong> Yield naik ➔ Aliran modal asing masuk ke obligasi AS ➔ Permintaan Dolar naik.
-                    </td>
-                    <td className="py-2.5 px-2.5">
-                      <span className="badge-neutral text-[9px] font-bold">{dxyBiasVsOpen === 'ABOVE_OPEN' ? 'DI ATAS OPEN' : 'DI BAWAH OPEN'}</span>
-                    </td>
-                    <td className="py-2.5 px-2.5 font-bold text-[var(--accent)]">
-                      {dxyBiasVsOpen === 'BELOW_OPEN' ? 'TEKANAN DOLAR MELEMAH' : 'TEKANAN DOLAR MENINGKAT'}
-                    </td>
-                  </tr>
-
-                  {/* Row 4: USDJPY */}
-                  <tr className="hover:bg-[var(--bg-section-alt)] transition">
-                    <td className="py-2.5 px-2.5 font-bold text-[var(--text-primary)]">
-                      <button onClick={() => onOpenChart('USDJPY')} className="hover:underline flex items-center gap-1 cursor-pointer">
-                        <span>USD/JPY</span>
-                        <ExternalLink className="w-2.5 h-2.5 text-[var(--text-muted)]" />
-                      </button>
-                    </td>
-                    <td className="py-2.5 px-2.5 text-[var(--text-muted)]">Valas / Carry Engine</td>
-                    <td className="py-2.5 px-2.5">
-                      <span className="font-bold text-[var(--text-primary)] mr-1.5">{usdjpy.price.toFixed(2)}</span>
-                      <span className={`text-[10px] ${(usdjpy.change_24h_pct || 0) >= 0 ? 'text-[var(--bullish)]' : 'text-[var(--bearish)]'}`}>
-                        {(usdjpy.change_24h_pct || 0) >= 0 ? '+' : ''}{(usdjpy.change_24h_pct || 0).toFixed(2)}%
-                      </span>
-                    </td>
-                    <td className="py-2.5 px-2.5 text-[11px] font-sans text-[var(--text-secondary)]">
-                      <strong>Searah Kuat (+0.78):</strong> Spread yield US-Japan ({usJpSpread}%) adalah bahan bakar carry trade. Yield US turun ➔ Carry ditutup ➔ JPY menguat (USD/JPY drop).
-                    </td>
-                    <td className="py-2.5 px-2.5">
-                      <span className="badge-bullish text-[9px] font-bold">✓ CARRY REAKTIF</span>
-                    </td>
-                    <td className="py-2.5 px-2.5 font-bold text-[var(--text-primary)]">
-                      {isYieldEasing ? 'WASPADA CARRY UNWIND' : 'CARRY TRADE FAVORABLE'}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
             </div>
           </div>
         </section>
       )}
 
-      {/* 4. MACRO CATALYSTS, CURRENCY FLOW, & EXECUTIVE PLAYBOOK */}
+      {/* 3. MACRO CATALYSTS, CURRENCY FLOW, & EXECUTIVE PLAYBOOK */}
       {(activeViewTab === 'ALL_IN_ONE' || activeViewTab === 'CATALYSTS_FX') && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 pt-1">
           {/* Executive Directives & Invalidations (7 cols) */}
@@ -760,10 +513,10 @@ export const ExecutiveMarketBrief: React.FC<ExecutiveMarketBriefProps> = ({
               <div className="flex items-center gap-2">
                 <ShieldAlert className="w-4 h-4 text-[var(--accent)]" />
                 <span className="text-xs font-mono font-bold text-[var(--text-primary)] uppercase">
-                  Panduan Taktis Eksekusi & Kondisi Invalidation
+                  {t('brief.directivesHeading')}
                 </span>
               </div>
-              <span className="text-[10px] font-mono text-[var(--text-muted)]">DESK PLAYBOOK</span>
+              <span className="text-[10px] font-mono text-[var(--text-muted)]">{t('brief.deskPlaybook')}</span>
             </div>
 
             <div className="space-y-2 text-xs font-sans">
@@ -772,7 +525,7 @@ export const ExecutiveMarketBrief: React.FC<ExecutiveMarketBriefProps> = ({
                   1
                 </span>
                 <p className="text-[var(--text-secondary)] leading-relaxed">
-                  <strong className="text-[var(--text-primary)] font-semibold">Fokus Emas (XAU/USD): </strong>
+                  <strong className="text-[var(--text-primary)] font-semibold">{t('brief.goldFocus')} </strong>
                   {goldTransmissionStory}
                 </p>
               </div>
@@ -782,8 +535,11 @@ export const ExecutiveMarketBrief: React.FC<ExecutiveMarketBriefProps> = ({
                   2
                 </span>
                 <p className="text-[var(--text-secondary)] leading-relaxed">
-                  <strong className="text-[var(--text-primary)] font-semibold">Fokus Valas & Suku Bunga: </strong>
-                  Divergensi mata uang G8 saat ini dipimpin oleh <strong>{strongestCurrency.currency}</strong> (skor {strongestCurrency.strength_score.toFixed(1)}) melawan <strong>{weakestCurrency.currency}</strong> (skor {weakestCurrency.strength_score.toFixed(1)}) dengan selisih {currencySpread} poin. Manfaatkan pergerakan searah dengan yield spread.
+                  <strong className="text-[var(--text-primary)] font-semibold">{t('brief.fxYieldFocus')} </strong>
+                  {t(
+                    `Dispersi valuta G8 dipimpin oleh ${strongestCurrency.currency} (skor ${strongestCurrency.strength_score.toFixed(1)}) melawan ${weakestCurrency.currency} (skor ${weakestCurrency.strength_score.toFixed(1)}) dengan selisih ${currencySpread} poin. Manfaatkan peluang yang searah dengan perbedaan yield suku bunga obligasi.`,
+                    `G8 currency dispersion is led by ${strongestCurrency.currency} (score ${strongestCurrency.strength_score.toFixed(1)}) versus ${weakestCurrency.currency} (score ${weakestCurrency.strength_score.toFixed(1)}) with a spread of ${currencySpread} points. Exploit moves aligned with sovereign yield differentials.`
+                  )}
                 </p>
               </div>
 
@@ -792,18 +548,27 @@ export const ExecutiveMarketBrief: React.FC<ExecutiveMarketBriefProps> = ({
                   3
                 </span>
                 <p className="text-[var(--text-secondary)] leading-relaxed">
-                  <strong className="text-[var(--text-primary)] font-semibold">Pemicu Pembatalan (Invalidation Trigger): </strong>
+                  <strong className="text-[var(--text-primary)] font-semibold">{t('brief.invalidationFocus')} </strong>
                   {isYieldEasing
-                    ? 'Jika US10Y mendadak rebound menembus resisten sesi atau DXY breakout ke atas pembukaan sesi, setup bullish Gold dan Tech batal (cut / de-risk).'
+                    ? t(
+                        'Kalau US10Y mendadak rebound nembus resisten sesi atau DXY tembus tegas ke atas open sesi, setup bullish di Emas dan Tech langsung batal / invalid (wajib cut / de-risk).',
+                        'If US10Y abruptly rebounds breaking above session resistance or DXY breaks decisively above the session open, bullish setups on Gold and Tech are invalidated (cut / de-risk).'
+                      )
                     : isYieldRising
-                    ? 'Jika US10Y drop tiba-tiba menembus support harian, tekanan bearish pada Gold dan Tech berakhir seketika.'
-                    : 'Penembusan range sesi pada DXY atau US10Y akan menentukan arah tren berikutnya.'}
+                    ? t(
+                        'Kalau US10Y mendadak jebol ke bawah support harian, tekanan bearish ke Emas dan Tech langsung berhenti seketika.',
+                        'If US10Y suddenly breaks below daily support, bearish pressure on Gold and Tech halts immediately.'
+                      )
+                    : t(
+                        'Breakout bersih dari DXY atau US10Y bakal jadi penentu tren arah berikutnya.',
+                        'A clean session breakout on DXY or US10Y will establish the next directional trend.'
+                      )}
                 </p>
               </div>
             </div>
 
             <div className="pt-2 border-t flex items-center justify-between text-[11px] font-mono" style={{ borderColor: 'var(--border-hairline)' }}>
-              <span className="text-[var(--text-muted)]">STATUS REZIM:</span>
+              <span className="text-[var(--text-muted)]">{t('brief.regimeStatus')}</span>
               <span className="font-bold text-[var(--text-primary)]">
                 {regimeTitle} ({riskScore > 0 ? `+${riskScore}` : riskScore})
               </span>
@@ -816,11 +581,11 @@ export const ExecutiveMarketBrief: React.FC<ExecutiveMarketBriefProps> = ({
               <div className="flex items-center gap-1.5">
                 <Flame className="w-4 h-4 text-amber-500" />
                 <span className="text-xs font-mono font-bold text-[var(--text-primary)] uppercase">
-                  Katalis Makro Hari Ini
+                  {t('brief.todayCatalysts')}
                 </span>
               </div>
               <span className="text-[10px] font-mono text-[var(--text-muted)]">
-                HIGH IMPACT
+                {t('brief.highImpact')}
               </span>
             </div>
 
@@ -835,25 +600,25 @@ export const ExecutiveMarketBrief: React.FC<ExecutiveMarketBriefProps> = ({
                     <span className="font-bold text-[var(--accent)]">{cat.currency || 'USD'}</span>
                     <span className="text-[var(--text-muted)]">
                       {cat.date_time_utc ? new Date(cat.date_time_utc).toLocaleTimeString('en-GB', {
-                        timeZone: 'Asia/Jakarta',
+                        timeZone: 'UTC',
                         hour12: false,
                         hour: '2-digit',
                         minute: '2-digit',
-                      }) + ' WIB' : 'SESI INI'}
+                      }) + ' UTC' : t('brief.thisSession')}
                     </span>
                   </div>
                   <div className="text-xs font-semibold text-[var(--text-primary)] line-clamp-1">
                     {cat.event_name}
                   </div>
                   <div className="text-[10.5px] text-[var(--text-secondary)] font-sans line-clamp-2">
-                    {cat.fundamental_implication || cat.actual_market_reaction || 'Pantau dampak rilis data terhadap ekspektasi suku bunga Fed.'}
+                    {cat.fundamental_implication || cat.actual_market_reaction || t('Pantau dampak data terhadap ekspektasi suku bunga bank sentral.', 'Monitor data impact on central bank policy expectations.')}
                   </div>
                 </div>
               ))}
 
               {todayCatalysts.length === 0 && (
                 <div className="text-xs text-[var(--text-muted)] py-3 text-center font-mono">
-                  Tidak ada katalis berdampak ekstrem terjadwal untuk sesi saat ini.
+                  {t('brief.noCatalystsSession')}
                 </div>
               )}
             </div>
@@ -861,11 +626,11 @@ export const ExecutiveMarketBrief: React.FC<ExecutiveMarketBriefProps> = ({
             {/* Currency quick badges */}
             <div className="pt-2 border-t flex items-center justify-between text-[11px] font-mono" style={{ borderColor: 'var(--border-hairline)' }}>
               <div className="flex items-center gap-1">
-                <span className="text-[var(--text-muted)]">LEADER:</span>
+                <span className="text-[var(--text-muted)]">{t('brief.leaderLabel')}</span>
                 <span className="font-bold text-[var(--bullish)]">{strongestCurrency.currency} ({strongestCurrency.strength_score.toFixed(1)})</span>
               </div>
               <div className="flex items-center gap-1">
-                <span className="text-[var(--text-muted)]">LAGGARD:</span>
+                <span className="text-[var(--text-muted)]">{t('brief.laggardLabel')}</span>
                 <span className="font-bold text-[var(--bearish)]">{weakestCurrency.currency} ({weakestCurrency.strength_score.toFixed(1)})</span>
               </div>
             </div>

@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { PageHeader } from './shared/PageHeader';
+import { useLanguage } from '../lib/LanguageContext';
 import {
   DailyMarketSnapshot,
   MarketMemoryInsight,
@@ -41,6 +42,7 @@ interface MarketHistoryViewProps {
 }
 
 export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({ onOpenChart }) => {
+  const { t } = useLanguage();
   const [snapshots, setSnapshots] = useState<DailyMarketSnapshot[]>([]);
   const [selectedDate, setSelectedDate] = useState<string>('2026-09-20');
   const [activeSnapshot, setActiveSnapshot] = useState<DailyMarketSnapshot | null>(null);
@@ -224,22 +226,25 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
     <div className="space-y-4 pb-12 font-sans">
       {/* 1. ARCHITECTURAL PIPELINE BANNER: NEWS → MACRO → CS → REACTION → AI → BIAS → HISTORY */}
       <PageHeader
-        eyebrow="RESEARCH · HISTORICAL DATA"
-        title="Market intelligence architecture"
-        description="Continuous multi-session archive · Zero simulated loss · Institutional persistence dossier."
+        eyebrow={t('RISET · DATA HISTORIS', 'RESEARCH · HISTORICAL DATA')}
+        title={t('Arsitektur Intelijen Pasar', 'Market intelligence architecture')}
+        description={t(
+          'Arsip multi-sesi berkelanjutan · Tanpa simulasi buatan · Berkas persistensi institusional.',
+          'Continuous multi-session archive · Zero simulated loss · Institutional persistence dossier.'
+        )}
         actions={
           <>
             <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-md bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-[11px] font-mono text-[var(--text-secondary)]">
               <span className="w-2 h-2 rounded-full bg-[var(--bullish)] animate-pulse" />
-              <span className="font-semibold text-[var(--text-primary)]">AUTO-ARCHIVE ACTIVE</span>
+              <span className="font-semibold text-[var(--text-primary)]">{t('ARSIP OTOMATIS AKTIF', 'AUTO-ARCHIVE ACTIVE')}</span>
               <span className="text-[var(--text-muted)]">·</span>
-              <span className="text-[var(--text-muted)]">OPEN → CLOSE (04:00 WIB)</span>
+              <span className="text-[var(--text-muted)]">{t('BUKA → TUTUP (04:00 WIB)', 'OPEN → CLOSE (04:00 WIB)')}</span>
             </div>
             <button
               onClick={loadInitialData}
               disabled={isLoading}
               className="h-8 w-8 rounded-md bg-[var(--bg-surface)] hover:bg-[var(--bg-section-alt)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition cursor-pointer disabled:opacity-50 flex items-center justify-center"
-              title="Reload memory database"
+              title={t('Muat ulang database memori', 'Reload memory database')}
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-[var(--accent)]' : ''}`} />
             </button>
@@ -251,22 +256,22 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
         {/* Pipeline Step Visualizer */}
         <div className="section-head flex-wrap gap-y-2">
           <span className="metadata-label text-[10px] text-[var(--text-muted)]">
-            Memory pipeline
+            {t('Alur memori', 'Memory pipeline')}
           </span>
           <span className="metadata-label text-[9.5px] text-[var(--text-muted)]">
-            Step 7 · permanent memory
+            {t('Langkah 7 · memori permanen', 'Step 7 · permanent memory')}
           </span>
         </div>
         <div className="overflow-x-auto pb-1">
           <div className="flex items-center min-w-[760px] text-[11px] font-mono">
             {[
-              { step: '1. NEWS', desc: 'Canonical Wire' },
-              { step: '2. MACRO', desc: 'Economic Events' },
-              { step: '3. CURRENCY STRENGTH', desc: 'G8 Real Flow' },
-              { step: '4. REACTION', desc: 'Price Action' },
-              { step: '5. AI ANALYSIS', desc: 'Grounded Synth' },
-              { step: '6. BIAS', desc: '14 Core Assets' },
-              { step: '7. HISTORY', desc: 'Permanent Memory', active: true },
+              { step: t('1. BERITA', '1. NEWS'), desc: t('Kawat Kanonikal', 'Canonical Wire') },
+              { step: t('2. MAKRO', '2. MACRO'), desc: t('Kalender Ekonomi', 'Economic Events') },
+              { step: t('3. KEKUATAN VALUTA', '3. CURRENCY STRENGTH'), desc: t('Arus Riil G8', 'G8 Real Flow') },
+              { step: t('4. REAKSI', '4. REACTION'), desc: t('Price Action', 'Price Action') },
+              { step: t('5. ANALISIS AI', '5. AI ANALYSIS'), desc: t('Sintesis Terverifikasi', 'Grounded Synth') },
+              { step: t('6. BIAS', '6. BIAS'), desc: t('14 Aset Inti', '14 Core Assets') },
+              { step: t('7. HISTORI', '7. HISTORY'), desc: t('Memori Permanen', 'Permanent Memory'), active: true },
             ].map((node, i, arr) => (
               <React.Fragment key={node.step}>
                 <div
@@ -302,7 +307,7 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
           <div className="flex flex-wrap items-center gap-2 font-mono">
             <span className="metadata-label text-xs text-[var(--text-muted)] flex items-center gap-1.5 mr-1">
               <CalendarDays className="w-3.5 h-3.5 text-[var(--accent)]" />
-              ARCHIVE DATE:
+              {t('TANGGAL ARSIP:', 'ARCHIVE DATE:')}
             </span>
 
             {snapshots.map(s => {
@@ -318,9 +323,9 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
                   }`}
                 >
                   {s.date === '2026-09-20'
-                    ? '20 Sep (Today)'
+                    ? t('20 Sep (Hari Ini)', '20 Sep (Today)')
                     : s.date === '2026-09-19'
-                    ? '19 Sep (Yesterday)'
+                    ? t('19 Sep (Kemarin)', '19 Sep (Yesterday)')
                     : s.date}
                 </button>
               );
@@ -328,7 +333,7 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
 
             {/* Custom Date Input */}
             <div className="flex items-center gap-1.5 bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded px-2.5 py-1 text-xs font-mono text-[var(--text-primary)]">
-              <span className="metadata-label text-[10px] text-[var(--text-muted)]">CUSTOM:</span>
+              <span className="metadata-label text-[10px] text-[var(--text-muted)]">{t('KUSTOM:', 'CUSTOM:')}</span>
               <input
                 type="date"
                 value={selectedDate}
@@ -349,7 +354,7 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
               }`}
             >
               <Scale className="w-3.5 h-3.5" />
-              <span>{isCompareMode ? 'EXIT COMPARE' : 'COMPARE DATES'}</span>
+              <span>{isCompareMode ? t('TUTUP KOMPARASI', 'EXIT COMPARE') : t('KOMPARASI TANGGAL', 'COMPARE DATES')}</span>
             </button>
 
             {isCompareMode && (
@@ -364,7 +369,7 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
                     .filter(s => s.date !== selectedDate)
                     .map(s => (
                       <option key={s.date} value={s.date}>
-                        {s.date === '2026-09-19' ? '19 Sep (Yesterday)' : s.date}
+                        {s.date === '2026-09-19' ? t('19 Sep (Kemarin)', '19 Sep (Yesterday)') : s.date}
                       </option>
                     ))}
                 </select>
@@ -381,11 +386,11 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-[var(--accent)]" />
               <h2 className="section-title text-xs text-[var(--text-primary)]">
-                MARKET MEMORY INSIGHTS (DERIVED FROM STORED HISTORY)
+                {t('INSIGHT MEMORI PASAR (BERDASARKAN DATA HISTORIS)', 'MARKET MEMORY INSIGHTS (DERIVED FROM STORED HISTORY)')}
               </h2>
             </div>
             <span className="text-[10px] font-mono text-[var(--text-muted)]">
-              Multi-Session Persistent Intelligence &bull; Zero Guesswork
+              {t('Intelijen Persisten Multi-Sesi • Tanpa Tebak-tebakan', 'Multi-Session Persistent Intelligence • Zero Guesswork')}
             </span>
           </div>
 
@@ -408,10 +413,10 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
                   {item.description}
                 </p>
                 <div className="pt-2 border-t text-[10px] font-mono text-[var(--text-muted)] flex items-center justify-between" style={{ borderColor: 'var(--border-hairline)' }}>
-                  <span>Confidence: {item.confidence}%</span>
+                  <span>{t('Keyakinan:', 'Confidence:')} {item.confidence}%</span>
                   <span className="text-[var(--bullish)] flex items-center gap-1">
                     <CheckCircle2 className="w-2.5 h-2.5" />
-                    Verified
+                    {t('Terverifikasi', 'Verified')}
                   </span>
                 </div>
               </div>
@@ -427,15 +432,18 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
             <div className="flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-[var(--accent)]" />
               <h2 className="section-title text-xs text-[var(--text-primary)]">
-                HISTORICAL CURRENCY STRENGTH COMPARISON (G8)
+                {t('KOMPARASI HISTORIS KEKUATAN MATA UANG (G8)', 'HISTORICAL CURRENCY STRENGTH COMPARISON (G8)')}
               </h2>
             </div>
             <p className="text-[10px] font-mono text-[var(--text-secondary)] mt-0.5">
-              Today vs Yesterday vs 3 Days vs 7 Days &bull; Grounded in historical interval database
+              {t(
+                'Hari Ini vs Kemarin vs 3 Hari vs 7 Hari • Berbasis database interval historis',
+                'Today vs Yesterday vs 3 Days vs 7 Days • Grounded in historical interval database'
+              )}
             </p>
           </div>
           <div className="flex items-center gap-1.5 text-[10px] font-mono text-[var(--text-muted)]">
-            <span>Benchmark:</span>
+            <span>{t('Tolok Ukur:', 'Benchmark:')}</span>
             <a
               href="https://currency-strength.com/en/"
               target="_blank"
@@ -452,13 +460,13 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
           <table className="w-full text-left text-xs font-mono">
             <thead>
               <tr className="border-b text-[10px] text-[var(--text-muted)] font-bold uppercase" style={{ borderColor: 'var(--border-subtle)' }}>
-                <th className="py-2 px-3">Currency</th>
-                <th className="py-2 px-3">Today Score</th>
-                <th className="py-2 px-3">Yesterday</th>
-                <th className="py-2 px-3">3-Day Ago</th>
-                <th className="py-2 px-3">7-Day Ago</th>
-                <th className="py-2 px-3">Net 7D Delta</th>
-                <th className="py-2 px-3">Macro Flow Trend</th>
+                <th className="py-2 px-3">{t('Mata Uang', 'Currency')}</th>
+                <th className="py-2 px-3">{t('Skor Hari Ini', 'Today Score')}</th>
+                <th className="py-2 px-3">{t('Kemarin', 'Yesterday')}</th>
+                <th className="py-2 px-3">{t('3 Hari Lalu', '3-Day Ago')}</th>
+                <th className="py-2 px-3">{t('7 Hari Lalu', '7-Day Ago')}</th>
+                <th className="py-2 px-3">{t('Delta Bersih 7H', 'Net 7D Delta')}</th>
+                <th className="py-2 px-3">{t('Tren Aliran Makro', 'Macro Flow Trend')}</th>
               </tr>
             </thead>
             <tbody className="divide-y" style={{ borderColor: 'var(--border-hairline)' }}>
@@ -551,7 +559,7 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
                         ) : (
                           <Minus className="w-3 h-3 text-[var(--text-muted)]" />
                         )}
-                        {item.trend}
+                        {isStrengthening ? t('MENGUAT', 'STRENGTHENING') : isWeakening ? t('MELEMAH', 'WEAKENING') : t('NETRAL', 'NEUTRAL')}
                       </span>
                     </td>
                   </tr>
@@ -569,11 +577,11 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
             <div className="flex items-center gap-2">
               <Scale className="w-4 h-4 text-[var(--accent)]" />
               <h2 className="section-title text-xs text-[var(--text-primary)]">
-                SIDE-BY-SIDE HISTORICAL COMPARISON: {activeSnapshot.date} VS {compareSnapshot.date}
+                {t('KOMPARASI HISTORIS BERDAMPINGAN:', 'SIDE-BY-SIDE HISTORICAL COMPARISON:')} {activeSnapshot.date} VS {compareSnapshot.date}
               </h2>
             </div>
             <span className="badge-neutral text-[10px] font-mono">
-              Delta Analysis
+              {t('Analisis Selisih / Delta', 'Delta Analysis')}
             </span>
           </div>
 
@@ -581,7 +589,7 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
             {/* Day A */}
             <div className="p-3 bg-[var(--bg-section-alt)] border border-[var(--border-subtle)] rounded space-y-2">
               <div className="text-xs font-mono font-bold text-[var(--text-primary)]">
-                DAY A: {activeSnapshot.date}
+                {t('HARI A:', 'DAY A:')} {activeSnapshot.date}
               </div>
               <div className="text-xs text-[var(--text-secondary)] leading-relaxed font-sans">
                 {activeSnapshot.ai_summary}
@@ -606,7 +614,7 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
             {/* Day B */}
             <div className="p-3 bg-[var(--bg-section-alt)] border border-[var(--border-subtle)] rounded space-y-2">
               <div className="text-xs font-mono font-bold text-[var(--text-primary)]">
-                DAY B: {compareSnapshot.date}
+                {t('HARI B:', 'DAY B:')} {compareSnapshot.date}
               </div>
               <div className="text-xs text-[var(--text-secondary)] leading-relaxed font-sans">
                 {compareSnapshot.ai_summary}
@@ -639,22 +647,22 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
               <div className="flex items-center gap-2">
                 <Calendar className="w-4 h-4 text-[var(--accent)]" />
                 <h2 className="section-title text-xs sm:text-sm text-[var(--text-primary)]">
-                  {activeSnapshot.title || `DAILY MARKET SNAPSHOT: ${activeSnapshot.date}`}
+                  {activeSnapshot.title || `${t('SNAPSHOT PASAR HARIAN:', 'DAILY MARKET SNAPSHOT:')} ${activeSnapshot.date}`}
                 </h2>
               </div>
               <p className="text-xs text-[var(--text-secondary)] font-mono mt-1">
-                Archived dossier for all 14 core markets &bull; Saved permanently in relational database
+                {t('Berkas arsip untuk seluruh 14 pasar inti • Disimpan permanen di database relasional', 'Archived dossier for all 14 core markets • Saved permanently in relational database')}
               </p>
             </div>
 
             {/* Asset Filter Pills */}
             <div className="flex flex-wrap items-center gap-1.5 font-mono">
               {[
-                { id: 'ALL', label: 'All 14 Assets' },
-                { id: 'METALS_CRYPTO', label: 'XAUUSD & BTC' },
-                { id: 'INDICES', label: 'US Equities (3)' },
-                { id: 'BONDS', label: 'Bonds (US10Y)' },
-                { id: 'FOREX', label: 'Currencies (8)' },
+                { id: 'ALL', label: t('Semua 14 Aset', 'All 14 Assets') },
+                { id: 'METALS_CRYPTO', label: t('XAUUSD & BTC', 'XAUUSD & BTC') },
+                { id: 'INDICES', label: t('Ekuitas AS (3)', 'US Equities (3)') },
+                { id: 'BONDS', label: t('Obligasi (US10Y)', 'Bonds (US10Y)') },
+                { id: 'FOREX', label: t('Valuta Forex (8)', 'Currencies (8)') },
               ].map(f => (
                 <button
                   key={f.id}
@@ -675,7 +683,7 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
           <div className="p-3.5 rounded bg-[var(--bg-section-alt)] border border-[var(--border-subtle)] mb-4">
             <div className="flex items-center gap-2 mb-1 text-xs font-mono font-bold text-[var(--text-primary)]">
               <Sparkles className="w-3.5 h-3.5 text-[var(--accent)]" />
-              <span>AI MACRO SYNTHESIS FOR {activeSnapshot.date}:</span>
+              <span>{t('SINTESIS MAKRO AI UNTUK', 'AI MACRO SYNTHESIS FOR')} {activeSnapshot.date}:</span>
             </div>
             <p className="text-xs text-[var(--text-secondary)] leading-relaxed mb-2 font-mono">
               {activeSnapshot.ai_summary}
@@ -691,8 +699,6 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
               const item = activeSnapshot.market_biases[sym];
               if (!item) return null;
 
-              const isBull = item.bias === 'BULLISH';
-              const isBear = item.bias === 'BEARISH';
               const chg = item.change_24h_pct;
 
               return (
@@ -715,7 +721,7 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
                     {/* Price & Change */}
                     <div className="flex items-baseline justify-between py-2 border-y mb-2 font-mono" style={{ borderColor: 'var(--border-hairline)' }}>
                       <div>
-                        <span className="text-xs text-[var(--text-muted)] mr-1.5">Price:</span>
+                        <span className="text-xs text-[var(--text-muted)] mr-1.5">{t('Harga:', 'Price:')}</span>
                         <span className="text-base font-bold text-[var(--text-primary)] tabular-nums">
                           {formatAssetPriceStr(sym, item.price)}
                         </span>
@@ -729,13 +735,13 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
                     {/* Strength & Major Catalyst */}
                     <div className="space-y-1.5 text-[11px] font-mono">
                       <div className="flex items-center justify-between text-[var(--text-secondary)]">
-                        <span className="text-[var(--text-muted)]">Strength Rating:</span>
-                        <span className="text-[var(--text-primary)] font-semibold">{item.strength_label || 'Neutral'}</span>
+                        <span className="text-[var(--text-muted)]">{t('Peringkat Kekuatan:', 'Strength Rating:')}</span>
+                        <span className="text-[var(--text-primary)] font-semibold">{item.strength_label || t('Netral', 'Neutral')}</span>
                       </div>
                       <div>
-                        <span className="metadata-label text-[10px] text-[var(--text-muted)] block">Major Catalyst:</span>
+                        <span className="metadata-label text-[10px] text-[var(--text-muted)] block">{t('Katalis Utama:', 'Major Catalyst:')}</span>
                         <p className="text-[var(--text-secondary)] text-xs mt-0.5 line-clamp-2 font-sans">
-                          {item.major_catalyst || 'Digestive consolidation and macro cross-flows.'}
+                          {item.major_catalyst || t('Konsolidasi digestif dan arus silang makro.', 'Digestive consolidation and macro cross-flows.')}
                         </p>
                       </div>
                     </div>
@@ -743,13 +749,13 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
 
                   {/* Footer with Chart Link & Timestamp */}
                   <div className="mt-3 pt-2 border-t flex items-center justify-between text-[10px] font-mono text-[var(--text-muted)]" style={{ borderColor: 'var(--border-hairline)' }}>
-                    <span>Updated: {new Date(item.last_updated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    <span>{t('Diperbarui:', 'Updated:')} {new Date(item.last_updated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                     {onOpenChart && (
                       <button
                         onClick={() => onOpenChart(sym)}
                         className="text-[var(--accent)] hover:underline flex items-center gap-1 cursor-pointer"
                       >
-                        <span>Chart</span>
+                        <span>{t('Grafik', 'Chart')}</span>
                         <ExternalLink className="w-2.5 h-2.5" />
                       </button>
                     )}
@@ -766,11 +772,11 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
                 <div className="flex items-center gap-2">
                   <TrendingUp className="w-4 h-4 text-[var(--accent)]" />
                   <h3 className="section-title text-xs text-[var(--text-primary)]">
-                    CURRENCY STRENGTH RANKING ON {activeSnapshot.date}
+                    {t('PERINGKAT KEKUATAN MATA UANG PADA', 'CURRENCY STRENGTH RANKING ON')} {activeSnapshot.date}
                   </h3>
                 </div>
                 <span className="text-[10px] font-mono text-[var(--text-muted)]">
-                  Relative Capital Flow Hierarchy
+                  {t('Hierarki Aliran Modal Relatif', 'Relative Capital Flow Hierarchy')}
                 </span>
               </div>
 
@@ -804,7 +810,7 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
             <div className="p-3 bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded space-y-2">
               <div className="font-bold text-[var(--bullish)] flex items-center gap-1.5 metadata-label text-xs">
                 <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>WHY THE MARKET MOVED (EVIDENCE)</span>
+                <span>{t('PENYEBAB PERGERAKAN PASAR (BUKTI)', 'WHY THE MARKET MOVED (EVIDENCE)')}</span>
               </div>
               <ul className="space-y-1.5 text-xs text-[var(--text-secondary)]">
                 {activeSnapshot.ai_why?.map((w, idx) => (
@@ -812,7 +818,7 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
                     <span className="text-[var(--bullish)] mt-0.5">&bull;</span>
                     <span className="leading-snug">{w}</span>
                   </li>
-                )) || <li className="text-[var(--text-muted)]">Historical evidence recorded.</li>}
+                )) || <li className="text-[var(--text-muted)]">{t('Bukti historis terekam.', 'Historical evidence recorded.')}</li>}
               </ul>
             </div>
 
@@ -820,7 +826,7 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
             <div className="p-3 bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded space-y-2">
               <div className="font-bold text-[var(--warning)] flex items-center gap-1.5 metadata-label text-xs">
                 <AlertCircle className="w-3.5 h-3.5" />
-                <span>IDENTIFIED RISKS & INVALIDATIONS</span>
+                <span>{t('RISIKO TERIDENTIFIKASI & AMBANG BATAL', 'IDENTIFIED RISKS & INVALIDATIONS')}</span>
               </div>
               <ul className="space-y-1.5 text-xs text-[var(--text-secondary)]">
                 {activeSnapshot.ai_risk?.map((r, idx) => (
@@ -828,7 +834,7 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
                     <span className="text-[var(--warning)] mt-0.5">&bull;</span>
                     <span className="leading-snug">{r}</span>
                   </li>
-                )) || <li className="text-[var(--text-muted)]">Normal session volatility conditions.</li>}
+                )) || <li className="text-[var(--text-muted)]">{t('Kondisi volatilitas sesi reguler.', 'Normal session volatility conditions.')}</li>}
               </ul>
             </div>
 
@@ -836,7 +842,7 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
             <div className="p-3 bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded space-y-2">
               <div className="font-bold text-[var(--text-primary)] flex items-center gap-1.5 metadata-label text-xs">
                 <History className="w-3.5 h-3.5 text-[var(--accent)]" />
-                <span>HISTORICAL MEMORY & CONTINUITY</span>
+                <span>{t('MEMORI HISTORIS & KONTINUITAS', 'HISTORICAL MEMORY & CONTINUITY')}</span>
               </div>
               <ul className="space-y-1.5 text-xs text-[var(--text-secondary)]">
                 {activeSnapshot.historical_insights?.map((h, idx) => (
@@ -844,7 +850,7 @@ export const MarketHistoryView: React.FC<MarketHistoryViewProps> = React.memo(({
                     <span className="text-[var(--accent)] mt-0.5">&bull;</span>
                     <span className="leading-snug">{h}</span>
                   </li>
-                )) || <li className="text-[var(--text-muted)]">Persistent memory tracking active.</li>}
+                )) || <li className="text-[var(--text-muted)]">{t('Pelacakan memori persisten aktif.', 'Persistent memory tracking active.')}</li>}
               </ul>
             </div>
           </div>

@@ -49,6 +49,7 @@ import { Autocomplete, AutocompleteGroup } from './components/ui/autocomplete';
 import { useMarketDataStream } from './hooks/useMarketDataStream';
 import { useNewsAlertManager } from './hooks/useNewsAlertManager';
 import { CentralMarketProvider } from './lib/CentralMarketContext';
+import { useLanguage } from './lib/LanguageContext';
 import {
   useLocation,
   isPublicRoute,
@@ -82,6 +83,7 @@ import {
 } from 'lucide-react';
 
 export default function App() {
+  const { t, language } = useLanguage();
   // Router Location
   const { path, navigate } = useLocation();
   // If an auth token is stored in localStorage or memory, set isAuthChecking true so route enforcement waits for validation
@@ -94,6 +96,24 @@ export default function App() {
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
   const [chartModalSymbol, setChartModalSymbol] = useState<string | null>(null);
+
+  // Ticker bar visibility: default hidden for maximum clean visual hierarchy
+  const [showTickerBar, setShowTickerBar] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('show_ticker_bar') === 'true';
+    }
+    return false;
+  });
+
+  const handleToggleTickerBar = useCallback(() => {
+    setShowTickerBar(prev => {
+      const next = !prev;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('show_ticker_bar', String(next));
+      }
+      return next;
+    });
+  }, []);
 
   // User State
   const [user, setUser] = useState<User | null>(() => getStoredUser());
@@ -421,7 +441,7 @@ export default function App() {
         </div>
         <div className="text-xs text-[var(--text-secondary)] flex items-center gap-2">
           <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-ping" />
-          <span>Verifying encrypted terminal session...</span>
+          <span>{t('Memverifikasi sesi terminal terenkripsi...', 'Verifying encrypted terminal session...')}</span>
         </div>
       </div>
     );
@@ -548,18 +568,23 @@ export default function App() {
             if (activeTab !== 'terminal') handleTabChange('terminal');
           }}
           onOpenChart={handleOpenChart}
+          showTickerBar={showTickerBar}
+          onToggleTickerBar={handleToggleTickerBar}
         />
 
-        {/* Real-time Ticker Bar */}
-        <TickerBar
-          prices={prices}
-          selectedSymbol={selectedSymbol}
-          onSelectSymbol={(sym) => {
-            handleSelectSymbol(sym);
-            if (activeTab !== 'terminal') handleTabChange('terminal');
-          }}
-          onOpenChart={handleOpenChart}
-        />
+        {/* Real-time Ticker Bar (Hidden by default for maximum clean hierarchy) */}
+        {showTickerBar && (
+          <TickerBar
+            prices={prices}
+            selectedSymbol={selectedSymbol}
+            onSelectSymbol={(sym) => {
+              handleSelectSymbol(sym);
+              if (activeTab !== 'terminal') handleTabChange('terminal');
+            }}
+            onOpenChart={handleOpenChart}
+            onClose={handleToggleTickerBar}
+          />
+        )}
 
         {/* Active Instrument Filter Strip */}
         {selectedSymbol && (
@@ -664,9 +689,9 @@ export default function App() {
           {activeTab === 'currency' && (
             <div className="space-y-4">
               <PageHeader
-                eyebrow="RESEARCH · CURRENCY G8"
-                title="Currency strength matrix"
-                description="Relative G8 strength, live parity timelines, and the pair opportunity matrix built from the same readings."
+                eyebrow={t('RISET · MATRIKS VALUTA G8', 'RESEARCH · G8 CURRENCY MATRIX')}
+                title={t('Matriks Kekuatan Valuta G8 & Peluang Pair', 'G8 Currency Strength Matrix & Pair Opportunities')}
+                description={t('Kekuatan relatif 8 mata uang utama (G8), linimasa paritas real-time, serta matriks peluang 28 pasangan mata uang yang dikalkulasikan secara sistematis.', 'Relative strength of the 8 major currencies (G8), real-time parity timeline, and systematically computed 28 cross-pair opportunity matrix.')}
               />
 
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
@@ -700,32 +725,32 @@ export default function App() {
 
           {/* VIEW 7: CANONICAL EVENT WIRE */}
           {activeTab === 'events' && (
-            <div className="space-y-5">
-              <div className="space-y-4">
+            <div className="space-y-4">
+              <div className="space-y-3">
                 <PageHeader
-                  eyebrow="MAIN · NEWS WIRE"
-                  title="Canonical news wire"
-                  description="One event, one canonical id, every source that carried it."
+                  eyebrow={t('FEEDS · WIRE BERITA KANONIKAL', 'FEEDS · CANONICAL NEWS WIRE')}
+                  title={t('Wire Berita Makro Kanonikal', 'Canonical Macro News Wire')}
+                  description={t('Satu peristiwa makro, satu ID kanonikal, teragregasi dari berbagai sumber institusional tanpa duplikasi narasi.', 'One macro event, one canonical ID, aggregated across institutional wires without redundant narrative duplicate.')}
                   actions={
                     <>
                       <button
                         onClick={refreshEvents}
                         disabled={isSyncing}
-                        className="flex items-center gap-1.5 px-3 h-8 rounded-md text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-section-alt)] text-xs font-medium transition cursor-pointer disabled:opacity-50"
-                        title="Sync wire with latest source releases"
+                        className="flex items-center gap-1.5 px-3 h-8 rounded-md text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-section-alt)] text-xs font-medium transition cursor-pointer disabled:opacity-50 border border-[var(--border-subtle)] font-mono"
+                        title={t('Sinkronisasi berita terbaru', 'Synchronize latest news')}
                       >
                         <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin text-[var(--accent)]' : ''}`} />
-                        <span>Sync wire</span>
+                        <span>{t('Sinkronisasi', 'Sync')}</span>
                       </button>
 
                       <Autocomplete
                         value={searchQuery}
                         onChange={setSearchQuery}
-                        placeholder="Search news, pairs, assets..."
+                        placeholder={t('Cari berita, pair, aset...', 'Search news, pair, asset...')}
                         groups={wireSearchGroups}
                         recentStorageKey="wire_search"
                         className="w-48 sm:w-64"
-                        inputClassName="bg-[var(--bg-section-alt)] h-8 text-xs focus:border-[var(--border-strong)]"
+                        inputClassName="bg-[var(--bg-surface)] h-8 text-xs focus:border-[var(--border-strong)] border-[var(--border-subtle)]"
                       />
                     </>
                   }
@@ -735,69 +760,76 @@ export default function App() {
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2.5 pt-2 border-t" style={{ borderColor: 'var(--border-hairline)' }}>
                   {/* Impact Filter Buttons */}
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="metadata-label text-[9px] text-[var(--text-muted)] flex items-center gap-1">
+                    <span className="text-[10px] font-mono text-[var(--text-muted)] flex items-center gap-1 uppercase tracking-wider">
                       <Filter className="w-3 h-3" />
-                      <span>Impact</span>
+                      <span>{t('Dampak:', 'Impact:')}</span>
                     </span>
 
                     <button
                       onClick={() => setImpactFilter('HIGH')}
-                      className={`flex items-center gap-1.5 px-2.5 h-7 rounded text-[11px] font-medium transition cursor-pointer ${
+                      className={`flex items-center gap-1.5 px-2.5 h-7 rounded text-[11px] font-medium transition cursor-pointer font-mono ${
                         impactFilter === 'HIGH'
-                          ? 'bg-[var(--bg-surface)] text-[var(--warning)] shadow-sm'
+                          ? 'bg-amber-500/15 text-amber-500 border border-amber-500/30 font-semibold'
                           : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
                       }`}
-                      title="Show only High & Critical impact events for reliable pair correlations"
+                      title={t('Tampilkan hanya peristiwa berdampak Tinggi & Kritis', 'Show only High & Critical impact events')}
                     >
                       <Flame className="w-3 h-3" />
-                      <span>High</span>
-                      <span className="tabular-nums opacity-70">
-                        {events.filter(e => e.impact_level === 'CRITICAL' || e.impact_level === 'HIGH').length}
+                      <span>{t('Tinggi', 'High')}</span>
+                      <span className="tabular-nums opacity-75">
+                        ({events.filter(e => e.impact_level === 'CRITICAL' || e.impact_level === 'HIGH').length})
                       </span>
                     </button>
 
                     <button
                       onClick={() => setImpactFilter('CRITICAL')}
-                      className={`flex items-center gap-1.5 px-2.5 h-7 rounded text-[11px] font-medium transition cursor-pointer ${
+                      className={`flex items-center gap-1.5 px-2.5 h-7 rounded text-[11px] font-medium transition cursor-pointer font-mono ${
                         impactFilter === 'CRITICAL'
-                          ? 'bg-[var(--bg-surface)] text-[var(--bearish)] shadow-sm'
+                          ? 'bg-rose-500/15 text-rose-500 border border-rose-500/30 font-semibold'
                           : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
                       }`}
-                      title="Show only critical macro events (Rates, geopolitical disruptions, liquidity shocks)"
+                      title={t('Tampilkan hanya peristiwa makro kritis (suku bunga, eskalasi geopolitik, likuiditas)', 'Show only critical macro events (policy rates, geopolitical escalation, liquidity)')}
                     >
                       <Zap className="w-3 h-3" />
-                      <span>Critical</span>
-                      <span className="tabular-nums opacity-70">
-                        {events.filter(e => e.impact_level === 'CRITICAL').length}
+                      <span>{t('Kritis', 'Critical')}</span>
+                      <span className="tabular-nums opacity-75">
+                        ({events.filter(e => e.impact_level === 'CRITICAL').length})
                       </span>
                     </button>
 
                     <button
                       onClick={() => setImpactFilter('ALL')}
-                      className={`flex items-center gap-1.5 px-2.5 h-7 rounded text-[11px] font-medium transition cursor-pointer ${
+                      className={`flex items-center gap-1.5 px-2.5 h-7 rounded text-[11px] font-medium transition cursor-pointer font-mono ${
                         impactFilter === 'ALL'
-                          ? 'bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-sm'
+                          ? 'bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-sm font-semibold border border-[var(--border-subtle)]'
                           : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
                       }`}
                     >
-                      <span>All</span>
-                      <span className="tabular-nums opacity-70">{events.length}</span>
+                      <span>{t('Semua', 'All')}</span>
+                      <span className="tabular-nums opacity-75">({events.length})</span>
                     </button>
                   </div>
 
                   {/* Category Filter Chips */}
-                  <div className="flex items-center flex-wrap gap-0.5 p-0.5 rounded-md bg-[var(--bg-section-alt)] min-w-0">
-                    {['ALL', 'MACRO', 'CENTRAL_BANK', 'COMMODITIES', 'GEOPOLITICS', 'CRYPTO'].map((cat) => (
+                  <div className="flex items-center flex-wrap gap-0.5 p-0.5 rounded-md bg-[var(--bg-section-alt)] border border-[var(--border-subtle)] min-w-0 font-mono">
+                    {[
+                      { id: 'ALL', label: t('Semua', 'All') },
+                      { id: 'MACRO', label: t('Makro', 'Macro') },
+                      { id: 'CENTRAL_BANK', label: t('Bank Sentral', 'Central Bank') },
+                      { id: 'COMMODITIES', label: t('Komoditas', 'Commodities') },
+                      { id: 'GEOPOLITICS', label: t('Geopolitik', 'Geopolitics') },
+                      { id: 'CRYPTO', label: t('Kripto', 'Crypto') },
+                    ].map((cat) => (
                       <button
-                        key={cat}
-                        onClick={() => setCategoryFilter(cat)}
+                        key={cat.id}
+                        onClick={() => setCategoryFilter(cat.id)}
                         className={`px-2.5 h-7 rounded text-[11px] whitespace-nowrap font-medium transition cursor-pointer ${
-                          categoryFilter === cat
-                            ? 'bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-sm'
+                          categoryFilter === cat.id
+                            ? 'bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-sm font-semibold'
                             : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
                         }`}
                       >
-                        {cat === 'ALL' ? 'All' : cat.charAt(0) + cat.slice(1).toLowerCase().replace('_', ' ')}
+                        {cat.label}
                       </button>
                     ))}
                   </div>
@@ -806,17 +838,16 @@ export default function App() {
                 {/* High Impact Mode Explanatory Banner */}
                 {impactFilter !== 'ALL' && (
                   <div
-                    className="p-3 rounded-lg flex items-center justify-between gap-3 text-xs"
-                    style={{ backgroundColor: 'var(--warning-bg)' }}
+                    className="p-2.5 rounded-lg flex items-center justify-between gap-3 text-xs border border-amber-500/20 bg-amber-500/10 text-amber-500 font-mono"
                   >
-                    <div className="flex items-center gap-2.5 text-[var(--text-secondary)]">
-                      <Flame className="w-4 h-4 text-[var(--warning)] shrink-0" />
-                      <span>
-                        Filtered to high-volatility drivers: monetary policy, CPI, geopolitics and commodities.
+                    <div className="flex items-center gap-2">
+                      <Flame className="w-3.5 h-3.5 shrink-0" />
+                      <span className="font-sans text-[11.5px] text-[var(--text-secondary)]">
+                        {t('Menyaring penggerak volatilitas tinggi: kebijakan moneter, CPI/PCE, geopolitik, dan guncangan komoditas.', 'Filtering high volatility catalysts: monetary policy, CPI/PCE, geopolitics, and commodity shocks.')}
                       </span>
                     </div>
-                    <span className="text-[11px] text-[var(--warning)] font-semibold shrink-0 hidden sm:inline tabular-nums">
-                      {filteredEvents.length} of {events.length}
+                    <span className="text-[11px] font-bold shrink-0 hidden sm:inline tabular-nums">
+                      {filteredEvents.length} {t('dari', 'of')} {events.length} {t('berita', 'news')}
                     </span>
                   </div>
                 )}
@@ -825,9 +856,9 @@ export default function App() {
               {filteredEvents.length === 0 ? (
                 <div className="py-16 text-center space-y-3">
                   <Flame className="w-8 h-8 text-[var(--text-muted)] mx-auto" />
-                  <h3 className="text-sm font-semibold text-[var(--text-primary)]">No events match these filters</h3>
+                  <h3 className="text-sm font-semibold text-[var(--text-primary)]">{t('Tidak ada berita yang cocok dengan filter', 'No news matched selected filters')}</h3>
                   <p className="text-xs text-[var(--text-muted)] max-w-md mx-auto">
-                    No active wire stories found {impactFilter !== 'ALL' ? `with impact ${impactFilter}` : ''} in the selected category.
+                    {t('Tidak ditemukan berita wire aktif pada kategori yang dipilih.', 'No active wire news found in selected category.')}
                   </p>
                   <button
                     onClick={() => {
@@ -837,7 +868,7 @@ export default function App() {
                     }}
                     className="px-3.5 py-1.5 rounded bg-[var(--bg-section-alt)] hover:bg-[var(--border-subtle)] text-[var(--accent)] text-xs font-mono font-bold transition cursor-pointer border border-[var(--border-subtle)]"
                   >
-                    Reset All Filters
+                    {t('Reset Semua Filter', 'Reset All Filters')}
                   </button>
                 </div>
               ) : (
@@ -857,9 +888,9 @@ export default function App() {
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 rounded terminal-panel text-xs font-mono text-[var(--text-primary)]">
                       <div className="flex items-center gap-2">
                         <span className="text-[var(--text-secondary)]">
-                          Showing <strong className="text-[var(--text-primary)]">{(wirePage - 1) * WIRE_PAGE_SIZE + 1}</strong> -{' '}
-                          <strong className="text-[var(--text-primary)]">{Math.min(wirePage * WIRE_PAGE_SIZE, filteredEvents.length)}</strong> of{' '}
-                          <strong className="text-[var(--text-primary)]">{filteredEvents.length}</strong> events
+                          {t('Menampilkan', 'Showing')} <strong className="text-[var(--text-primary)]">{(wirePage - 1) * WIRE_PAGE_SIZE + 1}</strong> -{' '}
+                          <strong className="text-[var(--text-primary)]">{Math.min(wirePage * WIRE_PAGE_SIZE, filteredEvents.length)}</strong> {t('dari', 'of')}{' '}
+                          <strong className="text-[var(--text-primary)]">{filteredEvents.length}</strong> {t('berita', 'events')}
                         </span>
                       </div>
 

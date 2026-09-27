@@ -20,6 +20,7 @@ import {
 import { api } from '../lib/api';
 import { PageHeader } from './shared/PageHeader';
 import { motion, AnimatePresence } from 'motion/react';
+import { useLanguage } from '../lib/LanguageContext';
 import {
   AIAnalysis,
   MarketTheme,
@@ -37,6 +38,7 @@ interface AIIntelligenceViewProps {
 }
 
 export const AIIntelligenceView: React.FC<AIIntelligenceViewProps> = React.memo(({ initialOverview, user }) => {
+  const { t, isId } = useLanguage();
   const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'CENTRAL_BANK' | 'MACRO_CONTEXT' | 'UNIFIED_CONTEXT'>('OVERVIEW');
   const [overview, setOverview] = useState<AIAnalysis | null>(initialOverview || null);
   const [themes, setThemes] = useState<MarketTheme[]>([]);
@@ -131,9 +133,12 @@ export const AIIntelligenceView: React.FC<AIIntelligenceViewProps> = React.memo(
   return (
     <div className="space-y-4 font-sans">
       <PageHeader
-        eyebrow="MAIN · AI ANALYSIS"
-        title="AI analysis"
-        description="Model-driven reads of the market regime, central-bank language, G8 macro conditions, and the unified cross-asset context."
+        eyebrow={t('UTAMA · ANALISIS AI', 'MAIN · AI ANALYSIS')}
+        title={t('Analisis Intelijen AI', 'AI Analysis')}
+        description={t(
+          'Pembacaan rezim pasar berbasis model, bahasa bank sentral, kondisi makro G8, dan konteks terpadu lintas aset.',
+          'Model-driven reads of the market regime, central-bank language, G8 macro conditions, and the unified cross-asset context.'
+        )}
       />
 
       {/* Sub-Navigation Tabs for Intelligence Layer */}
@@ -147,7 +152,7 @@ export const AIIntelligenceView: React.FC<AIIntelligenceViewProps> = React.memo(
           }`}
         >
           <Brain className="w-3.5 h-3.5" />
-          <span>MARKET REGIME & THEMES</span>
+          <span>{t('REZIM PASAR & TEMA', 'MARKET REGIME & THEMES')}</span>
         </button>
 
         <button
@@ -159,7 +164,7 @@ export const AIIntelligenceView: React.FC<AIIntelligenceViewProps> = React.memo(
           }`}
         >
           <Landmark className="w-3.5 h-3.5" />
-          <span>CENTRAL BANK SPEECHES</span>
+          <span>{t('PIDATO BANK SENTRAL', 'CENTRAL BANK SPEECHES')}</span>
           <span className="text-[10px] px-1.5 py-0.2 rounded bg-[var(--bg-section-alt)] text-[var(--text-secondary)] border border-[var(--border-subtle)]">
             {speeches.length}
           </span>
@@ -174,7 +179,7 @@ export const AIIntelligenceView: React.FC<AIIntelligenceViewProps> = React.memo(
           }`}
         >
           <Globe2 className="w-3.5 h-3.5" />
-          <span>G8 MACRO CONDITIONS</span>
+          <span>{t('KONDISI MAKRO G8', 'G8 MACRO CONDITIONS')}</span>
           <span className="text-[10px] px-1.5 py-0.2 rounded bg-[var(--bg-section-alt)] text-[var(--text-secondary)] border border-[var(--border-subtle)]">
             8 FX
           </span>
@@ -189,7 +194,7 @@ export const AIIntelligenceView: React.FC<AIIntelligenceViewProps> = React.memo(
           }`}
         >
           <Cpu className="w-3.5 h-3.5" />
-          <span>UNIFIED MARKET CONTEXT</span>
+          <span>{t('KONTEKS PASAR TERPADU', 'UNIFIED MARKET CONTEXT')}</span>
         </button>
       </div>
 
@@ -231,10 +236,10 @@ export const AIIntelligenceView: React.FC<AIIntelligenceViewProps> = React.memo(
                 <span className="w-2 h-2 rounded-xs bg-[var(--accent)]" />
                 <div>
                   <h2 className="section-title text-xs sm:text-sm text-[var(--text-primary)]">
-                    EXECUTIVE MACRO MARKET REGIME SYNTHESIS
+                    {t('SINTESIS REZIM PASAR MAKRO EKSEKUTIF', 'EXECUTIVE MACRO MARKET REGIME SYNTHESIS')}
                   </h2>
                   <p className="text-xs font-mono text-[var(--text-secondary)] mt-0.5">
-                    Ground-Truth Multimodal Intelligence (News + Prices + Currency Strength + Macro)
+                    {t('Intelijen Multimodal Terverifikasi (Berita + Harga + Kekuatan Valuta + Makro)', 'Ground-Truth Multimodal Intelligence (News + Prices + Currency Strength + Macro)')}
                   </p>
                 </div>
               </div>
@@ -242,14 +247,14 @@ export const AIIntelligenceView: React.FC<AIIntelligenceViewProps> = React.memo(
               <div className="flex items-center gap-2 font-mono">
                 {overview && (
                   <span className="text-[11px] text-[var(--text-secondary)]">
-                    CONFIDENCE: <strong className="text-[var(--text-primary)]">{((overview.confidence || 0.9) * 100).toFixed(0)}%</strong>
+                    {t('KEYAKINAN:', 'CONFIDENCE:')} <strong className="text-[var(--text-primary)]">{((overview.confidence || 0.9) * 100).toFixed(0)}%</strong>
                   </span>
                 )}
                 {/* The synthesis is cached server-side until RE-SYNTHESIZE runs, so
                     the read can be hours old while live prices move on. */}
                 {overview?.created_at && (
                   <span className="text-[11px] text-[var(--text-muted)]">
-                    AS OF <strong className="text-[var(--text-secondary)]">{new Date(overview.created_at).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' })} WIB</strong>
+                    {t('PER', 'AS OF')} <strong className="text-[var(--text-secondary)]">{new Date(overview.created_at).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' })} WIB</strong>
                   </span>
                 )}
                 <button
@@ -258,7 +263,7 @@ export const AIIntelligenceView: React.FC<AIIntelligenceViewProps> = React.memo(
                   className="flex items-center gap-1.5 px-3 py-1 rounded bg-[var(--accent)] text-white hover:opacity-90 text-xs font-bold transition cursor-pointer disabled:opacity-50 shadow-xs"
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
-                  <span>{refreshing ? 'SYNTHESIZING...' : 'RE-SYNTHESIZE'}</span>
+                  <span>{refreshing ? t('MENYINTESIS...', 'SYNTHESIZING...') : t('SINTESIS ULANG', 'RE-SYNTHESIZE')}</span>
                 </button>
               </div>
             </div>
@@ -266,7 +271,7 @@ export const AIIntelligenceView: React.FC<AIIntelligenceViewProps> = React.memo(
             {loading ? (
               <div className="py-8 flex items-center justify-center gap-2 text-xs font-mono text-[var(--text-secondary)]">
                 <RefreshCw className="w-4 h-4 text-[var(--accent)] animate-spin" />
-                <span>Analyzing consolidated market feeds with Gemini...</span>
+                <span>{t('Menganalisis feed pasar terkonsolidasi dengan AI...', 'Analyzing consolidated market feeds with Gemini...')}</span>
               </div>
             ) : overview ? (
               <div className="space-y-4">
@@ -277,7 +282,7 @@ export const AIIntelligenceView: React.FC<AIIntelligenceViewProps> = React.memo(
                 {/* Key Macro Implications */}
                 <div>
                   <h3 className="metadata-label text-[10px] text-[var(--text-muted)] mb-2.5">
-                    KEY STRATEGIC TAKEAWAYS:
+                    {t('POIN STRATEGIS UTAMA:', 'KEY STRATEGIC TAKEAWAYS:')}
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
                     {overview.key_implications.map((imp, idx) => (
@@ -292,7 +297,7 @@ export const AIIntelligenceView: React.FC<AIIntelligenceViewProps> = React.memo(
                 {/* Asset Sensitivity Matrix */}
                 <div>
                   <h3 className="metadata-label text-[10px] text-[var(--text-muted)] mb-2.5">
-                    ASSET DIRECTIONAL OUTLOOK:
+                    {t('OUTLOOK ARAH ASET:', 'ASSET DIRECTIONAL OUTLOOK:')}
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5">
                     {overview.affected_assets_outlook.map((out, idx) => {
@@ -325,26 +330,26 @@ export const AIIntelligenceView: React.FC<AIIntelligenceViewProps> = React.memo(
               <div className="flex items-center gap-2 pb-2.5 border-b mb-3 font-mono" style={{ borderColor: 'var(--border-subtle)' }}>
                 <Layers className="w-4 h-4 text-[var(--accent)]" />
                 <h3 className="section-title text-xs text-[var(--text-primary)]">
-                  ACTIVE INSTITUTIONAL THEMES ({themes.length})
+                  {t('TEMA INSTITUSIONAL AKTIF', 'ACTIVE INSTITUTIONAL THEMES')} ({themes.length})
                 </h3>
               </div>
 
               <div className="space-y-2.5">
-                {themes.map(t => (
-                  <div key={t.id} className="p-3 rounded bg-[var(--bg-section-alt)] border border-[var(--border-subtle)] space-y-1.5">
+                {themes.map(theme => (
+                  <div key={theme.id} className="p-3 rounded bg-[var(--bg-section-alt)] border border-[var(--border-subtle)] space-y-1.5">
                     <div className="flex items-center justify-between font-mono">
-                      <h4 className="font-bold text-xs text-[var(--text-primary)]">{t.title}</h4>
+                      <h4 className="font-bold text-xs text-[var(--text-primary)]">{theme.title}</h4>
                       <span className={`text-[9.5px] px-1.5 py-0.2 rounded font-bold uppercase ${
-                        t.sentiment === 'BULLISH' ? 'badge-bullish' : 'badge-neutral'
+                        theme.sentiment === 'BULLISH' ? 'badge-bullish' : 'badge-neutral'
                       }`}>
-                        {t.sentiment}
+                        {theme.sentiment}
                       </span>
                     </div>
-                    <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed font-sans">{t.description}</p>
+                    <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed font-sans">{theme.description}</p>
                     <div className="flex items-center gap-2 text-[10px] font-mono text-[var(--text-muted)] pt-1 border-t" style={{ borderColor: 'var(--border-hairline)' }}>
-                      <span>DRIVER: {t.driver || 'Macro Catalyst'}</span>
+                      <span>{t('PENDORONG:', 'DRIVER:')} {theme.driver || t('Katalis Makro', 'Macro Catalyst')}</span>
                       <span>•</span>
-                      <span>ASSETS: {(t.affected_assets || t.primary_assets || []).join(', ') || 'Global'}</span>
+                      <span>{t('ASET:', 'ASSETS:')} {(theme.affected_assets || theme.primary_assets || []).join(', ') || 'Global'}</span>
                     </div>
                   </div>
                 ))}
@@ -356,7 +361,7 @@ export const AIIntelligenceView: React.FC<AIIntelligenceViewProps> = React.memo(
               <div className="flex items-center gap-2 pb-2.5 border-b mb-3 font-mono" style={{ borderColor: 'var(--border-subtle)' }}>
                 <TrendingUp className="w-4 h-4 text-[var(--accent)]" />
                 <h3 className="section-title text-xs text-[var(--text-primary)]">
-                  MACRO TRANSMISSION MECHANISM MATRIX
+                  {t('MATRIKS MEKANISME TRANSMISI MAKRO', 'MACRO TRANSMISSION MECHANISM MATRIX')}
                 </h3>
               </div>
 
@@ -373,7 +378,7 @@ export const AIIntelligenceView: React.FC<AIIntelligenceViewProps> = React.memo(
                       {rel.transmission_mechanism}
                     </p>
                     <div className="text-[10px] font-mono text-[var(--text-muted)] pt-1 border-t" style={{ borderColor: 'var(--border-hairline)' }}>
-                      Primary Assets: {(rel.primary_assets || []).join(', ')}
+                      {t('Aset Utama:', 'Primary Assets:')} {(rel.primary_assets || []).join(', ')}
                     </div>
                   </div>
                 ))}
@@ -392,16 +397,19 @@ export const AIIntelligenceView: React.FC<AIIntelligenceViewProps> = React.memo(
                 <span className="w-2 h-2 rounded-xs bg-[var(--accent)]" />
                 <div>
                   <h2 className="section-title text-xs sm:text-sm text-[var(--text-primary)]">
-                    CENTRAL BANK SPEECH & STATEMENT INTELLIGENCE
+                    {t('INTELIJEN PIDATO & PERNYATAAN BANK SENTRAL', 'CENTRAL BANK SPEECH & STATEMENT INTELLIGENCE')}
                   </h2>
                   <p className="text-xs font-mono text-[var(--text-secondary)] mt-0.5">
-                    Grounded Statement Analysis: Hawkish / Dovish / Neutral / Mixed • Prior Statement Delta • 5-Step Transmission
+                    {t(
+                      'Analisis Pernyataan Terverifikasi: Hawkish / Dovish / Netral / Campuran • Selisih Panduan • Transmisi 5 Langkah',
+                      'Grounded Statement Analysis: Hawkish / Dovish / Neutral / Mixed • Prior Statement Delta • 5-Step Transmission'
+                    )}
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-2 text-xs font-mono text-[var(--text-secondary)]">
                 <ShieldCheck className="w-3.5 h-3.5 text-[var(--bullish)]" />
-                <span>Verified Feeds (FOMC, ECB, BoE, BoJ, RBA, SNB)</span>
+                <span>{t('Feed Terverifikasi (FOMC, ECB, BoE, BoJ, RBA, SNB)', 'Verified Feeds (FOMC, ECB, BoE, BoJ, RBA, SNB)')}</span>
               </div>
             </div>
 
@@ -417,7 +425,7 @@ export const AIIntelligenceView: React.FC<AIIntelligenceViewProps> = React.memo(
                       <span className="font-bold text-sm text-[var(--text-primary)]">{sp.speaker}</span>
                       <span className="text-xs text-[var(--text-muted)] font-mono">({sp.title})</span>
                       <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase font-mono ${getToneBadge(sp.tone)}`}>
-                        {sp.tone} STANCE
+                        {sp.tone} {t('SIKAP', 'STANCE')}
                       </span>
                     </div>
 
@@ -426,14 +434,14 @@ export const AIIntelligenceView: React.FC<AIIntelligenceViewProps> = React.memo(
                       <span>•</span>
                       <span className="text-[var(--text-secondary)]">{sp.source}</span>
                       <span>•</span>
-                      <span className="text-[var(--bullish)] font-bold">Conf: {sp.confidence}%</span>
+                      <span className="text-[var(--bullish)] font-bold">{t('Keyakinan:', 'Conf:')} {sp.confidence}%</span>
                     </div>
                   </div>
 
                   {/* Prior Guidance Comparison */}
                   <div className="p-2.5 rounded bg-[var(--bg-surface)] border border-[var(--border-subtle)] font-mono text-xs">
                     <div className="metadata-label text-[10px] text-[var(--text-muted)] mb-1">
-                      PRIOR STATEMENT COMPARISON:
+                      {t('KOMPARASI PANDUAN SEBELUMNYA:', 'PRIOR STATEMENT COMPARISON:')}
                     </div>
                     <p className="text-[var(--text-secondary)] leading-snug font-sans text-xs">{sp.previous_stance}</p>
                   </div>
@@ -442,32 +450,42 @@ export const AIIntelligenceView: React.FC<AIIntelligenceViewProps> = React.memo(
                   <div className="space-y-2 pt-1 font-mono">
                     <div className="flex items-center gap-1.5 text-[13px] font-semibold text-[var(--text-primary)]">
                       <Activity className="w-3.5 h-3.5 text-[var(--accent)]" />
-                      <span>Causal pipeline</span>
+                      <span>{t('Alur Kausalitas Transmisi', 'Causal pipeline')}</span>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
                       <div className="p-2.5 rounded bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
-                        <div className="metadata-label text-[9px] text-[var(--accent)] mb-1">1. WHAT WAS SAID</div>
+                        <div className="metadata-label text-[9px] text-[var(--accent)] mb-1">
+                          {t('1. APA YANG DIKATAKAN', '1. WHAT WAS SAID')}
+                        </div>
                         <p className="text-[11px] text-[var(--text-secondary)] leading-snug font-sans">{sp.what_was_said}</p>
                       </div>
 
                       <div className="p-2.5 rounded bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
-                        <div className="metadata-label text-[9px] text-[var(--text-primary)] mb-1">2. WHAT CHANGED</div>
+                        <div className="metadata-label text-[9px] text-[var(--text-primary)] mb-1">
+                          {t('2. APA YANG BERUBAH', '2. WHAT CHANGED')}
+                        </div>
                         <p className="text-[11px] text-[var(--text-secondary)] leading-snug font-sans">{sp.what_changed}</p>
                       </div>
 
                       <div className="p-2.5 rounded bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
-                        <div className="metadata-label text-[9px] text-[var(--text-secondary)] mb-1">3. WHY IT MATTERS</div>
+                        <div className="metadata-label text-[9px] text-[var(--text-secondary)] mb-1">
+                          {t('3. MENGAPA PENTING', '3. WHY IT MATTERS')}
+                        </div>
                         <p className="text-[11px] text-[var(--text-secondary)] leading-snug font-sans">{sp.why_it_matters}</p>
                       </div>
 
                       <div className="p-2.5 rounded bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
-                        <div className="metadata-label text-[9px] text-[var(--bullish)] mb-1">4. CURRENCY IMPACT</div>
+                        <div className="metadata-label text-[9px] text-[var(--bullish)] mb-1">
+                          {t('4. DAMPAK VALUTA', '4. CURRENCY IMPACT')}
+                        </div>
                         <p className="text-[11px] text-[var(--text-secondary)] leading-snug font-sans">{sp.currency_impact}</p>
                       </div>
 
                       <div className="p-2.5 rounded bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
-                        <div className="metadata-label text-[9px] text-[var(--text-primary)] mb-1">5. ASSET RELEVANCE</div>
+                        <div className="metadata-label text-[9px] text-[var(--text-primary)] mb-1">
+                          {t('5. RELEVANSI ASET', '5. ASSET RELEVANCE')}
+                        </div>
                         <p className="text-[11px] text-[var(--text-secondary)] leading-snug font-sans">{sp.asset_relevance}</p>
                       </div>
                     </div>
@@ -476,18 +494,18 @@ export const AIIntelligenceView: React.FC<AIIntelligenceViewProps> = React.memo(
                   {/* AI Explanation Provenance */}
                   <div className="p-2.5 rounded bg-[var(--bg-surface)] border border-[var(--border-subtle)] font-mono text-[11px] text-[var(--text-secondary)] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="metadata-label text-[10px] text-[var(--text-muted)]">SOURCE:</span>
+                      <span className="metadata-label text-[10px] text-[var(--text-muted)]">{t('SUMBER:', 'SOURCE:')}</span>
                       <span className="text-[var(--text-primary)] font-bold">{sp.source}</span>
                       <span>•</span>
-                      <span className="metadata-label text-[10px] text-[var(--text-muted)]">TIMESTAMP:</span>
+                      <span className="metadata-label text-[10px] text-[var(--text-muted)]">{t('WAKTU:', 'TIMESTAMP:')}</span>
                       <span className="text-[var(--text-primary)]">{new Date(sp.timestamp || sp.date_time_utc).toISOString()}</span>
                       <span>•</span>
-                      <span className="metadata-label text-[10px] text-[var(--text-muted)]">CONFIDENCE:</span>
+                      <span className="metadata-label text-[10px] text-[var(--text-muted)]">{t('KEYAKINAN:', 'CONFIDENCE:')}</span>
                       <span className="text-[var(--bullish)] font-bold">{sp.confidence}%</span>
                     </div>
                     <div className="text-[var(--text-muted)]">
-                      <span className="metadata-label text-[10px] mr-1">STATUS:</span>
-                      <span className="text-[var(--bullish)] font-bold">Strictly Grounded</span>
+                      <span className="metadata-label text-[10px] mr-1">{t('STATUS:', 'STATUS:')}</span>
+                      <span className="text-[var(--bullish)] font-bold">{t('Ketat Terverifikasi', 'Strictly Grounded')}</span>
                     </div>
                   </div>
                 </div>
@@ -506,15 +524,18 @@ export const AIIntelligenceView: React.FC<AIIntelligenceViewProps> = React.memo(
                 <span className="w-2 h-2 rounded-xs bg-[var(--accent)]" />
                 <div>
                   <h2 className="section-title text-xs sm:text-sm text-[var(--text-primary)]">
-                    G8 CURRENCY MACRO ECONOMIC CONTEXT
+                    {t('KONTEKS MAKROEKONOMI MATA UANG G8', 'G8 CURRENCY MACRO ECONOMIC CONTEXT')}
                   </h2>
                   <p className="text-xs font-mono text-[var(--text-secondary)] mt-0.5">
-                    Live Status: STRONG / WEAK / MIXED • Grounded by Inflation + Employment + Growth + PMI + Central Bank Tone
+                    {t(
+                      'Status Langsung: KUAT / LEMAH / CAMPURAN • Terverifikasi oleh Inflasi + Tenaga Kerja + Pertumbuhan + PMI + Sikap Bank Sentral',
+                      'Live Status: STRONG / WEAK / MIXED • Grounded by Inflation + Employment + Growth + PMI + Central Bank Tone'
+                    )}
                   </p>
                 </div>
               </div>
               <div className="text-xs font-mono text-[var(--text-secondary)]">
-                VERIFICATION: <strong className="text-[var(--bullish)]">Grounded Macro Engine</strong>
+                {t('VERIFIKASI:', 'VERIFICATION:')} <strong className="text-[var(--bullish)]">{t('Mesin Makro Terverifikasi', 'Grounded Macro Engine')}</strong>
               </div>
             </div>
 
@@ -535,46 +556,46 @@ export const AIIntelligenceView: React.FC<AIIntelligenceViewProps> = React.memo(
                   {/* Quantitative Economic Indicators */}
                   <div className="space-y-1.5 font-mono text-xs">
                     <div className="flex items-center justify-between text-[var(--text-muted)]">
-                      <span>INFLATION (CPI):</span>
+                      <span>{t('INFLASI (CPI):', 'INFLATION (CPI):')}</span>
                       <span className="text-[var(--text-primary)] font-semibold tabular-nums">{c.inflation.value}</span>
                     </div>
                     <div className="flex items-center justify-between text-[var(--text-muted)]">
-                      <span>EMPLOYMENT:</span>
+                      <span>{t('TENAGA KERJA:', 'EMPLOYMENT:')}</span>
                       <span className="text-[var(--text-primary)] font-semibold tabular-nums">{c.employment.value}</span>
                     </div>
                     <div className="flex items-center justify-between text-[var(--text-muted)]">
-                      <span>GDP GROWTH:</span>
+                      <span>{t('PERTUMBUHAN PDB:', 'GDP GROWTH:')}</span>
                       <span className="text-[var(--text-primary)] font-semibold tabular-nums">{c.growth.value}</span>
                     </div>
                     <div className="flex items-center justify-between text-[var(--text-muted)]">
-                      <span>PMI / ACTIVITY:</span>
+                      <span>{t('AKTIVITAS / PMI:', 'PMI / ACTIVITY:')}</span>
                       <span className="text-[var(--text-primary)] font-semibold tabular-nums">{c.pmi.value}</span>
                     </div>
                     <div className="flex items-center justify-between text-[var(--text-muted)]">
-                      <span>POLICY RATE:</span>
+                      <span>{t('SUKU BUNGA KEBIJAKAN:', 'POLICY RATE:')}</span>
                       <span className="text-[var(--text-primary)] font-semibold tabular-nums">{c.interest_rate.value}</span>
                     </div>
                     <div className="flex items-center justify-between text-[var(--text-muted)]">
-                      <span>CB TONE:</span>
+                      <span>{t('SIKAP BANK SENTRAL:', 'CB TONE:')}</span>
                       <span className={`text-[9.5px] px-1.5 py-0.2 rounded font-bold uppercase ${getToneBadge(c.central_bank_tone.value)}`}>
                         {c.central_bank_tone.value}
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-[var(--text-muted)] pt-1 border-t" style={{ borderColor: 'var(--border-hairline)' }}>
-                      <span>STRENGTH SCORE:</span>
+                      <span>{t('SKOR KEKUATAN:', 'STRENGTH SCORE:')}</span>
                       <span className="text-[var(--text-primary)] font-bold tabular-nums">{c.score.toFixed(1)} / 10</span>
                     </div>
                   </div>
 
                   {/* Grounded Evidence Summary */}
                   <div className="p-2 rounded bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
-                    <div className="metadata-label text-[9px] text-[var(--text-muted)] mb-1">EMPIRICAL EVIDENCE:</div>
+                    <div className="metadata-label text-[9px] text-[var(--text-muted)] mb-1">{t('BUKTI EMPIRIS:', 'EMPIRICAL EVIDENCE:')}</div>
                     <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed font-sans">{c.evidence_summary}</p>
                   </div>
 
                   <div className="flex items-center justify-between text-[10px] font-mono text-[var(--text-muted)] pt-1">
-                    <span>Source: {c.source}</span>
-                    <span className="text-[var(--bullish)]">Conf: {c.confidence}%</span>
+                    <span>{t('Sumber:', 'Source:')} {c.source}</span>
+                    <span className="text-[var(--bullish)]">{t('Keyakinan:', 'Conf:')} {c.confidence}%</span>
                   </div>
                 </div>
               ))}
@@ -592,16 +613,19 @@ export const AIIntelligenceView: React.FC<AIIntelligenceViewProps> = React.memo(
                 <span className="w-2 h-2 rounded-xs bg-[var(--accent)]" />
                 <div>
                   <h2 className="section-title text-xs sm:text-sm text-[var(--text-primary)]">
-                    UNIFIED MULTIMODAL MARKET CONTEXT
+                    {t('KONTEKS PASAR TERPADU MULTIMODAL', 'UNIFIED MULTIMODAL MARKET CONTEXT')}
                   </h2>
                   <p className="text-xs font-mono text-[var(--text-secondary)] mt-0.5">
-                    Harmonized Synthesis: News Wire + Macro Calendar + Central Bank Speeches + Currency Dispersion + Live Prices
+                    {t(
+                      'Sintesis Harmonis: Kawat Berita + Kalender Makro + Pidato Bank Sentral + Dispersi Valuta + Harga Langsung',
+                      'Harmonized Synthesis: News Wire + Macro Calendar + Central Bank Speeches + Currency Dispersion + Live Prices'
+                    )}
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-2 text-xs font-mono text-[var(--text-secondary)]">
                 <ShieldCheck className="w-3.5 h-3.5 text-[var(--bullish)]" />
-                <span>CONFIDENCE: <strong className="text-[var(--text-primary)]">{unifiedContext?.confidence || 93}%</strong></span>
+                <span>{t('KEYAKINAN:', 'CONFIDENCE:')} <strong className="text-[var(--text-primary)]">{unifiedContext?.confidence || 93}%</strong></span>
               </div>
             </div>
 
@@ -615,7 +639,7 @@ export const AIIntelligenceView: React.FC<AIIntelligenceViewProps> = React.memo(
                       <span>{unifiedContext.regime}</span>
                     </span>
                     <span className="px-2 py-0.5 rounded bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-[var(--text-primary)] text-[10px]">
-                      SENTIMENT: {unifiedContext.sentiment}
+                      {t('SENTIMEN:', 'SENTIMENT:')} {unifiedContext.sentiment}
                     </span>
                   </div>
                   <p className="text-sm text-[var(--text-secondary)] leading-relaxed font-sans">
@@ -626,27 +650,37 @@ export const AIIntelligenceView: React.FC<AIIntelligenceViewProps> = React.memo(
                 {/* 5 Pillars Summary */}
                 <div>
                   <h3 className="metadata-label text-[10px] text-[var(--text-muted)] mb-2.5">
-                    FIVE-PILLAR INTELLIGENCE INPUTS:
+                    {t('INPUT INTELIJEN LIMA PILAR:', 'FIVE-PILLAR INTELLIGENCE INPUTS:')}
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
                     <div className="p-3 rounded bg-[var(--bg-section-alt)] border border-[var(--border-subtle)] text-xs text-[var(--text-secondary)] font-sans">
-                      <span className="text-[var(--text-primary)] font-bold block mb-1 font-mono metadata-label">1. NEWS WIRE FEED</span>
+                      <span className="text-[var(--text-primary)] font-bold block mb-1 font-mono metadata-label">
+                        {t('1. FEED KAWAT BERITA', '1. NEWS WIRE FEED')}
+                      </span>
                       <span>{unifiedContext.pillars.news_wire_summary}</span>
                     </div>
                     <div className="p-3 rounded bg-[var(--bg-section-alt)] border border-[var(--border-subtle)] text-xs text-[var(--text-secondary)] font-sans">
-                      <span className="text-[var(--text-primary)] font-bold block mb-1 font-mono metadata-label">2. MACRO DATA RELEASE</span>
+                      <span className="text-[var(--text-primary)] font-bold block mb-1 font-mono metadata-label">
+                        {t('2. RILIS DATA MAKRO', '2. MACRO DATA RELEASE')}
+                      </span>
                       <span>{unifiedContext.pillars.macro_data_summary}</span>
                     </div>
                     <div className="p-3 rounded bg-[var(--bg-section-alt)] border border-[var(--border-subtle)] text-xs text-[var(--text-secondary)] font-sans">
-                      <span className="text-[var(--text-primary)] font-bold block mb-1 font-mono metadata-label">3. CENTRAL BANK SPEECHES</span>
+                      <span className="text-[var(--text-primary)] font-bold block mb-1 font-mono metadata-label">
+                        {t('3. PIDATO BANK SENTRAL', '3. CENTRAL BANK SPEECHES')}
+                      </span>
                       <span>{unifiedContext.pillars.central_bank_summary}</span>
                     </div>
                     <div className="p-3 rounded bg-[var(--bg-section-alt)] border border-[var(--border-subtle)] text-xs text-[var(--text-secondary)] font-sans">
-                      <span className="text-[var(--text-primary)] font-bold block mb-1 font-mono metadata-label">4. CURRENCY STRENGTH</span>
+                      <span className="text-[var(--text-primary)] font-bold block mb-1 font-mono metadata-label">
+                        {t('4. KEKUATAN MATA UANG', '4. CURRENCY STRENGTH')}
+                      </span>
                       <span>{unifiedContext.pillars.currency_strength_summary}</span>
                     </div>
                     <div className="p-3 rounded bg-[var(--bg-section-alt)] border border-[var(--border-subtle)] text-xs text-[var(--text-secondary)] font-sans">
-                      <span className="text-[var(--text-primary)] font-bold block mb-1 font-mono metadata-label">5. LIVE MARKET EXECUTION</span>
+                      <span className="text-[var(--text-primary)] font-bold block mb-1 font-mono metadata-label">
+                        {t('5. EKSEKUSI PASAR LANGSUNG', '5. LIVE MARKET EXECUTION')}
+                      </span>
                       <span>{unifiedContext.pillars.market_data_summary}</span>
                     </div>
                   </div>
@@ -655,7 +689,7 @@ export const AIIntelligenceView: React.FC<AIIntelligenceViewProps> = React.memo(
                 {/* Cross-Asset Directional Matrix */}
                 <div>
                   <h3 className="metadata-label text-[10px] text-[var(--text-muted)] mb-2.5">
-                    ASSET DIRECTIONAL OUTLOOK & IMPLICATION VS REACTION:
+                    {t('OUTLOOK ARAH ASET & IMPLIKASI VS REAKSI:', 'ASSET DIRECTIONAL OUTLOOK & IMPLICATION VS REACTION:')}
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 font-mono">
                     {unifiedContext.asset_outlook.map((ca, idx) => {
@@ -672,11 +706,15 @@ export const AIIntelligenceView: React.FC<AIIntelligenceViewProps> = React.memo(
                             </span>
                           </div>
                           <div className="text-[11px] font-sans text-[var(--text-secondary)]">
-                            <strong className="metadata-label text-[9.5px] block text-[var(--accent)]">FUNDAMENTAL:</strong>
+                            <strong className="metadata-label text-[9.5px] block text-[var(--accent)]">
+                              {t('FUNDAMENTAL:', 'FUNDAMENTAL:')}
+                            </strong>
                             {ca.fundamental_implication}
                           </div>
                           <div className="text-[11px] font-sans text-[var(--text-secondary)]">
-                            <strong className="metadata-label text-[9.5px] block text-[var(--text-primary)]">ACTUAL REACTION:</strong>
+                            <strong className="metadata-label text-[9.5px] block text-[var(--text-primary)]">
+                              {t('REAKSI AKTUAL:', 'ACTUAL REACTION:')}
+                            </strong>
                             {ca.actual_market_reaction}
                           </div>
                         </div>
@@ -689,32 +727,50 @@ export const AIIntelligenceView: React.FC<AIIntelligenceViewProps> = React.memo(
                 <div className="p-3 rounded bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-2 font-mono text-xs">
                   <div className="flex items-center justify-between text-[var(--text-secondary)] border-b pb-1.5" style={{ borderColor: 'var(--border-subtle)' }}>
                     <span className="text-[13px] font-semibold text-[var(--text-primary)]">
-                      Explanation and provenance
+                      {t('Penjelasan dan asal-usul intelijen', 'Explanation and provenance')}
                     </span>
-                    <span className="text-[var(--bullish)] font-semibold tabular-nums">{unifiedContext.confidence}% confidence</span>
+                    <span className="text-[var(--bullish)] font-semibold tabular-nums">
+                      {unifiedContext.confidence}% {t('keyakinan', 'confidence')}
+                    </span>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
                     <div>
-                      <span className="metadata-label text-[9px] text-[var(--text-muted)] block">TIMESTAMP:</span>
+                      <span className="metadata-label text-[9px] text-[var(--text-muted)] block">
+                        {t('WAKTU:', 'TIMESTAMP:')}
+                      </span>
                       <span className="text-[var(--text-primary)]">{new Date(unifiedContext.timestamp).toLocaleString()}</span>
                     </div>
                     <div>
-                      <span className="metadata-label text-[9px] text-[var(--text-muted)] block">INTELLIGENCE STANDARD:</span>
-                      <span className="text-[var(--text-primary)] font-semibold">Strict Grounding (Quantitative Verification)</span>
+                      <span className="metadata-label text-[9px] text-[var(--text-muted)] block">
+                        {t('STANDAR INTELIJEN:', 'INTELLIGENCE STANDARD:')}
+                      </span>
+                      <span className="text-[var(--text-primary)] font-semibold">
+                        {t('Verifikasi Ketat (Kuantitatif)', 'Strict Grounding (Quantitative Verification)')}
+                      </span>
                     </div>
                   </div>
 
                   <div className="p-2 rounded bg-[var(--bg-section-alt)] border border-[var(--border-subtle)] text-[11px] text-[var(--text-secondary)] font-sans">
-                    <strong className="font-mono metadata-label text-[10px] text-[var(--accent)] mr-1">EVIDENCE SUMMARY:</strong>
-                    Data cross-verified across macro calendars, news wires, central bank speeches, and live market quotes. Conflicting signals are classified as MIXED.
+                    <strong className="font-mono metadata-label text-[10px] text-[var(--accent)] mr-1">
+                      {t('RINGKASAN BUKTI:', 'EVIDENCE SUMMARY:')}
+                    </strong>
+                    {t(
+                      'Data diverifikasi silang antara kalender makro, kawat berita, pidato bank sentral, dan kutipan harga pasar langsung. Sinyal yang bertentangan diklasifikasikan sebagai CAMPURAN (MIXED).',
+                      'Data cross-verified across macro calendars, news wires, central bank speeches, and live market quotes. Conflicting signals are classified as MIXED.'
+                    )}
                   </div>
                 </div>
               </div>
             ) : (
               <div className="py-8 text-center text-xs font-mono text-[var(--text-secondary)]">
                 <RefreshCw className="w-4 h-4 text-[var(--accent)] animate-spin mx-auto mb-2" />
-                <span>Aggregating News, Macro, Speeches, Currency Strength, and Price Feeds...</span>
+                <span>
+                  {t(
+                    'Mengumpulkan Berita, Makro, Pidato, Kekuatan Mata Uang, dan Feed Harga...',
+                    'Aggregating News, Macro, Speeches, Currency Strength, and Price Feeds...'
+                  )}
+                </span>
               </div>
             )}
           </div>

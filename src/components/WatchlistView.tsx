@@ -3,6 +3,7 @@ import { UserWatchlist, MarketPrice, User } from '../types';
 import { Star, Trash2, Plus, TrendingUp, TrendingDown, Minus, LogIn, ShieldAlert, ArrowUpRight } from 'lucide-react';
 import { getUserLimits } from '../lib/plans';
 import { PageHeader } from './shared/PageHeader';
+import { useLanguage } from '../lib/LanguageContext';
 
 interface WatchlistViewProps {
   watchlist: UserWatchlist[];
@@ -23,6 +24,7 @@ export const WatchlistView: React.FC<WatchlistViewProps> = React.memo(({
   user,
   onOpenAuth,
 }) => {
+  const { t } = useLanguage();
   const [newSymbol, setNewSymbol] = useState('');
   const [newType, setNewType] = useState('ASSET');
 
@@ -44,26 +46,29 @@ export const WatchlistView: React.FC<WatchlistViewProps> = React.memo(({
   return (
     <section className="space-y-5 font-sans">
       <PageHeader
-        eyebrow="TOOLS · WATCHLIST"
-        title="Watchlist"
+        eyebrow={t('ALAT · WATCHLIST', 'TOOLS · WATCHLIST')}
+        title={t('Daftar Pantau (Watchlist)', 'Watchlist')}
         titleAdornment={
           <>
             <span className="text-[11px] text-[var(--text-muted)] tabular-nums">
-              {watchlist.length} of {limits.watchlistLimit}
+              {watchlist.length} {t('dari', 'of')} {limits.watchlistLimit}
             </span>
             {isAtLimit && (
               <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-[var(--warning-bg)] text-[var(--warning)]">
-                Quota reached
+                {t('Kuota penuh', 'Limit reached')}
               </span>
             )}
           </>
         }
-        description="Real-time quotes and 24-hour ranges for the instruments you track."
+        description={t(
+          'Pantauan harga real-time dan rentang 24 jam untuk instrumen yang Anda pantau.',
+          'Real-time price surveillance and 24-hour range for your monitored instruments.'
+        )}
         actions={
           <form onSubmit={handleAdd} className="flex items-center gap-2">
             <input
               type="text"
-              placeholder="Add ticker, e.g. XAUUSD"
+              placeholder={t('Tambah simbol, misal XAUUSD', 'Add symbol, e.g. XAUUSD')}
               value={newSymbol}
               onChange={(e) => setNewSymbol(e.target.value)}
               className="bg-[var(--bg-section-alt)] border border-transparent focus:border-[var(--border-strong)] px-3 h-9 rounded-md text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)] outline-none w-48 transition"
@@ -72,7 +77,7 @@ export const WatchlistView: React.FC<WatchlistViewProps> = React.memo(({
               type="submit"
               className="px-3.5 h-9 rounded-md bg-[var(--accent)] hover:opacity-90 text-white font-semibold text-xs transition cursor-pointer shadow-[var(--accent-glow)]"
             >
-              Add
+              {t('Tambah', 'Add')}
             </button>
           </form>
         }
@@ -87,7 +92,10 @@ export const WatchlistView: React.FC<WatchlistViewProps> = React.memo(({
           <div className="flex items-center gap-2.5 text-[var(--text-secondary)]">
             <LogIn className="w-4 h-4 text-[var(--accent)] shrink-0" />
             <span>
-              You are browsing as a guest. Sign in to sync this watchlist across devices.
+              {t(
+                'Anda mengakses sebagai tamu. Masuk untuk menyinkronkan watchlist ini di semua perangkat.',
+                'You are browsing as a guest. Sign in to synchronize this watchlist across all your devices.'
+              )}
             </span>
           </div>
           {onOpenAuth && (
@@ -95,7 +103,7 @@ export const WatchlistView: React.FC<WatchlistViewProps> = React.memo(({
               onClick={onOpenAuth}
               className="px-3 py-1.5 rounded-md bg-[var(--accent)] text-white font-semibold text-[11px] transition cursor-pointer shrink-0 shadow-[var(--accent-glow)]"
             >
-              Sign in
+              {t('Masuk', 'Sign in')}
             </button>
           )}
         </div>
@@ -103,7 +111,7 @@ export const WatchlistView: React.FC<WatchlistViewProps> = React.memo(({
 
       {/* Quick Add Pills */}
       <div className="flex items-center gap-2 flex-wrap">
-        <span className="metadata-label text-[9px] text-[var(--text-muted)]">Quick add</span>
+        <span className="metadata-label text-[9px] text-[var(--text-muted)]">{t('Tambah cepat', 'Quick add')}</span>
         {commonAssets.map(sym => {
           const isAdded = watchlist.some(w => w.symbol === sym);
           return (
@@ -126,19 +134,22 @@ export const WatchlistView: React.FC<WatchlistViewProps> = React.memo(({
       {/* Watchlist Table */}
       {watchlist.length === 0 ? (
         <div className="py-14 text-center text-xs text-[var(--text-muted)]">
-          Nothing tracked yet. Add an instrument above to follow its live quote.
+          {t(
+            'Belum ada instrumen yang dipantau. Tambahkan instrumen di atas untuk mengikuti kuotasi langsung.',
+            'No monitored instruments yet. Add instruments above to track live quotes.'
+          )}
         </div>
       ) : (
         <div className="overflow-x-auto rounded-lg border" style={{ borderColor: 'var(--border-subtle)' }}>
           <table className="terminal-table">
             <thead>
               <tr>
-                <th>Instrument</th>
-                <th className="text-right">Last</th>
-                <th className="text-right">24h change</th>
-                <th className="text-right">24h high</th>
-                <th className="text-right">24h low</th>
-                <th className="text-center">Feed</th>
+                <th>{t('Instrumen', 'Instrument')}</th>
+                <th className="text-right">{t('Terakhir', 'Last')}</th>
+                <th className="text-right">{t('Perubahan 24j', '24h Change')}</th>
+                <th className="text-right">{t('Tertinggi 24j', '24h High')}</th>
+                <th className="text-right">{t('Terendah 24j', '24h Low')}</th>
+                <th className="text-center">{t('Feed', 'Feed')}</th>
                 <th className="text-right"></th>
               </tr>
             </thead>
@@ -194,7 +205,7 @@ export const WatchlistView: React.FC<WatchlistViewProps> = React.memo(({
                           onRemove(item.symbol);
                         }}
                         className="p-1.5 rounded-md text-[var(--text-muted)] hover:text-[var(--bearish)] hover:bg-[var(--bg-section-alt)] transition cursor-pointer"
-                        title="Remove from watchlist"
+                        title={t('Hapus dari watchlist', 'Remove from watchlist')}
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>

@@ -1,13 +1,14 @@
 import React from 'react';
 import { MarketPrice } from '../types';
-import { TrendingUp, TrendingDown, Minus, LineChart } from 'lucide-react';
-import { D3Sparkline } from './ui/D3Sparkline';
+import { TrendingUp, TrendingDown, Minus, X } from 'lucide-react';
+import { useLanguage } from '../lib/LanguageContext';
 
 interface TickerBarProps {
   prices: MarketPrice[];
   selectedSymbol: string | null;
   onSelectSymbol: (symbol: string) => void;
   onOpenChart?: (symbol: string) => void;
+  onClose?: () => void;
 }
 
 export const TickerBar: React.FC<TickerBarProps> = React.memo(({
@@ -15,117 +16,85 @@ export const TickerBar: React.FC<TickerBarProps> = React.memo(({
   selectedSymbol,
   onSelectSymbol,
   onOpenChart,
+  onClose,
 }) => {
+  const { t } = useLanguage();
+
   return (
     <div
-      className="border-b overflow-x-auto no-scrollbar scroll-hint-x py-1 px-3 sm:px-4 flex items-center gap-2 shrink-0 select-none text-xs font-mono"
+      className="border-b overflow-x-auto no-scrollbar scroll-hint-x h-7 px-3 sm:px-4 flex items-center justify-between gap-3 shrink-0 select-none text-[11px] font-mono transition-colors"
       style={{
-        backgroundColor: 'var(--bg-surface)',
-        borderColor: 'var(--border-subtle)',
+        backgroundColor: 'var(--bg-section-alt)',
+        borderColor: 'var(--border-hairline)',
       }}
       id="market-ticker-strip"
     >
-      {/* Feed Label */}
-      <div className="flex items-center gap-1.5 shrink-0 pr-2.5 border-r" style={{ borderColor: 'var(--border-subtle)' }}>
-        <span className="w-1.5 h-1.5 rounded-full bg-[var(--bullish)]" />
-        <span className="text-[10px] uppercase tracking-wider text-[var(--text-muted)] font-semibold">
-          STREAM
-        </span>
-      </div>
+      <div className="flex items-center gap-4 shrink-0 overflow-x-auto no-scrollbar">
+        {/* Pulse Indicator */}
+        <div className="flex items-center gap-1.5 shrink-0 pr-2 border-r border-[var(--border-subtle)] text-[10px] text-[var(--text-muted)] font-semibold">
+          <span className="w-1.5 h-1.5 rounded-full bg-[var(--bullish)] animate-pulse" />
+          <span>{t('ticker.stream')}</span>
+        </div>
 
-      {/* Non-Delayed Charts Action */}
-      {onOpenChart && (
-        <button
-          onClick={() => onOpenChart('US30')}
-          className="flex items-center gap-1.5 h-6 px-2 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] hover:bg-[var(--border-subtle)] text-[var(--text-primary)] text-[10.5px] font-mono shrink-0 transition cursor-pointer"
-          title="Open Non-Delayed Institutional Charts (US30, SPX500, BTCUSD, DXY, US100)"
-        >
-          <LineChart className="w-3 h-3 text-[var(--accent)]" />
-          <span className="font-semibold">NON-DELAYED CHARTS</span>
-        </button>
-      )}
+        {/* Realtime Asset Items - Seamless Flow without bulky borders */}
+        <div className="flex items-center gap-4 shrink-0">
+          {prices.map(item => {
+            const isSelected = selectedSymbol === item.symbol;
+            const isPositive = item.change_24h_pct > 0;
+            const isNegative = item.change_24h_pct < 0;
 
-      {/* Realtime Asset Items */}
-      <div className="flex items-center gap-1.5 shrink-0">
-        {prices.map(item => {
-          const isSelected = selectedSymbol === item.symbol;
-          const isPositive = item.change_24h_pct > 0;
-          const isNegative = item.change_24h_pct < 0;
+            const formattedPrice = item.symbol === 'US10Y'
+              ? `${item.price.toFixed(3)}%`
+              : item.price.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: item.symbol === 'JPY' || item.asset_type === 'FOREX' ? 4 : 2,
+                });
 
-          // Decimal precision based on asset class
-          const formattedPrice = item.symbol === 'US10Y'
-            ? `${item.price.toFixed(3)}%`
-            : item.price.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: item.symbol === 'JPY' || item.asset_type === 'FOREX' ? 4 : 2,
-              });
-
-          return (
-            <button
-              key={item.symbol}
-              onClick={() => onSelectSymbol(item.symbol)}
-              className={`flex items-center gap-2 h-6 px-2 rounded border font-mono transition cursor-pointer shrink-0 tabular-nums ${
-                isSelected
-                  ? 'border-[var(--active-border)] bg-[var(--active-bg)] text-[var(--active-text)] shadow-xs ring-1 ring-[var(--accent)]'
-                  : 'border-[var(--border-subtle)] bg-[var(--bg-section-alt)] hover:border-[var(--border-strong)] text-[var(--text-primary)]'
-              }`}
-            >
-              <div className="flex items-center gap-1">
-                <span className="font-bold tracking-tight">{item.symbol}</span>
-                <span
-                  className={`w-1 h-1 rounded-full ${
-                    item.status === 'LIVE'
-                      ? 'bg-[var(--bullish)]'
-                      : item.status === 'DELAYED'
-                      ? 'bg-[var(--warning)]'
-                      : 'bg-[var(--bearish)]'
-                  }`}
-                  title={`${item.status} · ${item.source}`}
-                />
-              </div>
-
-              <span className="font-semibold tabular-nums text-[11px]">{formattedPrice}</span>
-
-              {item.sparkline_1h && item.sparkline_1h.length > 1 && (
-                <D3Sparkline
-                  data={item.sparkline_1h}
-                  width={34}
-                  height={13}
-                  isPositive={isPositive}
-                  strokeWidth={1.2}
-                  showArea={true}
-                  showEndDot={false}
-                  className="opacity-75"
-                />
-              )}
-
-              <div
-                className={`flex items-center gap-0.5 text-[10.5px] font-bold tabular-nums ${
-                  isPositive
-                    ? 'text-[var(--bullish)]'
-                    : isNegative
-                    ? 'text-[var(--bearish)]'
-                    : 'text-[var(--text-muted)]'
+            return (
+              <button
+                key={item.symbol}
+                onClick={() => onSelectSymbol(item.symbol)}
+                className={`flex items-center gap-1.5 transition cursor-pointer shrink-0 py-0.5 px-1.5 rounded text-[11px] font-mono tabular-nums ${
+                  isSelected
+                    ? 'bg-[var(--accent)] text-[var(--accent-contrast)] font-bold shadow-xs'
+                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface)]'
                 }`}
+                title={`${t('ticker.filterBy')} ${item.symbol}`}
               >
-                {isPositive ? (
-                  <TrendingUp className="w-2.5 h-2.5" />
-                ) : isNegative ? (
-                  <TrendingDown className="w-2.5 h-2.5" />
-                ) : (
-                  <Minus className="w-2.5 h-2.5" />
-                )}
-                <span>
+                <span className="font-bold text-[var(--text-primary)]">{item.symbol}</span>
+                <span className="font-medium text-[var(--text-secondary)]">{formattedPrice}</span>
+                <span
+                  className={`flex items-center text-[10px] font-semibold ${
+                    isPositive
+                      ? 'text-[var(--bullish)]'
+                      : isNegative
+                      ? 'text-[var(--bearish)]'
+                      : 'text-[var(--text-muted)]'
+                  }`}
+                >
                   {isPositive ? '+' : ''}
                   {item.change_24h_pct.toFixed(2)}%
                 </span>
-              </div>
-            </button>
-          );
-        })}
+              </button>
+            );
+          })}
+        </div>
       </div>
+
+      {/* Dismiss / Close Action */}
+      {onClose && (
+        <button
+          onClick={onClose}
+          className="p-1 rounded text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface)] transition cursor-pointer shrink-0 ml-auto"
+          title={t('ticker.hideBar')}
+          aria-label={t('ticker.hideBar')}
+        >
+          <X className="w-3.5 h-3.5" />
+        </button>
+      )}
     </div>
   );
 });
 
 TickerBar.displayName = 'TickerBar';
+

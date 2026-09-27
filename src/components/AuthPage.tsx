@@ -18,7 +18,7 @@ import {
   Box,
   TrendingUp,
 } from 'lucide-react';
-import { MarketChart3D } from './MarketChart3D';
+import { SplineScene } from './ui/splite';
 import {
   api,
   setAuthToken,
@@ -39,6 +39,8 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Badge } from './ui/badge';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from './ui/card';
+import { LanguageToggle } from './LanguageToggle';
+import { useLanguage } from '../lib/LanguageContext';
 
 export type AuthMode =
   | 'login'
@@ -58,6 +60,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
   onNavigate,
   onSuccess,
 }) => {
+  const { t } = useLanguage();
   // Input fields
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -195,14 +198,14 @@ export const AuthPage: React.FC<AuthPageProps> = ({
             }, 1000);
           })
           .catch((err: any) => {
-            setTokenVerifyError(err.message || 'That verification token is invalid or has expired.');
+            setTokenVerifyError(err.message || t('Tautan verifikasi tidak valid atau telah kedaluwarsa.', 'That verification token is invalid or has expired.'));
           })
           .finally(() => {
             setTokenVerifying(false);
           });
       }
     }
-  }, [isResetPassword, isVerifyEmail, onSuccess]);
+  }, [isResetPassword, isVerifyEmail, onSuccess, t]);
 
   // Clear transient error when switching mode
   useEffect(() => {
@@ -216,7 +219,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) {
-      setError('Enter your email address.');
+      setError(t('Masukkan alamat email Anda.', 'Enter your email address.'));
       return;
     }
     setLoading(true);
@@ -224,12 +227,12 @@ export const AuthPage: React.FC<AuthPageProps> = ({
     setSuccessMessage(null);
     try {
       const res = await api.forgotPassword(email.trim());
-      setSuccessMessage(res.message || 'A password reset link has been sent to your email.');
+      setSuccessMessage(res.message || t('Tautan reset password telah dikirim ke email Anda.', 'A password reset link has been sent to your email.'));
       if (res.resetUrl) {
         setResetUrl(res.resetUrl);
       }
     } catch (err: any) {
-      setError(err.message || 'Could not request a password reset.');
+      setError(err.message || t('Tidak dapat memproses permintaan reset password.', 'Could not request a password reset.'));
     } finally {
       setLoading(false);
     }
@@ -239,11 +242,11 @@ export const AuthPage: React.FC<AuthPageProps> = ({
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newPassword || newPassword.length < 6) {
-      setError('The new password must be at least 6 characters.');
+      setError(t('Password baru minimal harus 6 karakter.', 'The new password must be at least 6 characters.'));
       return;
     }
     if (newPassword !== confirmPassword) {
-      setError('Password confirmation does not match.');
+      setError(t('Konfirmasi password tidak cocok.', 'Password confirmation does not match.'));
       return;
     }
 
@@ -251,7 +254,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
     setError(null);
     try {
       if (!resetToken) {
-        throw new Error('Open the reset link from your email to continue. Request a new one if it expired.');
+        throw new Error(t('Buka tautan reset dari email Anda untuk melanjutkan. Minta tautan baru jika telah kedaluwarsa.', 'Open the reset link from your email to continue. Request a new one if it expired.'));
       }
 
       const res = await api.resetPassword({
@@ -259,7 +262,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
         newPassword,
       });
 
-      setSuccessMessage('Password updated. Redirecting to the terminal...');
+      setSuccessMessage(t('Password diperbarui. Mengalihkan ke terminal...', 'Password updated. Redirecting to the terminal...'));
       setAuthToken(res.token);
       setStoredUser(res.user);
       addRegisteredAccount({
@@ -271,7 +274,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
         onSuccess(res.user, res.token);
       }, 900);
     } catch (err: any) {
-      setError(err.message || 'Could not reset the password.');
+      setError(err.message || t('Tidak dapat memperbarui password.', 'Could not reset the password.'));
     } finally {
       setLoading(false);
     }
@@ -287,7 +290,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const fbUser = result.user;
-      if (!fbUser.email) throw new Error('The Google account has no public email address.');
+      if (!fbUser.email) throw new Error(t('Akun Google tidak memiliki alamat email publik.', 'The Google account has no public email address.'));
 
       // 1. Authenticate with backend API with a fresh token. The backend verifies this token's
       // signature itself, so it cannot be spoofed with a plain email/uid.
@@ -315,7 +318,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
       onSuccess(apiRes.user, apiRes.token);
     } catch (err: any) {
       console.error('Google sign in error:', err);
-      setError(err.message || 'Google sign-in failed');
+      setError(err.message || t('Login dengan Google gagal', 'Google sign-in failed'));
     } finally {
       setGoogleLoading(false);
     }
@@ -333,7 +336,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
     try {
       if (isRegister) {
         if (!name.trim()) {
-          throw new Error('Enter your full name or trading handle.');
+          throw new Error(t('Masukkan nama lengkap atau trading handle Anda.', 'Enter your full name or trading handle.'));
         }
         const res = await api.register({
           email: email.trim(),
@@ -342,7 +345,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
         });
 
         if (res.token && res.user) {
-          setSuccessMessage(`Welcome, ${res.user.name || name}! Your account is active.`);
+          setSuccessMessage(t(`Selamat datang, ${res.user.name || name}! Akun Anda sudah aktif.`, `Welcome, ${res.user.name || name}! Your account is active.`));
           setAuthToken(res.token);
           setStoredUser(res.user);
           addRegisteredAccount({
@@ -373,7 +376,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
         onSuccess(res.user, res.token);
       }
     } catch (err: any) {
-      setError(err.message || 'Authentication failed. Check your email and password.');
+      setError(err.message || t('Autentikasi gagal. Periksa email dan password Anda.', 'Authentication failed. Check your email and password.'));
       if (err.code) {
         setErrorCode(err.code);
       }
@@ -389,7 +392,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
   const handleResendVerification = async (targetEmail?: string) => {
     const emailToUse = targetEmail || registeredEmail || email;
     if (!emailToUse.trim()) {
-      setError('Enter your email address first.');
+      setError(t('Masukkan alamat email Anda terlebih dahulu.', 'Enter your email address first.'));
       return;
     }
 
@@ -397,9 +400,9 @@ export const AuthPage: React.FC<AuthPageProps> = ({
     setResendStatus(null);
     try {
       const res = await api.resendVerification(emailToUse.trim());
-      setResendStatus(res.message || 'A new verification link has been sent to your email.');
+      setResendStatus(res.message || t('Tautan verifikasi baru telah dikirimkan ke email Anda.', 'A new verification link has been sent to your email.'));
     } catch (err: any) {
-      setError(err.message || 'Could not resend the verification email.');
+      setError(err.message || t('Gagal mengirim ulang email verifikasi.', 'Could not resend the verification email.'));
     } finally {
       setResendLoading(false);
     }
@@ -410,12 +413,12 @@ export const AuthPage: React.FC<AuthPageProps> = ({
     if (e) e.preventDefault();
     const cleanCode = otpCode.trim();
     if (!cleanCode) {
-      setError('Enter the 6-digit verification code from your email.');
+      setError(t('Masukkan 6 digit kode verifikasi dari email Anda.', 'Enter the 6-digit verification code from your email.'));
       return;
     }
     const targetEmail = registeredEmail || email;
     if (!targetEmail.trim()) {
-      setError('No email address set. Enter your email first.');
+      setError(t('Alamat email belum ditentukan. Masukkan email Anda terlebih dahulu.', 'No email address set. Enter your email first.'));
       return;
     }
 
@@ -423,7 +426,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
     setError(null);
     try {
       const res = await api.verifyCode(targetEmail.trim(), cleanCode);
-      setTokenVerifySuccess('Email verified. Opening the trading terminal...');
+      setTokenVerifySuccess(t('Email terverifikasi. Membuka terminal trading...', 'Email verified. Opening the trading terminal...'));
       setAuthToken(res.token);
       setStoredUser(res.user);
       addRegisteredAccount({
@@ -435,14 +438,25 @@ export const AuthPage: React.FC<AuthPageProps> = ({
         onSuccess(res.user, res.token);
       }, 700);
     } catch (err: any) {
-      setError(err.message || 'That verification code is incorrect or has expired.');
+      setError(err.message || t('Kode verifikasi salah atau telah kedaluwarsa.', 'That verification code is incorrect or has expired.'));
     } finally {
       setOtpVerifying(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[var(--bg-canvas)] text-[var(--text-primary)] flex flex-col font-sans selection:bg-[var(--accent)] selection:text-white relative">
+    <div className="min-h-screen bg-[var(--bg-canvas)] text-[var(--text-primary)] flex flex-col font-sans selection:bg-[var(--accent)] selection:text-white relative overflow-hidden">
+      {/* 3D Robot Background Visual - Positioned to visually merge with page layout */}
+      <div className="absolute inset-0 z-0">
+        <SplineScene
+          scene="https://prod.spline.design/kZDDjO5HuC9GJUM2/scene.splinecode"
+          className="w-full h-full"
+        />
+        {/* Gradient Overlay to mask the edges and visually merge with page layout */}
+        <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-[var(--bg-canvas)] via-[var(--bg-canvas)]/75 to-transparent lg:w-3/5" />
+        <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-[var(--bg-canvas)] via-transparent to-[var(--bg-canvas)]/40" />
+      </div>
+
       {/* Ambient background glow */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-80 bg-[var(--accent-subtle)] rounded-full blur-3xl pointer-events-none" />
 
@@ -456,7 +470,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
           id="back-home-btn"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Back to home</span>
+          <span>{t('auth.backHome')}</span>
         </Button>
 
         <div
@@ -471,26 +485,24 @@ export const AuthPage: React.FC<AuthPageProps> = ({
           </span>
         </div>
 
-        <div className="hidden sm:flex items-center">
-          <Badge variant="cyan" className="gap-1.5 py-1">
-            <ShieldCheck className="w-3.5 h-3.5 text-[var(--accent)]" />
-            <span>INSTITUTIONAL GATEWAY</span>
-          </Badge>
+        <div className="flex items-center gap-3">
+          <LanguageToggle variant="pill" />
+          <div className="hidden sm:flex items-center">
+            <Badge variant="cyan" className="gap-1.5 py-1">
+              <ShieldCheck className="w-3.5 h-3.5 text-[var(--accent)]" />
+              <span>{t('auth.gatewayBadge')}</span>
+            </Badge>
+          </div>
         </div>
       </header>
 
-      {/* Main Authentication Container with 3D Market Topography Showcase */}
-      <main className="flex-1 flex items-center justify-center p-4 sm:p-8 z-10">
+      {/* Main Authentication Container */}
+      <main className="flex-1 flex items-center justify-center p-4 sm:p-8 z-10 relative pointer-events-none">
         <div className="w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
           
           {/* Left Column: Authentication Form / Card */}
-          <div className="lg:col-span-6 xl:col-span-5 w-full flex flex-col items-center">
-            {/* Mobile-only compact 3D visual banner */}
-            <div className="lg:hidden w-full mb-3 rounded-lg overflow-hidden border border-[var(--border-subtle)]">
-              <MarketChart3D variant="compact" symbol="XAUUSD" showControls={false} />
-            </div>
-
-            <Card className="w-full bg-[var(--bg-surface)] border-[var(--border-subtle)] shadow-[var(--shadow-overlay)] p-6 sm:p-8 space-y-6">
+          <div className="lg:col-span-6 xl:col-span-5 w-full flex flex-col items-center pointer-events-auto">
+            <Card className="w-full bg-[var(--bg-surface)]/95 backdrop-blur-md border-[var(--border-subtle)] shadow-[var(--shadow-overlay)] p-6 sm:p-8 space-y-6">
 
           {/* STATE 1: Token Verifying in Progress */}
           {tokenVerifying && (
@@ -498,9 +510,9 @@ export const AuthPage: React.FC<AuthPageProps> = ({
               <div className="w-12 h-12 rounded-md bg-[var(--accent-subtle)]/80 border border-[var(--accent)]/80 flex items-center justify-center mx-auto text-[var(--accent)] shadow-inner">
                 <RefreshCw className="w-6 h-6 animate-spin" />
               </div>
-              <h2 className="text-lg font-bold text-[var(--text-primary)]">Validating access link...</h2>
+              <h2 className="text-lg font-bold text-[var(--text-primary)]">{t('auth.validatingLink')}</h2>
               <p className="text-xs text-[var(--text-secondary)] font-sans">
-                Please wait while the system confirms your account authentication token.
+                {t('auth.validatingLinkDesc')}
               </p>
             </div>
           )}
@@ -510,7 +522,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
             <div className="p-4 rounded-md bg-[var(--bullish-bg)]/60 border border-[var(--bullish-border)]/80 text-[var(--bullish)] text-xs space-y-2 font-sans">
               <div className="flex items-center gap-2 font-semibold text-[var(--bullish)]">
                 <CheckCircle2 className="w-4 h-4 text-[var(--bullish)] shrink-0" />
-                <span>Authentication verified</span>
+                <span>{t('auth.authVerified')}</span>
               </div>
               <p>{tokenVerifySuccess}</p>
             </div>
@@ -521,7 +533,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
             <div className="p-4 rounded-md bg-[var(--bullish-bg)]/60 border border-[var(--bullish-border)]/80 text-[var(--bullish)] text-xs space-y-2 font-sans">
               <div className="flex items-center gap-2 font-semibold text-[var(--bullish)]">
                 <CheckCircle2 className="w-4 h-4 text-[var(--bullish)] shrink-0" />
-                <span>Success</span>
+                <span>{t('auth.success')}</span>
               </div>
               <p>{successMessage}</p>
             </div>
@@ -532,7 +544,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
             <div className="p-4 rounded-md bg-[var(--bearish-bg)]/60 border border-[var(--bearish-border)]/80 text-[var(--bearish)] text-xs space-y-3 font-sans">
               <div className="flex items-center gap-2 font-semibold text-[var(--bearish)]">
                 <AlertCircle className="w-4 h-4 text-[var(--bearish)] shrink-0" />
-                <span>Link validation failed</span>
+                <span>{t('auth.linkFailed')}</span>
               </div>
               <p>{tokenVerifyError}</p>
               <button
@@ -543,7 +555,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                 }}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[var(--bg-section-alt)] hover:bg-[var(--border-subtle)] text-[var(--text-primary)] text-[11px] font-mono font-medium transition cursor-pointer"
               >
-                <span>Open sign-in form</span>
+                <span>{t('auth.backToLogin')}</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -560,10 +572,10 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                   </span>
                 </div>
                 <h1 className="text-xl font-bold font-mono tracking-tight text-[var(--text-primary)]">
-                  Activate your email
+                  {t('auth.verify.title')}
                 </h1>
                 <p className="text-xs text-[var(--text-secondary)] font-sans leading-relaxed">
-                  A verification link and code were sent to:
+                  {t('auth.verify.desc')}
                 </p>
                 <div className="inline-block px-3 py-1.5 rounded-md bg-[var(--bg-canvas)] border border-[var(--accent)] text-[var(--accent)] font-mono text-xs font-semibold">
                   {registeredEmail}
@@ -575,15 +587,15 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-mono font-bold text-[var(--accent)] uppercase tracking-wider flex items-center gap-1.5">
                     <KeyRound className="w-3.5 h-3.5 text-[var(--accent)]" />
-                    Activate with a 6-digit email code
+                    {t('auth.verify.codeLabel')}
                   </span>
                   <span className="text-[10px] font-mono text-[var(--accent)]/80 bg-[var(--accent-subtle)] px-2 py-0.5 rounded border border-[var(--accent)]">
-                    Bebas Hambatan
+                    {t('Bebas Hambatan', 'Fast Track')}
                   </span>
                 </div>
 
                 <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed font-sans">
-                  Enter the 6-digit activation code sent to your email below (the fastest route when your browser blocks the link):
+                  {t('Masukkan 6 digit kode aktivasi dari email Anda di bawah ini:', 'Enter the 6-digit activation code sent to your email below:')}
                 </p>
 
                 <div className="flex gap-2">
@@ -592,7 +604,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                     inputMode="numeric"
                     autoComplete="one-time-code"
                     maxLength={6}
-                    placeholder="e.g. 849201"
+                    placeholder={t('auth.verify.codePlaceholder')}
                     value={otpCode}
                     onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                     className="flex-1 px-3 py-2.5 bg-[var(--bg-canvas)] border border-[var(--border-strong)] focus:border-[var(--accent)] rounded-md text-center font-mono text-base tracking-[0.25em] font-bold text-[var(--accent)] outline-none placeholder:text-[var(--text-muted)] placeholder:tracking-normal placeholder:font-sans placeholder:text-xs transition"
@@ -603,13 +615,13 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                     className="px-4 py-2.5 rounded-md bg-[var(--accent)] hover:opacity-90 text-[var(--accent-contrast)] font-bold font-mono text-xs flex items-center justify-center gap-1.5 transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
                   >
                     {otpVerifying ? <RefreshCw className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
-                    <span>Verify</span>
+                    <span>{otpVerifying ? t('auth.verify.verifying') : t('auth.verify.submit')}</span>
                   </button>
                 </div>
 
                 <div className="flex items-center gap-2 text-[10px] text-[var(--text-secondary)] font-mono pt-1">
                   <span className="w-2 h-2 rounded-full bg-[var(--accent)] animate-pulse inline-block shrink-0" />
-                  <span>This page updates on its own once you open the link in your email.</span>
+                  <span>{t('Halaman ini otomatis masuk begitu tautan di email Anda dibuka.', 'This page updates automatically once you open the link in your email.')}</span>
                 </div>
               </form>
 
@@ -622,7 +634,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                   className="w-full py-2.5 rounded-md bg-[var(--bg-section-alt)] hover:bg-[var(--bg-section-alt)] border border-[var(--border-strong)] text-[var(--text-primary)] font-mono text-xs font-semibold transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${resendLoading ? 'animate-spin' : ''}`} />
-                  <span>{resendLoading ? 'Resending...' : 'Resend verification email'}</span>
+                  <span>{resendLoading ? t('auth.verify.resending') : t('auth.verify.resend')}</span>
                 </button>
 
                 <button
@@ -633,7 +645,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                   }}
                   className="w-full py-2 rounded-md text-[var(--text-secondary)] hover:text-[var(--text-primary)] font-mono text-xs transition cursor-pointer text-center"
                 >
-                  Already verified? Sign in
+                  {t('auth.register.hasAccount')} {t('auth.register.loginLink')}
                 </button>
               </div>
             </div>
@@ -645,10 +657,10 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                   <KeyRound className="w-5 h-5" />
                 </div>
                 <h1 className="text-xl font-bold font-mono tracking-tight text-[var(--text-primary)]">
-                  Forgot password
+                  {t('auth.forgot.title')}
                 </h1>
                 <p className="text-xs text-[var(--text-secondary)] font-sans leading-relaxed">
-                  Enter your account email. We will send a link to create a new password.
+                  {t('auth.forgot.desc')}
                 </p>
               </div>
 
@@ -666,10 +678,10 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                 <div className="p-3.5 rounded-md bg-[var(--accent-subtle)]/60 border border-[var(--accent)]/80 text-[var(--text-primary)] text-xs space-y-2">
                   <div className="font-mono text-[11px] font-bold text-[var(--accent)] flex items-center gap-1.5">
                     <KeyRound className="w-3.5 h-3.5 text-[var(--warning)]" />
-                    <span>Instant reset link ready</span>
+                    <span>{t('Tautan reset langsung siap digunakan', 'Instant reset link ready')}</span>
                   </div>
                   <p className="text-[11px] text-[var(--text-secondary)]">
-                    Use the button below to open the new-password form directly:
+                    {t('Gunakan tombol di bawah untuk langsung membuka formulir password baru:', 'Use the button below to open the new-password form directly:')}
                   </p>
                   <button
                     type="button"
@@ -682,7 +694,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                     }}
                     className="w-full py-2 px-3 rounded-md bg-[var(--accent)] hover:opacity-90 text-[var(--accent-contrast)] font-bold font-mono text-xs flex items-center justify-center gap-1.5 transition cursor-pointer"
                   >
-                    <span>Open the new-password form</span>
+                    <span>{t('Buka formulir password baru', 'Open the new-password form')}</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -691,7 +703,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
               <form onSubmit={handleForgotPassword} className="space-y-4 font-mono text-xs">
                 <div className="space-y-1.5">
                   <label className="block text-[var(--text-secondary)] text-[11px] font-semibold">
-                    Registered email address
+                    {t('auth.login.email')}
                   </label>
                   <div className="relative">
                     <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] z-10" />
@@ -700,7 +712,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="e.g. trader@marketintel.pro"
+                      placeholder={t('auth.login.emailPlaceholder')}
                       className="pl-9 h-10"
                     />
                   </div>
@@ -713,10 +725,10 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                   className="w-full mt-2"
                 >
                   {loading ? (
-                    <span>Sending request...</span>
+                    <span>{t('auth.forgot.submitting')}</span>
                   ) : (
                     <>
-                      <span>Send password reset link</span>
+                      <span>{t('auth.forgot.submit')}</span>
                       <Send className="w-3.5 h-3.5" />
                     </>
                   )}
@@ -730,7 +742,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                   className="text-[var(--accent)] hover:underline font-mono text-xs cursor-pointer inline-flex items-center gap-1"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
-                  <span>Back to sign in</span>
+                  <span>{t('auth.backToLogin')}</span>
                 </button>
               </div>
             </div>
@@ -742,10 +754,10 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                   <Lock className="w-5 h-5" />
                 </div>
                 <h1 className="text-xl font-bold font-mono tracking-tight text-[var(--text-primary)]">
-                  Create new password
+                  {t('auth.reset.title')}
                 </h1>
                 <p className="text-xs text-[var(--text-secondary)] font-sans leading-relaxed">
-                  Enter a new password for your account (at least 6 characters).
+                  {t('auth.reset.desc')}
                 </p>
               </div>
 
@@ -761,14 +773,13 @@ export const AuthPage: React.FC<AuthPageProps> = ({
               <form onSubmit={handleResetPassword} className="space-y-4 font-mono text-xs">
                 {!resetToken && (
                   <div className="p-3.5 rounded-md bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-[var(--text-secondary)] text-xs font-sans leading-relaxed">
-                    Password resets only happen through the link we email you.
-                    Request a new link from the{' '}
+                    {t('auth.reset.noTokenWarning')}
                     <button
                       type="button"
                       onClick={() => onNavigate('/forgot-password')}
                       className="text-[var(--accent)] underline underline-offset-2"
                     >
-                      forgot password
+                      {t('auth.reset.forgotLink')}
                     </button>
                     .
                   </div>
@@ -776,7 +787,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
 
                 <div className="space-y-1.5">
                   <label className="block text-[var(--text-secondary)] text-[11px] font-semibold">
-                    New password
+                    {t('auth.reset.newPassword')}
                   </label>
                   <div className="relative">
                     <Lock className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] z-10" />
@@ -794,7 +805,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
 
                 <div className="space-y-1.5">
                   <label className="block text-[var(--text-secondary)] text-[11px] font-semibold">
-                    Repeat new password
+                    {t('auth.reset.repeatPassword')}
                   </label>
                   <div className="relative">
                     <Lock className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] z-10" />
@@ -817,10 +828,10 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                   className="w-full mt-2"
                 >
                   {loading ? (
-                    <span>Updating password...</span>
+                    <span>{t('auth.reset.submitting')}</span>
                   ) : (
                     <>
-                      <span>Save password & sign in</span>
+                      <span>{t('auth.reset.submit')}</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </>
                   )}
@@ -833,7 +844,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                   onClick={() => onNavigate('/login')}
                   className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] font-mono text-xs cursor-pointer"
                 >
-                  Cancel and return to sign in
+                  {t('auth.reset.cancel')}
                 </button>
               </div>
             </div>
@@ -846,12 +857,10 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                   <Lock className="w-5 h-5" />
                 </div>
                 <h1 className="text-xl font-bold font-mono tracking-tight text-[var(--text-primary)]">
-                  {isRegister ? 'Create a trader account' : 'Terminal authentication'}
+                  {isRegister ? t('auth.register.title') : t('auth.login.title')}
                 </h1>
                 <p className="text-xs text-[var(--text-secondary)] font-sans leading-relaxed">
-                  {isRegister
-                    ? 'Create an account to access market intelligence. A verification link will be sent to your email.'
-                    : 'Sign in to access the macro intelligence workspace and market telemetry.'}
+                  {isRegister ? t('auth.register.desc') : t('auth.login.desc')}
                 </p>
               </div>
 
@@ -867,7 +876,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                   }`}
                   id="tab-login"
                 >
-                  Sign in
+                  {t('auth.login.tab')}
                 </button>
                 <button
                   type="button"
@@ -879,7 +888,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                   }`}
                   id="tab-register"
                 >
-                  Create account
+                  {t('auth.register.tab')}
                 </button>
               </div>
 
@@ -894,7 +903,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                   {/* Resolution Paths for Invalid Password */}
                   {errorCode === 'INVALID_PASSWORD' && (
                     <div className="pt-2 border-t border-[var(--bearish-border)]/60 space-y-2">
-                      <p className="text-[11px] text-[var(--bearish)]/90 font-mono">Forgot or want to change your password?</p>
+                      <p className="text-[11px] text-[var(--bearish)]/90 font-mono">{t('auth.invalidPasswordHelp')}</p>
                       <div>
                         <button
                           type="button"
@@ -905,7 +914,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                           className="w-full py-2 px-3 rounded-md bg-[var(--bg-section-alt)] hover:bg-[var(--bg-section-alt)] text-[var(--accent)] border border-[var(--border-strong)] font-mono text-xs flex items-center justify-center gap-1.5 transition cursor-pointer"
                         >
                           <KeyRound className="w-3.5 h-3.5 text-[var(--warning)]" />
-                          <span>Reset password</span>
+                          <span>{t('auth.resetPasswordBtn')}</span>
                         </button>
                       </div>
                     </div>
@@ -916,14 +925,14 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                     <div className="pt-2 border-t border-[var(--bearish-border)]/60 space-y-2.5">
                       <div className="space-y-1.5">
                         <label className="text-[10px] font-mono font-bold text-[var(--accent)] uppercase tracking-wider block">
-                          Enter the 6-digit code from your email:
+                          {t('auth.otpLabel')}
                         </label>
                         <div className="flex gap-2">
                           <input
                             type="text"
                             inputMode="numeric"
                             maxLength={6}
-                            placeholder="6-digit OTP code"
+                            placeholder={t('auth.otpPlaceholder')}
                             value={otpCode}
                             onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                             className="flex-1 px-2.5 py-1.5 bg-[var(--bg-canvas)] border border-[var(--border-strong)] focus:border-[var(--accent)] rounded text-center font-mono text-sm tracking-widest font-bold text-[var(--accent)] outline-none placeholder:text-[var(--text-muted)] placeholder:tracking-normal placeholder:font-sans placeholder:text-xs"
@@ -935,7 +944,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                             className="px-3 py-1.5 rounded bg-[var(--accent)] hover:opacity-90 text-[var(--accent-contrast)] font-bold font-mono text-xs flex items-center gap-1 transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
                           >
                             {otpVerifying ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-3.5 h-3.5" />}
-                            <span>Activate</span>
+                            <span>{t('auth.activateBtn')}</span>
                           </button>
                         </div>
                       </div>
@@ -949,7 +958,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                           }}
                           className="text-[11px] text-[var(--accent)] hover:underline font-mono"
                         >
-                          Open the full activation screen →
+                          {t('auth.openFullActivation')}
                         </button>
 
                         <button
@@ -960,7 +969,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                           id="unverified-resend-btn"
                         >
                           <Send className="w-3 h-3" />
-                          <span>{resendLoading ? 'Sending...' : 'Resend email'}</span>
+                          <span>{resendLoading ? t('auth.resendingEmail') : t('auth.resendEmail')}</span>
                         </button>
                       </div>
                     </div>
@@ -975,7 +984,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                         className="w-full py-1.5 px-3 rounded-md bg-[var(--accent)] hover:opacity-90 text-[var(--accent-contrast)] font-bold font-mono text-xs flex items-center justify-center gap-1.5 transition cursor-pointer"
                       >
                         <UserIcon className="w-3.5 h-3.5" />
-                        <span>Create this account now</span>
+                        <span>{t('auth.createAccountNow')}</span>
                       </button>
                     </div>
                   )}
@@ -995,7 +1004,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                   {isRegister && (
                     <div className="space-y-1.5">
                       <label className="block text-[var(--text-secondary)] text-[11px] font-semibold">
-                        Nama Lengkap / Trading Desk Handle
+                        {t('auth.register.name')}
                       </label>
                       <div className="relative">
                         <UserIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] z-10" />
@@ -1004,7 +1013,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                           required
                           value={name}
                           onChange={(e) => setName(e.target.value)}
-                          placeholder="e.g. Alexander Vance"
+                          placeholder={t('auth.register.namePlaceholder')}
                           className="pl-9 h-10"
                           id="auth-name-input"
                         />
@@ -1014,7 +1023,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
 
                   <div className="space-y-1.5">
                     <label className="block text-[var(--text-secondary)] text-[11px] font-semibold">
-                      Email address (must be active)
+                      {t('auth.login.email')}
                     </label>
                     <div className="relative">
                       <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] z-10" />
@@ -1023,7 +1032,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                         required
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        placeholder="e.g. trader@marketintel.pro"
+                        placeholder={t('auth.login.emailPlaceholder')}
                         className="pl-9 h-10"
                         id="auth-email-input"
                       />
@@ -1033,7 +1042,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
                       <label className="block text-[var(--text-secondary)] text-[11px] font-semibold">
-                        Password
+                        {t('auth.login.password')}
                       </label>
                       {!isRegister && (
                         <button
@@ -1041,7 +1050,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                           onClick={() => onNavigate(`/forgot-password?email=${encodeURIComponent(email.trim())}`)}
                           className="text-[11px] text-[var(--accent)] hover:underline font-mono cursor-pointer"
                         >
-                          Forgot password?
+                          {t('auth.login.forgot')}
                         </button>
                       )}
                     </div>
@@ -1068,10 +1077,10 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                     id="auth-submit-btn"
                   >
                     {loading ? (
-                      <span>Processing authentication...</span>
+                      <span>{t('auth.login.submitting')}</span>
                     ) : (
                       <>
-                        <span>{isRegister ? 'Create account' : 'Sign in to terminal'}</span>
+                        <span>{isRegister ? t('auth.register.submit') : t('auth.login.submit')}</span>
                         <ArrowRight className="w-3.5 h-3.5" />
                       </>
                     )}
@@ -1082,7 +1091,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                     <div className="relative flex items-center justify-center">
                       <div className="border-t border-[var(--border-subtle)] w-full" />
                       <span className="px-3 text-[10px] uppercase font-mono tracking-widest text-[var(--text-muted)] shrink-0" style={{ background: 'var(--bg-surface)' }}>
-                        or continue with
+                        {t('auth.login.orContinue')}
                       </span>
                       <div className="border-t border-[var(--border-subtle)] w-full" />
                     </div>
@@ -1112,7 +1121,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                           d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.34 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
                         />
                       </svg>
-                      <span>{googleLoading ? 'Connecting to Google...' : 'Sign in with Google'}</span>
+                      <span>{googleLoading ? t('auth.login.googleConnecting') : t('auth.login.google')}</span>
                     </button>
                   </div>
                 </form>
@@ -1121,24 +1130,24 @@ export const AuthPage: React.FC<AuthPageProps> = ({
               <div className="text-center text-[11px] text-[var(--text-secondary)] font-sans pt-2 border-t border-[var(--border-subtle)]">
                 {isRegister ? (
                   <p>
-                    Already have an account?{' '}
+                    {t('auth.register.hasAccount')}{' '}
                     <button
                       type="button"
                       onClick={() => onNavigate('/login')}
                       className="text-[var(--accent)] hover:underline font-semibold cursor-pointer"
                     >
-                      Sign in
+                      {t('auth.register.loginLink')}
                     </button>
                   </p>
                 ) : (
                   <p>
-                    No terminal account yet?{' '}
+                    {t('auth.login.noAccount')}{' '}
                     <button
                       type="button"
                       onClick={() => onNavigate('/register')}
                       className="text-[var(--accent)] hover:underline font-semibold cursor-pointer"
                     >
-                      Create a new account
+                      {t('auth.login.registerNow')}
                     </button>
                   </p>
                 )}
@@ -1148,19 +1157,15 @@ export const AuthPage: React.FC<AuthPageProps> = ({
         </Card>
           </div>
 
-          {/* Right Column: 3D Market Intelligence Showcase (Desktop / Tablet) */}
-          <div className="lg:col-span-6 xl:col-span-7 hidden lg:flex flex-col items-center justify-center relative overflow-visible">
-            <div className="w-full flex items-center justify-center overflow-visible py-4">
-              <MarketChart3D variant="auth" symbol="XAUUSD" showControls={false} />
-            </div>
-          </div>
+          {/* Right Column: Open Area for 3D Robot Background Visual */}
+          <div className="lg:col-span-6 xl:col-span-7 hidden lg:flex items-center justify-center relative w-full h-[600px] overflow-visible pointer-events-none" />
 
         </div>
       </main>
 
       {/* Bottom Disclaimer */}
       <footer className="py-4 text-center text-[10px] text-[var(--text-muted)] font-mono border-t border-[var(--border-subtle)]">
-        ARAHMARKET INTELLIGENCE TERMINAL • SECURE ENCRYPTED VERIFICATION GATEWAY
+        {t('auth.footerDisclaimer')}
       </footer>
     </div>
   );

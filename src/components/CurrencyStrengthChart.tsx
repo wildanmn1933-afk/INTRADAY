@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { CurrencyStrength } from '../types';
 import { api } from '../lib/api';
 import { RefreshCw, TrendingUp, Sparkles, ExternalLink, Calendar, SlidersHorizontal } from 'lucide-react';
+import { useLanguage } from '../lib/LanguageContext';
 
 // Identity palette: each currency keeps its hue family so existing users are not
 // re-taught the legend, but saturation and lightness are pulled into one narrow
@@ -65,6 +66,7 @@ export const CurrencyStrengthChart: React.FC<CurrencyStrengthChartProps> = React
   isRefreshing: externalRefreshing = false,
   onSelectCurrency,
 }) => {
+  const { t } = useLanguage();
   const [range, setRange] = useState<'1d' | '2d'>('1d');
   const [selectedCurrencies, setSelectedCurrencies] = useState<Set<string>>(
     new Set(G8_CURRENCIES)
@@ -336,13 +338,13 @@ export const CurrencyStrengthChart: React.FC<CurrencyStrengthChartProps> = React
           <div className="flex items-center gap-1.5">
             <TrendingUp className="w-4 h-4 text-[var(--warning)]" />
             <span className="font-bold text-[var(--text-primary)] uppercase tracking-wider text-[11px]">
-              CURRENCY STRENGTH CHART
+              {t('GRAFIK KEKUATAN VALUTA', 'CURRENCY STRENGTH CHART')}
             </span>
           </div>
 
           <div className="hidden sm:flex items-center gap-1 text-[10px] text-[var(--text-secondary)]">
             <span className="w-1.5 h-1.5 rounded-full bg-[var(--bullish)] animate-pulse" />
-            <span>Open Parity 04:00 WIB</span>
+            <span>{t('Paritas Open 04:00 WIB', 'Open Parity 04:00 WIB')}</span>
           </div>
         </div>
 
@@ -356,9 +358,9 @@ export const CurrencyStrengthChart: React.FC<CurrencyStrengthChartProps> = React
                   ? 'bg-[var(--warning-bg)] text-[var(--warning-strong)] font-bold border border-[var(--warning-border)] shadow-xs'
                   : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
               }`}
-              title="View past 48 hours (yesterday + today)"
+              title={t('Lihat 48 jam terakhir (kemarin + hari ini)', 'View past 48 hours (yesterday + today)')}
             >
-              yesterday (2D)
+              {t('kemarin (2D)', 'yesterday (2D)')}
             </button>
             <button
               onClick={() => setRange('1d')}
@@ -367,16 +369,16 @@ export const CurrencyStrengthChart: React.FC<CurrencyStrengthChartProps> = React
                   ? 'bg-[var(--warning-bg)] text-[var(--warning-strong)] font-bold border border-[var(--warning-border)] shadow-xs'
                   : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
               }`}
-              title="View current trading session from 04:00 WIB open"
+              title={t('Lihat sesi trading berjalan dari open 04:00 WIB', 'View current trading session from 04:00 WIB open')}
             >
-              today (1D)
+              {t('hari ini (1D)', 'today (1D)')}
             </button>
           </div>
 
           <button
             onClick={handleManualRefresh}
             disabled={isLoading || externalRefreshing}
-            title="Refresh Live Chart Data"
+            title={t('Perbarui Data Grafik Live', 'Refresh Live Chart Data')}
             className="p-1.5 rounded bg-[var(--bg-canvas)] hover:bg-[var(--bg-section-alt)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition disabled:opacity-50 cursor-pointer"
           >
             <RefreshCw className={`w-3 h-3 ${isLoading || externalRefreshing ? 'animate-spin text-[var(--warning)]' : ''}`} />
@@ -400,7 +402,7 @@ export const CurrencyStrengthChart: React.FC<CurrencyStrengthChartProps> = React
                 onDoubleClick={() => isolateCurrency(cur)}
                 onMouseEnter={() => setHoveredCurrency(cur)}
                 onMouseLeave={() => setHoveredCurrency(null)}
-                title={`Click to toggle, double-click to focus ${cur}`}
+                title={t(`Klik untuk beralih, klik dua kali untuk fokus ke ${cur}`, `Click to toggle, double-click to focus ${cur}`)}
                 className={`px-2 py-0.5 rounded text-[10px] font-bold border transition flex items-center gap-1.5 cursor-pointer ${
                   isSelected
                     ? `${style.bg} ${style.text} ${style.border} ${isHovered ? 'ring-1 ring-white/40' : ''}`
@@ -430,7 +432,7 @@ export const CurrencyStrengthChart: React.FC<CurrencyStrengthChartProps> = React
           onClick={selectAll}
           className="text-[9px] text-[var(--warning)] hover:text-[var(--warning)] hover:underline cursor-pointer px-1.5 py-0.5 rounded bg-[var(--bg-canvas)] border border-[var(--border-subtle)]"
         >
-          All (8)
+          {t('Semua (8)', 'All (8)')}
         </button>
       </div>
 
@@ -440,7 +442,7 @@ export const CurrencyStrengthChart: React.FC<CurrencyStrengthChartProps> = React
           <div className="absolute inset-0 z-20 flex items-center justify-center bg-[var(--bg-canvas)] backdrop-blur-xs">
             <div className="flex items-center gap-2 text-xs text-[var(--warning)] font-mono">
               <RefreshCw className="w-4 h-4 animate-spin" />
-              <span>Loading chart data from currency-strength.com...</span>
+              <span>{t('Memuat data grafik dari currency-strength.com...', 'Loading chart data from currency-strength.com...')}</span>
             </div>
           </div>
         )}
@@ -664,7 +666,7 @@ export const CurrencyStrengthChart: React.FC<CurrencyStrengthChartProps> = React
           <div className="mt-2 pt-2 border-t border-[var(--border-subtle)] flex flex-wrap items-center justify-between gap-2 text-[10px]">
             <div className="flex items-center gap-1.5 text-[var(--text-secondary)]">
               <Calendar className="w-3 h-3 text-[var(--warning)]" />
-              <span>TIME:</span>
+              <span>{t('WAKTU:', 'TIME:')}</span>
               <span className="text-[var(--warning)] font-bold">
                 {new Date(activeTimestamp).toLocaleDateString('en-GB', {
                   timeZone: 'Asia/Jakarta',
@@ -723,15 +725,15 @@ export const CurrencyStrengthChart: React.FC<CurrencyStrengthChartProps> = React
           <div className="flex items-center gap-2">
             <Sparkles className="w-3.5 h-3.5 text-[var(--warning)] shrink-0" />
             <span className="text-[var(--text-secondary)]">
-              <strong>Strongest:</strong>{' '}
+              <strong>{t('Terkuat:', 'Strongest:')}</strong>{' '}
               <span className="text-[var(--bullish)] font-bold">{sortedAtPoint[0]?.currency}</span> ({sortedAtPoint[0]?.val > 0 ? `+${sortedAtPoint[0]?.val.toFixed(2)}` : sortedAtPoint[0]?.val.toFixed(2)}) &bull;{' '}
-              <strong>Weakest:</strong>{' '}
+              <strong>{t('Terlemah:', 'Weakest:')}</strong>{' '}
               <span className="text-[var(--bearish)] font-bold">{sortedAtPoint[sortedAtPoint.length - 1]?.currency}</span> ({sortedAtPoint[sortedAtPoint.length - 1]?.val.toFixed(2)})
             </span>
           </div>
 
           <div className="text-[var(--warning)] font-bold hidden sm:flex items-center gap-1">
-            <span>Pair dispersion ({sortedAtPoint[0]?.currency}/{sortedAtPoint[sortedAtPoint.length - 1]?.currency}):</span>
+            <span>{t('Dispersi pair', 'Pair dispersion')} ({sortedAtPoint[0]?.currency}/{sortedAtPoint[sortedAtPoint.length - 1]?.currency}):</span>
             <span className="text-[var(--text-primary)] tabular-nums">
               +{(sortedAtPoint[0]?.val - sortedAtPoint[sortedAtPoint.length - 1]?.val).toFixed(2)} pt
             </span>

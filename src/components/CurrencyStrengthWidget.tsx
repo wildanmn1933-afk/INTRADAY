@@ -14,6 +14,7 @@ import {
 import { MetricTooltip, MetricInfoIcon } from './Tooltip';
 import { api } from '../lib/api';
 import { CurrencyStrengthChart } from './CurrencyStrengthChart';
+import { useLanguage } from '../lib/LanguageContext';
 
 interface CurrencyStrengthWidgetProps {
   strengths: CurrencyStrength[];
@@ -30,6 +31,7 @@ export const CurrencyStrengthWidget: React.FC<CurrencyStrengthWidgetProps> = Rea
   onSelectCurrency,
   initialTab = 'CHART',
 }) => {
+  const { t } = useLanguage();
   const [subTab, setSubTab] = useState<'CHART' | 'LIVE' | 'COMPARISON' | 'ARCHIVE'>(initialTab);
   const [comparisons, setComparisons] = useState<HistoricalCurrencyComparison[]>([]);
   const [archiveDate, setArchiveDate] = useState<string>('2026-09-19');
@@ -76,6 +78,22 @@ export const CurrencyStrengthWidget: React.FC<CurrencyStrengthWidgetProps> = Rea
     }
   };
 
+  const formatDirection = (dir: string) => {
+    switch (dir) {
+      case 'STRONG_BUY':
+        return t('BELI KUAT', 'STRONG BUY');
+      case 'BUY':
+        return t('BELI', 'BUY');
+      case 'STRONG_SELL':
+        return t('JUAL KUAT', 'STRONG SELL');
+      case 'SELL':
+        return t('JUAL', 'SELL');
+      case 'NEUTRAL':
+      default:
+        return t('NETRAL', 'NEUTRAL');
+    }
+  };
+
   return (
     <div className="terminal-panel p-3.5 flex flex-col h-full space-y-3 font-sans" id="currency-strength-widget-root">
       {/* Widget Header */}
@@ -84,12 +102,12 @@ export const CurrencyStrengthWidget: React.FC<CurrencyStrengthWidgetProps> = Rea
           <div className="flex items-center gap-1.5">
             <TrendingUp className="w-3.5 h-3.5 text-[var(--accent)]" />
             <h2 className="text-[13px] font-semibold text-[var(--text-primary)]">
-              Currency strength · G8
+              {t('Kekuatan Valuta · G8', 'Currency strength · G8')}
             </h2>
             <MetricInfoIcon term="CURRENCY_STRENGTH" position="bottom" />
           </div>
           <div className="flex items-center gap-1 mt-0.5 text-[9.5px] font-mono text-[var(--text-muted)]">
-            <span>FEED:</span>
+            <span>{t('SUMBER:', 'FEED:')}</span>
             <a
               href="https://currency-strength.com/en/"
               target="_blank"
@@ -105,7 +123,7 @@ export const CurrencyStrengthWidget: React.FC<CurrencyStrengthWidgetProps> = Rea
         <button
           onClick={onRefresh}
           disabled={isRefreshing}
-          title="Refresh currency strength scores"
+          title={t('Perbarui skor kekuatan valuta', 'Refresh currency strength scores')}
           className="h-6 w-6 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] hover:bg-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] flex items-center justify-center transition cursor-pointer"
         >
           <RefreshCw className={`w-3 h-3 ${isRefreshing ? 'animate-spin text-[var(--accent)]' : ''}`} />
@@ -118,43 +136,43 @@ export const CurrencyStrengthWidget: React.FC<CurrencyStrengthWidgetProps> = Rea
           onClick={() => setSubTab('CHART')}
           className={`py-1 rounded font-semibold transition cursor-pointer flex items-center justify-center gap-1 ${
             subTab === 'CHART'
-              ? 'bg-[var(--active-bg)] text-[var(--active-text)] border border-[var(--active-border)] shadow-xs'
+              ? 'bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-sm'
               : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
           }`}
         >
           <LineChart className="w-3 h-3" />
-          <span>CHART</span>
+          <span>{t('GRAFIK', 'CHART')}</span>
         </button>
         <button
           onClick={() => setSubTab('LIVE')}
           className={`py-1 rounded font-semibold transition cursor-pointer flex items-center justify-center gap-1 ${
             subTab === 'LIVE'
-              ? 'bg-[var(--active-bg)] text-[var(--active-text)] border border-[var(--active-border)] shadow-xs'
+              ? 'bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-sm'
               : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
           }`}
         >
           <BarChart3 className="w-3 h-3" />
-          <span>METER</span>
+          <span>{t('SKOR LIVE', 'LIVE SCORES')}</span>
         </button>
         <button
           onClick={() => setSubTab('COMPARISON')}
           className={`py-1 rounded font-semibold transition cursor-pointer ${
             subTab === 'COMPARISON'
-              ? 'bg-[var(--active-bg)] text-[var(--active-text)] border border-[var(--active-border)] shadow-xs'
+              ? 'bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-sm'
               : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
           }`}
         >
-          DELTA
+          {t('MULTI-HARI', 'MULTI-DAY')}
         </button>
         <button
           onClick={() => setSubTab('ARCHIVE')}
           className={`py-1 rounded font-semibold transition cursor-pointer ${
             subTab === 'ARCHIVE'
-              ? 'bg-[var(--active-bg)] text-[var(--active-text)] border border-[var(--active-border)] shadow-xs'
+              ? 'bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-sm'
               : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
           }`}
         >
-          ARCHIVE
+          {t('ARSIP', 'ARCHIVE')}
         </button>
       </div>
 
@@ -191,7 +209,7 @@ export const CurrencyStrengthWidget: React.FC<CurrencyStrengthWidgetProps> = Rea
                       {item.currency}
                     </span>
                     <span className={`text-[8.5px] px-1 py-0 rounded border font-semibold ${getDirectionBadgeClass(item.change_direction)}`}>
-                      {item.change_direction.replace('_', ' ')}
+                      {formatDirection(item.change_direction)}
                     </span>
                   </div>
 
@@ -244,32 +262,32 @@ export const CurrencyStrengthWidget: React.FC<CurrencyStrengthWidgetProps> = Rea
                   <span className={`text-[9px] px-1 py-0 rounded border font-semibold ${
                     isStrengthening ? 'badge-bullish' : isWeakening ? 'badge-bearish' : 'badge-neutral'
                   }`}>
-                    {c.trend}
+                    {isStrengthening ? t('MENGUAT', 'STRENGTHENING') : isWeakening ? t('MELEMAH', 'WEAKENING') : t('STABIL', 'STABLE')}
                   </span>
                 </div>
 
                 <div className="grid grid-cols-4 gap-1 text-[10px] tabular-nums p-1 rounded border border-[var(--border-subtle)] bg-[var(--bg-surface)]">
                   <div>
-                    <span className="text-[9px] text-[var(--text-muted)] block">TODAY</span>
+                    <span className="text-[9px] text-[var(--text-muted)] block">{t('HARI INI', 'TODAY')}</span>
                     <span className="font-bold text-[var(--text-primary)]">{c.today_score.toFixed(1)}</span>
                   </div>
                   <div>
-                    <span className="text-[9px] text-[var(--text-muted)] block">Y-DAY</span>
+                    <span className="text-[9px] text-[var(--text-muted)] block">{t('KEMARIN', 'Y-DAY')}</span>
                     <span>{c.yesterday_score.toFixed(1)}</span>
                   </div>
                   <div>
-                    <span className="text-[9px] text-[var(--text-muted)] block">3-DAY</span>
+                    <span className="text-[9px] text-[var(--text-muted)] block">{t('3 HARI', '3-DAY')}</span>
                     <span>{c.three_day_score.toFixed(1)}</span>
                   </div>
                   <div>
-                    <span className="text-[9px] text-[var(--text-muted)] block">7-DAY</span>
+                    <span className="text-[9px] text-[var(--text-muted)] block">{t('7 HARI', '7-DAY')}</span>
                     <span>{c.seven_day_score.toFixed(1)}</span>
                   </div>
                 </div>
 
                 <div className="flex items-center justify-between text-[10px] text-[var(--text-secondary)]">
-                  <span>Δ Y-Day: <strong className={c.delta_yesterday >= 0 ? 'text-[var(--bullish)]' : 'text-[var(--bearish)]'}>{c.delta_yesterday >= 0 ? '+' : ''}{c.delta_yesterday.toFixed(2)}</strong></span>
-                  <span>Δ 7D: <strong className={c.delta_7d >= 0 ? 'text-[var(--bullish)]' : 'text-[var(--bearish)]'}>{c.delta_7d >= 0 ? '+' : ''}{c.delta_7d.toFixed(2)}</strong></span>
+                  <span>Δ {t('Kemarin', 'Y-Day')}: <strong className={c.delta_yesterday >= 0 ? 'text-[var(--bullish)]' : 'text-[var(--bearish)]'}>{c.delta_yesterday >= 0 ? '+' : ''}{c.delta_yesterday.toFixed(2)}</strong></span>
+                  <span>Δ {t('7 Hari', '7D')}: <strong className={c.delta_7d >= 0 ? 'text-[var(--bullish)]' : 'text-[var(--bearish)]'}>{c.delta_7d >= 0 ? '+' : ''}{c.delta_7d.toFixed(2)}</strong></span>
                 </div>
               </div>
             );
@@ -283,7 +301,7 @@ export const CurrencyStrengthWidget: React.FC<CurrencyStrengthWidgetProps> = Rea
           <div className="p-2 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] flex items-center justify-between gap-2">
             <span className="text-[10px] text-[var(--text-muted)] flex items-center gap-1 font-semibold">
               <Calendar className="w-3 h-3 text-[var(--accent)]" />
-              <span>DATE:</span>
+              <span>{t('TANGGAL:', 'DATE:')}</span>
             </span>
             <input
               type="date"
@@ -295,7 +313,7 @@ export const CurrencyStrengthWidget: React.FC<CurrencyStrengthWidgetProps> = Rea
 
           {isLoadingArchive ? (
             <div className="p-4 text-center text-[var(--text-muted)] text-xs">
-              Loading archive...
+              {t('Memuat arsip...', 'Loading archive...')}
             </div>
           ) : (
             <div className="space-y-1">
@@ -322,13 +340,16 @@ export const CurrencyStrengthWidget: React.FC<CurrencyStrengthWidgetProps> = Rea
       {strengths.length >= 2 && subTab === 'LIVE' && (
         <div className="pt-2 border-t text-[10px] font-mono text-[var(--text-muted)]" style={{ borderColor: 'var(--border-hairline)' }}>
           <div className="flex items-center justify-between text-[var(--text-primary)] font-bold mb-0.5">
-            <span>DIVERGENCE LEAD:</span>
+            <span>{t('PEMIMPIN DIVERGENSI:', 'DIVERGENCE LEAD:')}</span>
             <span className="text-[var(--accent)]">
               {strengths[0]?.currency} vs {strengths[strengths.length - 1]?.currency}
             </span>
           </div>
           <p className="leading-tight text-[var(--text-secondary)] font-sans">
-            Score disparity of {(strengths[0]?.strength_score - strengths[strengths.length - 1]?.strength_score).toFixed(1)} points signals cleanest trending momentum.
+            {t(
+              `Disparitas skor sebesar ${(strengths[0]?.strength_score - strengths[strengths.length - 1]?.strength_score).toFixed(1)} poin menandakan momentum tren paling bersih.`,
+              `Score disparity of ${(strengths[0]?.strength_score - strengths[strengths.length - 1]?.strength_score).toFixed(1)} points signals cleanest trending momentum.`
+            )}
           </p>
         </div>
       )}

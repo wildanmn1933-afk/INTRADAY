@@ -19,6 +19,7 @@ import { AIAnalysis, MarketPrice, CurrencyStrength } from '../types';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Separator } from './ui/separator';
+import { useLanguage } from '../lib/LanguageContext';
 
 interface EventDetailModalProps {
   eventId: string;
@@ -26,6 +27,7 @@ interface EventDetailModalProps {
 }
 
 export const EventDetailModal: React.FC<EventDetailModalProps> = ({ eventId, onClose }) => {
+  const { t } = useLanguage();
   const [data, setData] = useState<{
     event: any;
     sources: any[];
@@ -47,7 +49,7 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({ eventId, onC
       const res = await api.getEventDetail(eventId);
       setData(res);
     } catch (err: any) {
-      setError(err.message || 'Failed to load event details');
+      setError(err.message || t('Gagal memuat detail peristiwa', 'Failed to load event details'));
     } finally {
       setLoading(false);
     }
@@ -67,10 +69,10 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({ eventId, onC
           ...data,
           ai_analysis: res.analysis,
         });
-        setNotice({ type: 'success', message: 'Event causal chain and market impact re-analyzed.' });
+        setNotice({ type: 'success', message: t('Rantai kausalitas dan dampak pasar peristiwa berhasil disintesis ulang.', 'Event causal chain and market impact re-analyzed.') });
       }
     } catch (err: any) {
-      setNotice({ type: 'error', message: err.message || 'AI re-analysis failed' });
+      setNotice({ type: 'error', message: err.message || t('Sintesis AI gagal', 'AI re-analysis failed') });
     } finally {
       setReanalyzing(false);
     }
@@ -81,7 +83,7 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({ eventId, onC
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 font-sans" style={{ backgroundColor: 'rgba(0, 0, 0, 0.75)' }}>
         <div className="terminal-panel p-6 max-w-md w-full flex items-center gap-3">
           <RefreshCw className="w-5 h-5 text-[var(--accent)] animate-spin" />
-          <span className="text-xs font-mono text-[var(--text-secondary)]">Resolving multi-source event intelligence...</span>
+          <span className="text-xs font-mono text-[var(--text-secondary)]">{t('Menyusun intelijen peristiwa multi-sumber...', 'Resolving multi-source event intelligence...')}</span>
         </div>
       </div>
     );
@@ -92,13 +94,13 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({ eventId, onC
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 font-sans" style={{ backgroundColor: 'rgba(0, 0, 0, 0.75)' }}>
         <div className="terminal-panel p-6 max-w-md w-full text-center">
           <AlertCircle className="w-8 h-8 text-[var(--bearish)] mx-auto mb-2" />
-          <h3 className="text-sm font-bold text-[var(--text-primary)] mb-1">Event Load Error</h3>
-          <p className="text-xs text-[var(--text-secondary)] mb-4">{error || 'Event could not be retrieved.'}</p>
+          <h3 className="text-sm font-bold text-[var(--text-primary)] mb-1">{t('Gagal Memuat Berkas Peristiwa', 'Event Load Error')}</h3>
+          <p className="text-xs text-[var(--text-secondary)] mb-4">{error || t('Peristiwa tidak dapat ditemukan.', 'Event could not be retrieved.')}</p>
           <button
             onClick={onClose}
             className="px-4 py-1.5 rounded bg-[var(--accent)] text-white hover:opacity-90 text-xs font-mono font-bold cursor-pointer shadow-xs"
           >
-            CLOSE
+            {t('TUTUP', 'CLOSE')}
           </button>
         </div>
       </div>
@@ -117,10 +119,10 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({ eventId, onC
         <div className="flex items-center justify-between px-5 py-3.5 border-b bg-[var(--bg-surface)]" style={{ borderColor: 'var(--border-subtle)' }}>
           <div className="flex items-center gap-2.5">
             <span className="badge-neutral text-xs font-mono font-bold">
-              EVENT #{event.id}
+              {t('PERISTIWA', 'EVENT')} #{event.id}
             </span>
             <span className="metadata-label text-[10px] text-[var(--text-muted)] hidden sm:inline">
-              INSTITUTIONAL DOSSIER CONSOLIDATION
+              {t('KONSOLIDASI BERKAS INSTITUSIONAL', 'INSTITUTIONAL DOSSIER CONSOLIDATION')}
             </span>
           </div>
 
@@ -128,11 +130,11 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({ eventId, onC
             <button
               onClick={handleReanalyze}
               disabled={reanalyzing}
-              title="Generate fresh AI market intelligence"
+              title={t('Sintesis ulang intelijen pasar AI', 'Generate fresh AI market intelligence')}
               className="flex items-center gap-1.5 h-7 px-2.5 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] hover:border-[var(--border-strong)] text-[var(--text-primary)] text-xs font-mono cursor-pointer"
             >
               <Sparkles className={`w-3.5 h-3.5 text-[var(--accent)] ${reanalyzing ? 'animate-spin' : ''}`} />
-              <span>{reanalyzing ? 'SYNTHESIZING...' : 'AI RE-ANALYZE'}</span>
+              <span>{reanalyzing ? t('MENYINTESIS...', 'SYNTHESIZING...') : t('SINTESIS ULANG AI', 'AI RE-ANALYZE')}</span>
             </button>
 
             <button
@@ -173,13 +175,13 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({ eventId, onC
                 event.impact_level === 'HIGH' ? 'badge-warning' :
                 'badge-neutral'
               }`}>
-                {event.impact_level} IMPACT
+                {event.impact_level} {t('DAMPAK', 'IMPACT')}
               </span>
               <span className="metadata-label text-[10px] text-[var(--text-muted)]">
-                CATEGORY: {event.primary_category}
+                {t('KATEGORI:', 'CATEGORY:')} {event.primary_category}
               </span>
               <span className="text-xs font-mono text-[var(--text-muted)] ml-auto">
-                First detected: {new Date(event.first_detected_at).toLocaleString()}
+                {t('Pertama terdeteksi:', 'First detected:')} {new Date(event.first_detected_at).toLocaleString()}
               </span>
             </div>
 
@@ -199,20 +201,23 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({ eventId, onC
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-[var(--accent)]" />
                     <h3 className="section-title text-xs text-[var(--text-primary)]">
-                      PAIR CORRELATIONS & TRANSMISSION BIAS
+                      {t('KORELASI PAIR & BIAS TRANSMISI', 'PAIR CORRELATIONS & TRANSMISSION BIAS')}
                     </h3>
                   </div>
                   <p className="text-[11px] font-mono text-[var(--text-muted)] mt-0.5">
-                    Macro transmission correlation to affected market instruments and expected directional bias.
+                    {t(
+                      'Korelasi transmisi makro terhadap instrumen pasar terdampak dan arah bias yang diharapkan.',
+                      'Macro transmission correlation to affected market instruments and expected directional bias.'
+                    )}
                   </p>
                 </div>
 
                 <div className="flex items-center gap-2 text-[10px] font-mono shrink-0">
                   <span className="badge-bullish">
-                    ▲ BULLISH
+                    ▲ {t('BULLISH', 'BULLISH')}
                   </span>
                   <span className="badge-bearish">
-                    ▼ BEARISH
+                    ▼ {t('BEARISH', 'BEARISH')}
                   </span>
                 </div>
               </div>
@@ -222,7 +227,11 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({ eventId, onC
                 <div className="p-2.5 rounded border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-xs font-mono text-[var(--text-primary)] flex items-center gap-2">
                   <Flame className="w-4 h-4 text-[var(--accent)] shrink-0" />
                   <span>
-                    <strong className="text-[var(--accent)]">High Severity Catalyst:</strong> Significant macro order flow sensitivity detected. Directional transmission models are actively tracked.
+                    <strong className="text-[var(--accent)]">{t('Katalis Berdampak Tinggi:', 'High Severity Catalyst:')}</strong>{' '}
+                    {t(
+                      'Sensitivitas order flow makro terdeteksi signifikan. Model transmisi arah terus dipantau.',
+                      'Significant macro order flow sensitivity detected. Directional transmission models are actively tracked.'
+                    )}
                   </span>
                 </div>
               )}
@@ -264,15 +273,15 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({ eventId, onC
                             {isBull ? (
                               <>
                                 <TrendingUp className="w-3 h-3" />
-                                <span>BULLISH</span>
+                                <span>{t('BULLISH', 'BULLISH')}</span>
                               </>
                             ) : isBear ? (
                               <>
                                 <TrendingDown className="w-3 h-3" />
-                                <span>BEARISH</span>
+                                <span>{t('BEARISH', 'BEARISH')}</span>
                               </>
                             ) : (
-                              <span>NEUTRAL</span>
+                              <span>{t('NETRAL', 'NEUTRAL')}</span>
                             )}
                           </span>
                         </div>
@@ -281,7 +290,7 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({ eventId, onC
                       {/* Transmission Mechanism */}
                       {pi.mechanism && (
                         <div className="text-[10px] font-mono text-[var(--accent)] font-semibold flex items-center gap-1">
-                          <span className="text-[var(--text-muted)]">MECHANISM:</span>
+                          <span className="text-[var(--text-muted)]">{t('MEKANISME:', 'MECHANISM:')}</span>
                           <span>{pi.mechanism}</span>
                         </div>
                       )}
@@ -294,7 +303,7 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({ eventId, onC
                       {/* Live Market Quote Snapshot */}
                       {liveMarket && (
                         <div className="flex items-center justify-between pt-2 border-t font-mono text-[11px]" style={{ borderColor: 'var(--border-hairline)' }}>
-                          <span className="text-[var(--text-muted)] text-[10px]">MARKET PRICE:</span>
+                          <span className="text-[var(--text-muted)] text-[10px]">{t('HARGA PASAR:', 'MARKET PRICE:')}</span>
                           <div className="flex items-center gap-2">
                             <span className="font-bold text-[var(--text-primary)] tabular-nums">
                               {liveMarket.price.toLocaleString(undefined, {

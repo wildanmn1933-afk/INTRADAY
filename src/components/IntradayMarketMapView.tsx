@@ -28,6 +28,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { getCurrencyFlagUrl } from '../lib/assets';
 import { EmptyState } from './shared/EmptyState';
 import { Autocomplete, AutocompleteItem } from './ui/autocomplete';
+import { useLanguage } from '../lib/LanguageContext';
 
 interface IntradayMarketMapViewProps {
   data: IntradayAssetBias[];
@@ -46,6 +47,7 @@ export const IntradayMarketMapView: React.FC<IntradayMarketMapViewProps> = ({
   onOpenChart,
   onSelectSymbol,
 }) => {
+  const { t } = useLanguage();
   const [selectedCategory, setSelectedCategory] = useState<'ALL' | 'COMMODITY' | 'CRYPTO' | 'INDEX' | 'BOND' | 'FOREX'>('ALL');
   const [selectedBias, setSelectedBias] = useState<'ALL' | 'BULLISH' | 'BEARISH' | 'NEUTRAL' | 'MIXED'>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
@@ -199,20 +201,20 @@ export const IntradayMarketMapView: React.FC<IntradayMarketMapViewProps> = ({
         <div className="space-y-1.5 max-w-3xl">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="metadata-label text-[10px] text-[var(--accent)] font-mono">
-              REAL-TIME MAP
+              {t('PETA REAL-TIME', 'REAL-TIME MAP')}
             </span>
             <span className="text-[var(--border-subtle)]">·</span>
             <span className="text-[10px] font-mono text-[var(--text-secondary)] font-semibold">
-              13 CORE ASSETS SYNCHRONIZED
+              {t('13 ASET UTAMA TERSINKRONISASI', '13 CORE ASSETS SYNCHRONIZED')}
             </span>
           </div>
 
           <h1 className="headline-h2 text-[var(--text-primary)]">
-            INTRADAY MARKET MAP
+            {t('PETA PASAR INTRADAY', 'INTRADAY MARKET MAP')}
           </h1>
 
           <p className="text-xs sm:text-[13px] text-[var(--text-secondary)] font-sans leading-relaxed">
-            Multi-factor synthesis connecting <strong>Macro Data + Central Bank Guidance + Currency Disparity + Benchmark Yields</strong> into actionable intraday bias.
+            {t('Sintesis multi-faktor memadukan Data Makro + Panduan Bank Sentral + Disparitas Valuta + Yield Acuan menjadi bias intraday yang dapat dieksekusi.', 'Multi-factor synthesis connecting Macro Data + Central Bank Guidance + Currency Disparity + Benchmark Yields into actionable intraday bias.')}
           </p>
         </div>
 
@@ -231,9 +233,10 @@ export const IntradayMarketMapView: React.FC<IntradayMarketMapViewProps> = ({
             onClick={onRefresh}
             disabled={isRefreshing}
             className="h-7 px-3 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] hover:bg-[var(--border-subtle)] text-[var(--text-primary)] text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer disabled:opacity-50"
+            title={t('Sinkronisasi peta pasar intraday', 'Synchronize intraday market map')}
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
-            <span>SYNC</span>
+            <span>{t('Sinkronkan', 'SYNC')}</span>
           </button>
         </div>
       </section>
@@ -242,7 +245,7 @@ export const IntradayMarketMapView: React.FC<IntradayMarketMapViewProps> = ({
       <div className="terminal-panel p-3 flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
         {/* Category Filters */}
         <div className="flex flex-wrap items-center gap-1">
-          <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider mr-1">CLASS:</span>
+          <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider mr-1">{t('KELAS:', 'CLASS:')}</span>
           {(['ALL', 'COMMODITY', 'CRYPTO', 'INDEX', 'BOND', 'FOREX'] as const).map(cat => (
             <button
               key={cat}
@@ -253,7 +256,17 @@ export const IntradayMarketMapView: React.FC<IntradayMarketMapViewProps> = ({
                   : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-transparent'
               }`}
             >
-              {cat}
+              {cat === 'ALL'
+                ? t('SEMUA', 'ALL')
+                : cat === 'COMMODITY'
+                ? t('KOMODITAS', 'COMMODITY')
+                : cat === 'CRYPTO'
+                ? t('KRIPTO', 'CRYPTO')
+                : cat === 'INDEX'
+                ? t('INDEKS', 'INDEX')
+                : cat === 'BOND'
+                ? t('OBLIGASI', 'BOND')
+                : t('FOREX', 'FOREX')}
             </button>
           ))}
         </div>
@@ -271,7 +284,7 @@ export const IntradayMarketMapView: React.FC<IntradayMarketMapViewProps> = ({
                   : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
               }`}
             >
-              {b}
+              {b === 'ALL' ? t('SEMUA', 'ALL') : b}
             </button>
           ))}
         </div>
@@ -282,7 +295,7 @@ export const IntradayMarketMapView: React.FC<IntradayMarketMapViewProps> = ({
             <Autocomplete
               value={searchQuery}
               onChange={setSearchQuery}
-              placeholder="Search asset, catalyst..."
+              placeholder={t('Cari aset, katalis...', 'Search asset, catalyst...')}
               items={marketMapSuggestions}
               recentStorageKey="intraday_map_search"
               className="w-full"
@@ -299,7 +312,7 @@ export const IntradayMarketMapView: React.FC<IntradayMarketMapViewProps> = ({
                   : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
               }`}
             >
-              CARDS
+              {t('KARTU', 'CARDS')}
             </button>
             <button
               onClick={() => setViewMode('TABLE')}
@@ -309,7 +322,7 @@ export const IntradayMarketMapView: React.FC<IntradayMarketMapViewProps> = ({
                   : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
               }`}
             >
-              TABLE
+              {t('TABEL', 'TABLE')}
             </button>
           </div>
         </div>
@@ -390,7 +403,7 @@ export const IntradayMarketMapView: React.FC<IntradayMarketMapViewProps> = ({
                       <span>{asset.overall_bias}</span>
                     </div>
                     <span className="text-[11px] tabular-nums">
-                      {asset.confidence}% CONVICTION
+                      {asset.confidence}% {t('KEYAKINAN', 'CONVICTION')}
                     </span>
                   </div>
 
@@ -398,7 +411,7 @@ export const IntradayMarketMapView: React.FC<IntradayMarketMapViewProps> = ({
                   <div className="grid grid-cols-2 gap-2 text-xs font-mono">
                     <div className="p-2 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)]">
                       <span className="text-[9px] text-[var(--text-muted)] block uppercase tracking-wider">
-                        FUNDAMENTAL
+                        {t('FUNDAMENTAL', 'FUNDAMENTAL')}
                       </span>
                       <span className={`font-bold mt-0.5 block ${
                         asset.fundamental_bias === 'BULLISH' ? 'text-[var(--bullish)]' : asset.fundamental_bias === 'BEARISH' ? 'text-[var(--bearish)]' : 'text-[var(--text-muted)]'
@@ -422,7 +435,7 @@ export const IntradayMarketMapView: React.FC<IntradayMarketMapViewProps> = ({
                   {/* Today's Key Catalyst */}
                   <div className="mt-2 p-2 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] text-[11px] font-sans">
                     <strong className="text-[10px] font-mono text-[var(--text-primary)] block uppercase tracking-wider mb-0.5">
-                      CATALYST:
+                      {t('KATALIS:', 'CATALYST:')}
                     </strong>
                     <p className="text-[var(--text-secondary)] leading-snug line-clamp-2">
                       {asset.today_key_catalyst}
@@ -437,14 +450,14 @@ export const IntradayMarketMapView: React.FC<IntradayMarketMapViewProps> = ({
                     className="flex-1 h-7 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] hover:bg-[var(--border-subtle)] text-[var(--text-primary)] text-[10.5px] font-semibold flex items-center justify-center gap-1 transition cursor-pointer"
                   >
                     <LineChart className="w-3 h-3 text-[var(--accent)]" />
-                    <span>CHART</span>
+                    <span>{t('CHART', 'CHART')}</span>
                   </button>
 
                   <button
                     onClick={() => setExpandedSymbol(isExpanded ? null : asset.symbol)}
                     className="h-7 px-2 rounded border border-[var(--border-subtle)] bg-[var(--bg-section-alt)] hover:bg-[var(--border-subtle)] text-[var(--text-secondary)] text-[10.5px] flex items-center gap-1 transition cursor-pointer"
                   >
-                    <span>{isExpanded ? 'LESS' : 'DRIVERS'}</span>
+                    <span>{isExpanded ? t('RINGKAS', 'LESS') : t('DETAIL', 'DRIVERS')}</span>
                     {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
                   </button>
                 </div>
@@ -453,7 +466,7 @@ export const IntradayMarketMapView: React.FC<IntradayMarketMapViewProps> = ({
                 {isExpanded && (
                   <div className="pt-2 border-t space-y-2 text-xs font-mono" style={{ borderColor: 'var(--border-hairline)' }}>
                     <div className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider">
-                      PRIMARY DRIVERS:
+                      {t('PENDORONG UTAMA:', 'PRIMARY DRIVERS:')}
                     </div>
                     <ul className="space-y-1 text-[11px] text-[var(--text-secondary)] font-sans list-disc pl-4">
                       {asset.top_drivers.map((d, i) => (
@@ -463,7 +476,7 @@ export const IntradayMarketMapView: React.FC<IntradayMarketMapViewProps> = ({
 
                     {asset.conditions_to_change_bias && (
                       <div className="p-2 rounded border border-[var(--warning-border)] bg-[var(--warning-bg)] text-[10.5px] text-[var(--warning)] font-sans">
-                        <strong>INVALIDATION:</strong> {asset.conditions_to_change_bias}
+                        <strong>{t('BATAS BATAL (INVALIDASI):', 'INVALIDATION:')}</strong> {asset.conditions_to_change_bias}
                       </div>
                     )}
                   </div>
@@ -478,14 +491,14 @@ export const IntradayMarketMapView: React.FC<IntradayMarketMapViewProps> = ({
           <table className="w-full text-left text-xs font-mono divide-y" style={{ borderColor: 'var(--border-hairline)' }}>
             <thead>
               <tr className="table-header">
-                <th className="py-2.5 px-3">ASSET</th>
-                <th className="py-2.5 px-3">TYPE</th>
-                <th className="py-2.5 px-3 text-right">PRICE</th>
-                <th className="py-2.5 px-3 text-right">24H</th>
-                <th className="py-2.5 px-3">OVERALL BIAS</th>
-                <th className="py-2.5 px-3 text-right">CONFIDENCE</th>
-                <th className="py-2.5 px-3">TODAY'S CATALYST</th>
-                <th className="py-2.5 px-3 text-right">ACTION</th>
+                <th className="py-2.5 px-3">{t('ASET', 'ASSET')}</th>
+                <th className="py-2.5 px-3">{t('TIPE', 'TYPE')}</th>
+                <th className="py-2.5 px-3 text-right">{t('HARGA', 'PRICE')}</th>
+                <th className="py-2.5 px-3 text-right">{t('24J', '24H')}</th>
+                <th className="py-2.5 px-3">{t('BIAS KESELURUHAN', 'OVERALL BIAS')}</th>
+                <th className="py-2.5 px-3 text-right">{t('KEYAKINAN', 'CONFIDENCE')}</th>
+                <th className="py-2.5 px-3">{t('KATALIS HARI INI', "TODAY'S CATALYST")}</th>
+                <th className="py-2.5 px-3 text-right">{t('AKSI', 'ACTION')}</th>
               </tr>
             </thead>
             <tbody className="divide-y" style={{ borderColor: 'var(--border-hairline)' }}>

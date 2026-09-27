@@ -93,51 +93,6 @@ export class ArahMarketEngine {
     // Captured once so the basket average below can be compared against it.
     const usdScoreBaseline = strengthMap.get('USD')?.strength_score ?? 5.0;
 
-    const intermarketSpreads: IntermarketSpreadItem[] = [
-      {
-        id: 'spread-us-de',
-        name: 'Transatlantic Rate Differential',
-        formulaLabel: 'US10Y - Bund 10Y',
-        currentValue: usDeSpread,
-        unit: '%',
-        changeSessionBps: us10yChangeBps,
-        trend: us10yChange > 0 ? 'WIDENING' : us10yChange < 0 ? 'NARROWING' : 'STABLE',
-        targetPair: 'EURUSD',
-        interpretation:
-          usDeSpread > 1.7
-            ? 'Spread widening in favour of the US dollar (EUR/USD gravity likely to stall or stay pressured).'
-            : 'Spread narrowing (opens room for euro strength).',
-      },
-      {
-        id: 'spread-us-jp',
-        name: 'Carry Trade Yield Engine',
-        formulaLabel: 'US10Y - JGB 10Y',
-        currentValue: usJpSpread,
-        unit: '%',
-        changeSessionBps: us10yChangeBps,
-        trend: us10yChange > 0 ? 'WIDENING' : us10yChange < 0 ? 'NARROWING' : 'STABLE',
-        targetPair: 'USDJPY',
-        interpretation:
-          usJpSpread > 3.0
-            ? 'US-Japan rate differential is very wide (the main fuel for USD/JPY upside and long-USD carry trades).'
-            : 'Rate differential is flattening (watch for a yen reversal or carry unwinding).',
-      },
-      {
-        id: 'spread-real-yield',
-        name: 'US 10Y Real Yield (nominal less assumed breakeven)',
-        formulaLabel: 'Nominal 10Y - Est. 2.25% Breakeven',
-        currentValue: realYield10y,
-        unit: '%',
-        changeSessionBps: us10yChangeBps,
-        trend: us10yChange > 0 ? 'WIDENING' : us10yChange < 0 ? 'NARROWING' : 'STABLE',
-        targetPair: 'XAUUSD',
-        interpretation:
-          realYield10y > 1.9
-            ? 'High real yields raise the opportunity cost of gold (XAU/USD prone to resistance on rallies).'
-            : 'Real yields easing below 1.8% (a positive catalyst for safe-haven gold rallies).',
-      },
-    ];
-
     // Barometer Intermarket US100 vs US30 (Tech vs Cyclical Rotation)
     const us100PriceObj = priceMap.get('US100');
     const us30PriceObj = priceMap.get('US30');
@@ -208,6 +163,65 @@ export class ArahMarketEngine {
       },
     };
 
+    const intermarketSpreads: IntermarketSpreadItem[] = [
+      {
+        id: 'spread-us-de',
+        name: 'Transatlantic Rate Differential',
+        formulaLabel: 'US10Y - Bund 10Y',
+        currentValue: usDeSpread,
+        unit: '%',
+        changeSessionBps: us10yChangeBps,
+        trend: us10yChange > 0 ? 'WIDENING' : us10yChange < 0 ? 'NARROWING' : 'STABLE',
+        targetPair: 'EURUSD',
+        interpretation:
+          usDeSpread > 1.7
+            ? 'Spread melebar mendukung penguatan USD (EUR/USD cenderung tertahan).'
+            : 'Spread menyempit membuka peluang pemulihan Euro.',
+      },
+      {
+        id: 'spread-us-jp',
+        name: 'Carry Trade Yield Engine',
+        formulaLabel: 'US10Y - JGB 10Y',
+        currentValue: usJpSpread,
+        unit: '%',
+        changeSessionBps: us10yChangeBps,
+        trend: us10yChange > 0 ? 'WIDENING' : us10yChange < 0 ? 'NARROWING' : 'STABLE',
+        targetPair: 'USDJPY',
+        interpretation:
+          usJpSpread > 3.0
+            ? 'Diferensial suku bunga lebar menjadi bahan bakar utama carry trade USD/JPY.'
+            : 'Diferensial menyempit memicu unwinding posisi carry Yen.',
+      },
+      {
+        id: 'spread-real-yield',
+        name: 'US 10Y Real Yield Benchmark',
+        formulaLabel: 'Nominal 10Y - Est. 2.25%',
+        currentValue: realYield10y,
+        unit: '%',
+        changeSessionBps: us10yChangeBps,
+        trend: us10yChange > 0 ? 'WIDENING' : us10yChange < 0 ? 'NARROWING' : 'STABLE',
+        targetPair: 'XAUUSD',
+        interpretation:
+          realYield10y > 1.9
+            ? 'Yield riil tinggi menaikkan opportunity cost emas (rentan tertahan).'
+            : 'Yield riil melunak mendukung reli aset safe-haven emas.',
+      },
+      {
+        id: 'spread-tech-rotation',
+        name: 'Wall Street Growth vs Value Ratio',
+        formulaLabel: 'Rasio US100 / US30',
+        currentValue: ratioUs100ToUs30,
+        unit: 'x',
+        changeSessionBps: Math.round((us100Change - us30Change) * 100),
+        trend: ratioTrend === 'OUTPERFORMING' ? 'WIDENING' : ratioTrend === 'UNDERPERFORMING' ? 'NARROWING' : 'STABLE',
+        targetPair: 'US100',
+        interpretation:
+          ratioTrend === 'OUTPERFORMING'
+            ? 'Sektor teknologi & AI memimpin reli penguatan indeks saham Wall Street.'
+            : 'Rotasi defensif mengalir ke saham industri dan perbankan Dow Jones.',
+      },
+    ];
+
     // 3. Klasifikasi Rezim Pasar Global dari Central Context (Single Source of Truth)
     const regimeTitle = centralContext.globalRegime.title;
     const regimeBadgeColor = centralContext.globalRegime.badgeColor;
@@ -217,39 +231,49 @@ export class ArahMarketEngine {
     // Ambil berita terbaru yang berdampak
     const topCatalyst = events.find(e => e.impact_level === 'CRITICAL' || e.impact_level === 'HIGH');
 
-    // 4. Deteksi Peringatan Anomali & Divergensi dari Central Context (NO FORCED HARMONY)
-    const anomalyAlerts: ArahMarketTodayData['anomalyAlerts'] = centralContext.divergences.map(d => ({
-      id: d.id,
-      severity: d.severity === 'CRITICAL' || d.severity === 'WARNING' ? 'WARNING' : 'OPPORTUNITY',
-      title: d.title,
-      description: `${d.observedCondition} Sebab struktural: ${d.structuralCause}`,
-      affectedPairs: d.instruments,
-      actionAdvice: `${d.actionableContext} Implikasi: ${d.marketImplication}`,
-    }));
+    // 4. Deteksi Peringatan Anomali & Divergensi dari Central Context (DEDUPED)
+    const anomalyAlerts: ArahMarketTodayData['anomalyAlerts'] = [];
+    const seenAnomalies = new Set<string>();
 
-    // Tambahan deteksi anomali lokal jika belum ada di list
-    if (!anomalyAlerts.some(a => a.id === 'anomaly-gold-dxy') && dxyChange < -0.15 && goldChange < -0.1) {
+    for (const d of centralContext.divergences) {
+      const primaryKey = d.instruments[0] || d.id;
+      if (!seenAnomalies.has(primaryKey)) {
+        seenAnomalies.add(primaryKey);
+        anomalyAlerts.push({
+          id: d.id,
+          severity: d.severity === 'CRITICAL' || d.severity === 'WARNING' ? 'WARNING' : 'OPPORTUNITY',
+          title: d.title,
+          description: `${d.observedCondition} Sebab struktural: ${d.structuralCause}`,
+          affectedPairs: d.instruments,
+          actionAdvice: `${d.actionableContext} Implikasi: ${d.marketImplication}`,
+        });
+      }
+    }
+
+    // Tambahan deteksi anomali lokal HANYA jika belum ada anomali untuk pair terkait
+    if (!seenAnomalies.has('XAUUSD') && dxyChange < -0.15 && goldChange < -0.1) {
+      seenAnomalies.add('XAUUSD');
       anomalyAlerts.push({
         id: 'anomaly-gold-dxy',
         severity: 'WARNING',
-        title: 'XAU/USD anomaly: gold fails to rise as the dollar softens',
+        title: 'Anomali XAU/USD: Emas Gagal Menguat Saat DXY Melunak',
         description:
-          'DXY softened intraday, yet XAU/USD could not capitalise and instead consolidated or fell. That signals internal selling pressure or still-sticky real yields.',
+          'DXY terkoreksi intraday, namun XAU/USD gagal memanfaatkan momentum dan berkonsolidasi. Hal ini mengindikasikan tekanan jual internal atau yield riil yang masih tinggi.',
         affectedPairs: ['XAUUSD', 'EURUSD'],
-        actionAdvice: 'Watch for a bull trap in gold. Do not rush to buy before price clears the session\'s key resistance.',
+        actionAdvice: 'Waspadai bull trap pada emas. Jangan terburu-buru beli sebelum menembus resistensi utama sesi.',
       });
     }
 
-    // Deteksi Anomali 2: USD/JPY vs Spread Imbal Hasil
-    if (usJpSpread > 3.2 && (priceMap.get('JPY')?.change_24h_pct || 0) < -0.3) {
+    if (!seenAnomalies.has('USDJPY') && usJpSpread > 3.2 && (priceMap.get('JPY')?.change_24h_pct || 0) < -0.3) {
+      seenAnomalies.add('USDJPY');
       anomalyAlerts.push({
         id: 'anomaly-usdjpy-intervention',
         severity: 'WARNING',
-        title: 'USD/JPY Overextended vs Spread (Zona Sensitif Intervensi)',
+        title: 'USD/JPY Overextended vs Spread (Zona Sensitivitas Intervensi)',
         description:
-          'Even though the yield spread supports upside, the current price sits in the area where Japan\'s Ministry of Finance (MoF/BoJ) has intervened verbally.',
+          'Meskipun spread yield mendukung kenaikan, harga saat ini berada di area yang sensitif terhadap intervensi verbal Kementerian Keuangan Jepang (MoF/BoJ).',
         affectedPairs: ['USDJPY'],
-        actionAdvice: 'Limit long exposure; keep a tight stop loss given the risk of a sudden intervention swing.',
+        actionAdvice: 'Batasi eksposur long; pertahankan stop loss ketat mengingat risiko ayunan intervensi tiba-tiba.',
       });
     }
 
@@ -259,7 +283,7 @@ export class ArahMarketEngine {
       anomalyAlerts.push({
         id: 'anomaly-tech-yield-divergence',
         severity: 'WARNING',
-        title: 'Divergensi Valuasi: Nasdaq Reli Melawan Lonjakan Yields',
+        title: 'Valuation Divergence: Nasdaq Rallies Against Rising Yields',
         description:
           'Technology indices are up sharply even as US10Y yields jump. A yield spike normally compresses P/E multiples.',
         affectedPairs: ['US100', 'US500'],
@@ -391,29 +415,21 @@ export class ArahMarketEngine {
       let invalidation = 'An H1 close outside the reference level';
 
       if (tp.pair === 'XAUUSD') {
-        fundBias = usdVsBasket > 1.0 ? 'BEARISH' : usdVsBasket < -1.0 ? 'BULLISH' : 'NEUTRAL';
-        fundDriver = 'Fed policy rate expectations and geopolitical hedging premium, read from the dollar versus the currency basket';
+        fundBias = usdVsBasket > 0.6 || dxyChange > 0.2 ? 'BEARISH' : usdVsBasket < -0.6 || dxyChange < -0.15 ? 'BULLISH' : (dxyBiasVsOpen === 'BELOW_OPEN' ? 'BULLISH' : dxyBiasVsOpen === 'ABOVE_OPEN' ? 'BEARISH' : 'NEUTRAL');
+        fundDriver = 'Fed policy rate expectations and geopolitical hedging premium against US Dollar liquidity.';
         fundScore = fundBias === 'BULLISH' ? 45 : fundBias === 'BEARISH' ? -40 : 0;
 
-        interBias = realYield10y > 1.9 ? 'BEARISH' : realYield10y < 1.8 ? 'BULLISH' : (dxyBiasVsOpen === 'BELOW_OPEN' ? 'BULLISH' : 'BEARISH');
-        interSymptom = realYield10y > 1.9 ? `High 10Y real yield (${realYield10y}%) adds weight on gold` : `Easing real yield (${realYield10y}%) opens a safe-haven bid`;
+        interBias = realYield10y > 2.05 ? 'BEARISH' : realYield10y < 1.9 ? 'BULLISH' : (us10yChange < 0 ? 'BULLISH' : 'BEARISH');
+        interSymptom = realYield10y > 2.05 ? `High 10Y real yield (${realYield10y}%) adds weight on gold` : `Real yield at ${realYield10y}% provides safe-haven cushion`;
         interScore = interBias === 'BULLISH' ? 40 : -40;
 
-        paBias = chg > 0.2 ? 'BULLISH' : chg < -0.2 ? 'BEARISH' : 'NEUTRAL';
+        paBias = chg > 0.15 ? 'BULLISH' : chg < -0.15 ? 'BEARISH' : 'NEUTRAL';
         paStructure = chg > 0.3 ? 'SESSION_BREAKOUT' : chg < -0.3 ? 'RETEST_RESISTANCE' : 'CHOP_RANGE';
         actionableZone = chg > 0 ? 'Pullback to the nearest session demand' : 'Test of the lower session support area';
-        paScore = chg > 0.2 ? 35 : chg < -0.2 ? -35 : 0;
+        paScore = chg > 0.15 ? 35 : chg < -0.15 ? -35 : 0;
 
-        if (fundBias === 'BULLISH' && interBias === 'BULLISH') {
-          recommendedAction = 'LOOK_FOR_BUY';
-          invalidation = 'If DXY breaks strongly above the session high';
-        } else if (fundBias === 'BEARISH' && interBias === 'BEARISH') {
-          recommendedAction = 'LOOK_FOR_SELL';
-          invalidation = 'If US10Y yields drop below intraday support';
-        } else {
-          recommendedAction = 'WAIT_ON_SUPPORT';
-          invalidation = 'Awaiting session breakout confirmation';
-        }
+        recommendedAction = (fundBias === 'BULLISH' && paBias === 'BULLISH') ? 'LOOK_FOR_BUY' : (fundBias === 'BEARISH' && paBias === 'BEARISH') ? 'LOOK_FOR_SELL' : 'WAIT_ON_SUPPORT';
+        invalidation = chg >= 0 ? 'If DXY breaks strongly above the session high' : 'If US10Y yields drop below intraday support';
       } else if (tp.pair === 'EURUSD') {
         const eurScore = strengthMap.get('EUR')?.strength_score || 5.0;
         fundBias = eurScore > usdScore + 0.1 ? 'BULLISH' : eurScore < usdScore - 0.1 ? 'BEARISH' : 'NEUTRAL';
@@ -665,15 +681,12 @@ export class ArahMarketEngine {
         recommendedAction = 'WAIT_ON_SUPPORT';
       }
 
-      // Sinkronisasi dengan Central Market Context Single Source of Truth
+      // Harmonize with Central Market Context Divergences & Anomalies
       const canonical = centralContext.canonicalBiases[tp.pair];
-      if (canonical) {
-        directionalBias = canonical.bias;
-        confluenceStatus = canonical.confluenceStatus;
-        convictionScore = canonical.convictionScore;
-        if (canonical.bias.includes('BULLISH')) recommendedAction = 'LOOK_FOR_BUY';
-        else if (canonical.bias.includes('BEARISH')) recommendedAction = 'LOOK_FOR_SELL';
-        else recommendedAction = 'WAIT_ON_SUPPORT';
+      if (canonical?.hasActiveDivergence) {
+        confluenceStatus = 'CAUTION_TRAP';
+        convictionScore = Math.min(convictionScore, 45);
+        recommendedAction = 'CAUTION_NO_TRADE';
       }
 
       const csWarning = hasCsDivergence

@@ -261,7 +261,12 @@ STRICT RULES:
 1. Explain the market context using ONLY the verified data provided above.
 2. NEVER invent prices, reactions, or sources.
 3. If there is insufficient data to judge an asset's direction, state "INSUFFICIENT CURRENT DATA".
-4. Return a valid JSON object matching the exact schema:
+4. PROFESSIONAL TRADING TERMINOLOGY DISCIPLINE:
+   - ALL trading, technical analysis, and Smart Money terminology MUST REMAIN IN STANDARD ENGLISH:
+     Price Action, Market Structure, Order Flow, Liquidity Sweep, Fair Value Gap (FVG), Break of Structure (BOS), Change of Character (CHoCH), Higher High (HH), Lower Low (LL), Support, Resistance, Supply, Demand, Smart Money Concepts (SMC), Entry, Exit, Stop Loss (SL), Take Profit (TP), Risk/Reward, Drawdown, Long, Short, Spread, Hawkish, Dovish, Risk-on, Risk-off.
+   - NEVER use unnatural literal translations (e.g., do NOT write "Aksi Harga", "Uang Pintar", "Penyapuan Likuiditas", "Kesenjangan Nilai Wajar", "Penembusan Struktur").
+   - Proper names (XAUUSD, BTCUSD, DXY, Federal Reserve, CME, Bloomberg) MUST NEVER be altered or translated.
+5. Return a valid JSON object matching the exact schema:
 {
   "summary": "Concise 2-3 sentence strategic macro synthesis.",
   "key_implications": ["Bullet 1", "Bullet 2", "Bullet 3"],

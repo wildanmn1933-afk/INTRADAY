@@ -23,6 +23,7 @@ import {
   ExternalLink,
   ChevronRight,
   FileText,
+  Activity,
 } from 'lucide-react';
 import { SSEConnectionState } from '../lib/useSSE';
 import { NavTabId } from './Sidebar';
@@ -30,6 +31,8 @@ import { Tooltip, MetricTooltip } from './Tooltip';
 import { Button } from './ui/button';
 import { User, MarketPrice, MarketEvent, EconomicEvent } from '../types';
 import { ThemeToggle } from './ThemeToggle';
+import { LanguageToggle } from './LanguageToggle';
+import { useLanguage } from '../lib/LanguageContext';
 
 interface HeaderProps {
   activeTab: NavTabId;
@@ -53,6 +56,8 @@ interface HeaderProps {
   calendar?: EconomicEvent[];
   onSelectSymbol?: (symbol: string) => void;
   onOpenChart?: (symbol: string) => void;
+  showTickerBar?: boolean;
+  onToggleTickerBar?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = React.memo(({
@@ -77,7 +82,10 @@ export const Header: React.FC<HeaderProps> = React.memo(({
   calendar = [],
   onSelectSymbol,
   onOpenChart,
+  showTickerBar = false,
+  onToggleTickerBar,
 }) => {
+  const { t } = useLanguage();
   const [timeState, setTimeState] = useState<{
     wibTime: string;
     utcTime: string;
@@ -157,17 +165,17 @@ export const Header: React.FC<HeaderProps> = React.memo(({
 
   // System Views for Navigation Autocomplete
   const systemViews = useMemo(() => [
-    { id: 'terminal' as NavTabId, label: 'Overview & Wire', desc: 'Canonical wire and real-time news stream', icon: <Layers className="w-3.5 h-3.5" /> },
-    { id: 'daily_report' as NavTabId, label: 'Daily Market Report', desc: 'Executive daily intelligence briefing & tactical playbook', icon: <FileText className="w-3.5 h-3.5" /> },
-    { id: 'arah_market' as NavTabId, label: 'Market Bias & Catalysts', desc: 'High-impact directional bias and drivers', icon: <Flame className="w-3.5 h-3.5" /> },
-    { id: 'markets' as NavTabId, label: 'Intraday Market Surveillance', desc: 'Asset heatmap and intraday session map', icon: <Compass className="w-3.5 h-3.5" /> },
-    { id: 'intermarket' as NavTabId, label: 'Intermarket Matrix', desc: 'Cross-asset flows & macro correlations', icon: <TrendingUp className="w-3.5 h-3.5" /> },
-    { id: 'currency' as NavTabId, label: 'Currency Strength G8', desc: 'G8 currency relative strength ranking', icon: <Zap className="w-3.5 h-3.5" /> },
-    { id: 'macro' as NavTabId, label: 'Macro Economic Calendar', desc: 'Central bank releases, GDP, and CPI data', icon: <Calendar className="w-3.5 h-3.5" /> },
-    { id: 'intelligence' as NavTabId, label: 'AI Market Intelligence', desc: 'Synthesis, macro regime, and scenario modeling', icon: <Sparkles className="w-3.5 h-3.5" /> },
-    { id: 'watchlist' as NavTabId, label: 'Watchlist & Pinned Assets', desc: 'Personalized asset tracking and alerts', icon: <Radio className="w-3.5 h-3.5" /> },
-    { id: 'admin' as NavTabId, label: 'System & Feeds Admin', desc: 'Data sources, deduplication, and feeds', icon: <Globe2 className="w-3.5 h-3.5" /> },
-  ], []);
+    { id: 'terminal' as NavTabId, label: t('Ringkasan & Wire', 'Overview & Wire'), desc: t('Wire kanonikal dan stream berita real-time', 'Canonical wire and real-time news stream'), icon: <Layers className="w-3.5 h-3.5" /> },
+    { id: 'daily_report' as NavTabId, label: t('Laporan Pasar Harian', 'Daily Market Report'), desc: t('Briefing intelijen eksekutif & playbook taktikal', 'Executive daily intelligence briefing & tactical playbook'), icon: <FileText className="w-3.5 h-3.5" /> },
+    { id: 'arah_market' as NavTabId, label: t('Bias Pasar & Katalis', 'Market Bias & Catalysts'), desc: t('Bias arah dan pendorong berdampak tinggi', 'High-impact directional bias and drivers'), icon: <Flame className="w-3.5 h-3.5" /> },
+    { id: 'markets' as NavTabId, label: t('Surveilans Pasar Intraday', 'Intraday Market Surveillance'), desc: t('Heatmap aset dan peta sesi trading intraday', 'Asset heatmap and intraday session map'), icon: <Compass className="w-3.5 h-3.5" /> },
+    { id: 'intermarket' as NavTabId, label: t('Matriks Antar-Pasar', 'Intermarket Matrix'), desc: t('Aliran dana lintas aset & korelasi makro', 'Cross-asset flows & macro correlations'), icon: <TrendingUp className="w-3.5 h-3.5" /> },
+    { id: 'currency' as NavTabId, label: t('Kekuatan Valuta G8', 'Currency Strength G8'), desc: t('Peringkat kekuatan relatif 8 mata uang utama', 'G8 currency relative strength ranking'), icon: <Zap className="w-3.5 h-3.5" /> },
+    { id: 'macro' as NavTabId, label: t('Kalender Ekonomi Makro', 'Macro Economic Calendar'), desc: t('Rilis data bank sentral, PDB, dan inflasi CPI', 'Central bank releases, GDP, and CPI data'), icon: <Calendar className="w-3.5 h-3.5" /> },
+    { id: 'intelligence' as NavTabId, label: t('Intelijen Pasar AI', 'AI Market Intelligence'), desc: t('Sintesis, rezim makro, dan model skenario', 'Synthesis, macro regime, and scenario modeling'), icon: <Sparkles className="w-3.5 h-3.5" /> },
+    { id: 'watchlist' as NavTabId, label: t('Daftar Pantau & Aset Pilihan', 'Watchlist & Pinned Assets'), desc: t('Pelacakan aset personal dan alert harga', 'Personalized asset tracking and alerts'), icon: <Radio className="w-3.5 h-3.5" /> },
+    { id: 'admin' as NavTabId, label: t('Admin Sistem & Feed', 'System & Feeds Admin'), desc: t('Sumber data, deduplikasi, dan feed', 'Data sources, deduplication, and feeds'), icon: <Globe2 className="w-3.5 h-3.5" /> },
+  ], [t]);
 
   // Filtered Autocomplete Suggestions
   const suggestions = useMemo(() => {
@@ -362,27 +370,27 @@ export const Header: React.FC<HeaderProps> = React.memo(({
   const formatViewLabel = (tab: NavTabId): string => {
     switch (tab) {
       case 'terminal':
-        return 'Overview';
+        return t('nav.overview', 'Overview');
       case 'arah_market':
-        return 'Market bias';
+        return t('nav.marketBias', 'Market Bias');
       case 'intermarket':
-        return 'Intermarket flows';
+        return t('nav.intermarket', 'Intermarket Flows');
       case 'markets':
-        return 'Market surveillance';
+        return t('nav.markets', 'Market Surveillance');
       case 'currency':
-        return 'Currency strength G8';
+        return t('nav.currencyStrength', 'Currency Strength G8');
       case 'history':
-        return 'Historical memory';
+        return t('nav.history', 'Historical Memory');
       case 'macro':
-        return 'Economic calendar';
+        return t('nav.calendar', 'Economic Calendar');
       case 'events':
-        return 'Canonical news wire';
+        return t('nav.newsWire', 'News Wire');
       case 'intelligence':
-        return 'AI market intelligence';
+        return t('nav.intelligence', 'AI Market Intelligence');
       case 'watchlist':
-        return 'Active watchlist';
+        return t('nav.watchlist', 'Active Watchlist');
       case 'admin':
-        return 'System & feeds';
+        return t('nav.admin', 'System & Feeds');
       default:
         return String(tab)
           .replace(/_/g, ' ')
@@ -395,9 +403,13 @@ export const Header: React.FC<HeaderProps> = React.memo(({
     return (sessions || []).filter(s => s.current_status === 'OPEN');
   }, [sessions]);
 
-  const activeSessionName = activeSessions.length > 0
-    ? activeSessions.map(s => s.session_name.toUpperCase()).join(' + ')
-    : 'ASIA SESSION';
+  // Format active sessions cleanly (e.g. "New York", "London")
+  const activeSessionName = useMemo(() => {
+    if (!activeSessions || activeSessions.length === 0) return t('Sesi Asia', 'Asia Session');
+    return activeSessions
+      .map(s => s.session_name.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (c: string) => c.toUpperCase()))
+      .join(' + ');
+  }, [activeSessions, t]);
 
   return (
     <header
@@ -414,7 +426,7 @@ export const Header: React.FC<HeaderProps> = React.memo(({
           <button
             onClick={onToggleMobileMenu}
             className="p-1.5 rounded text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-section-alt)] lg:hidden cursor-pointer transition"
-            title="Open Navigation"
+            title={t('header.openNav')}
             id="mobile-menu-toggle-btn"
           >
             <Menu className="w-4 h-4" />
@@ -427,8 +439,8 @@ export const Header: React.FC<HeaderProps> = React.memo(({
 
             {/* Connection Live Indicator */}
             <Tooltip
-              title="SSE Streaming Feed"
-              badge={sseStatus === 'CONNECTED' ? 'LIVE' : 'RECONNECTING'}
+              title={t('header.sseFeed')}
+              badge={sseStatus === 'CONNECTED' ? t('common.live', 'LIVE') : t('header.syncing', 'SYNCING')}
               badgeColor={
                 sseStatus === 'CONNECTED'
                   ? 'badge-bullish text-[9px] px-1 py-0'
@@ -436,10 +448,10 @@ export const Header: React.FC<HeaderProps> = React.memo(({
               }
               content={
                 sseStatus === 'CONNECTED'
-                  ? 'Live Server-Sent Events stream connected. Institutional price ticks and canonical wires streaming with zero delay.'
-                  : 'Re-establishing high-frequency institutional feed connection.'
+                  ? t('header.sseLiveDesc')
+                  : t('header.sseReconnecting')
               }
-              whyItMatters="Guarantees actionable real-time signals without manual browser reloads."
+              whyItMatters={t('header.sseWhyItMatters')}
               position="bottom"
             >
               <div className="flex items-center gap-1.5 cursor-help">
@@ -449,7 +461,7 @@ export const Header: React.FC<HeaderProps> = React.memo(({
                   }`}
                 />
                 <span className="metadata-label text-[9px] text-[var(--text-muted)]">
-                  {sseStatus === 'CONNECTED' ? 'Live' : 'Syncing'}
+                  {sseStatus === 'CONNECTED' ? t('common.live', 'Live') : t('common.syncing', 'Syncing')}
                 </span>
               </div>
             </Tooltip>
@@ -471,7 +483,7 @@ export const Header: React.FC<HeaderProps> = React.memo(({
               }}
               onFocus={() => setIsSearchOpen(true)}
               onKeyDown={handleKeyDown}
-              placeholder="Search ticker, news, catalyst, view..."
+              placeholder={t('header.searchPlaceholder')}
               className="h-8 w-full bg-[var(--bg-section-alt)] border border-transparent focus:border-[var(--border-strong)] rounded-md pl-8 pr-12 text-xs font-sans text-[var(--text-primary)] placeholder-[var(--text-muted)] transition outline-none shadow-xs"
             />
             {searchQuery ? (
@@ -483,7 +495,7 @@ export const Header: React.FC<HeaderProps> = React.memo(({
                   searchInputRef.current?.focus();
                 }}
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-primary)] cursor-pointer p-0.5"
-                title="Clear search"
+                title={t('header.clearSearch')}
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -505,7 +517,7 @@ export const Header: React.FC<HeaderProps> = React.memo(({
                     <div className="p-2">
                       <div className="flex items-center justify-between px-2 py-1 text-[10px] uppercase font-mono font-medium text-[var(--text-muted)]">
                         <span className="flex items-center gap-1.5">
-                          <Clock className="w-3 h-3" /> Recent Searches
+                          <Clock className="w-3 h-3" /> {t('header.recentSearches')}
                         </span>
                         <button
                           onClick={() => {
@@ -514,7 +526,7 @@ export const Header: React.FC<HeaderProps> = React.memo(({
                           }}
                           className="hover:text-[var(--text-primary)] hover:underline cursor-pointer text-[10px]"
                         >
-                          Clear
+                          {t('header.clear')}
                         </button>
                       </div>
                       <div className="mt-1 flex flex-wrap gap-1 px-1">
@@ -546,9 +558,9 @@ export const Header: React.FC<HeaderProps> = React.memo(({
                     <div className="py-1">
                       <div className="px-3 py-1 text-[10px] uppercase font-mono font-medium text-[var(--text-muted)] flex items-center justify-between">
                         <span className="flex items-center gap-1.5">
-                          <TrendingUp className="w-3 h-3 text-[var(--accent)]" /> Instruments & Pairs
+                          <TrendingUp className="w-3 h-3 text-[var(--accent)]" /> {t('header.instrumentsAndPairs')}
                         </span>
-                        <span className="text-[9px] lowercase opacity-70">press enter to select</span>
+                        <span className="text-[9px] lowercase opacity-70">{t('header.pressEnterToSelect')}</span>
                       </div>
                       <div className="space-y-0.5 px-1">
                         {suggestions.instruments.map(inst => {
@@ -616,7 +628,7 @@ export const Header: React.FC<HeaderProps> = React.memo(({
                                       setIsSearchOpen(false);
                                     }}
                                     className="p-1 text-[var(--text-muted)] hover:text-[var(--accent)] hover:bg-[var(--bg-canvas)] rounded cursor-pointer"
-                                    title="Open interactive chart"
+                                    title={t('header.openChart')}
                                   >
                                     <ExternalLink className="w-3 h-3" />
                                   </button>
@@ -634,7 +646,7 @@ export const Header: React.FC<HeaderProps> = React.memo(({
                   {suggestions.views.length > 0 && (
                     <div className="py-1">
                       <div className="px-3 py-1 text-[10px] uppercase font-mono font-medium text-[var(--text-muted)] flex items-center gap-1.5">
-                        <Compass className="w-3 h-3 text-[var(--accent)]" /> Quick Jump Navigation
+                        <Compass className="w-3 h-3 text-[var(--accent)]" /> {t('header.quickJump')}
                       </div>
                       <div className="space-y-0.5 px-1">
                         {suggestions.views.map(v => {
@@ -668,7 +680,7 @@ export const Header: React.FC<HeaderProps> = React.memo(({
                                 </div>
                               </div>
                               <div className="flex items-center gap-1 shrink-0 text-[10px] font-mono text-[var(--text-muted)]">
-                                <span>Switch</span>
+                                <span>{t('Buka', 'Jump')}</span>
                                 <ChevronRight className="w-3 h-3" />
                               </div>
                             </div>
@@ -682,7 +694,7 @@ export const Header: React.FC<HeaderProps> = React.memo(({
                   {suggestions.catalysts.length > 0 && (
                     <div className="py-1">
                       <div className="px-3 py-1 text-[10px] uppercase font-mono font-medium text-[var(--text-muted)] flex items-center gap-1.5">
-                        <Calendar className="w-3 h-3 text-[var(--accent)]" /> Macro Indicators & Catalysts
+                        <Calendar className="w-3 h-3 text-[var(--accent)]" /> {t('header.macroIndicators')}
                       </div>
                       <div className="space-y-0.5 px-1">
                         {suggestions.catalysts.map(cat => {
@@ -735,7 +747,7 @@ export const Header: React.FC<HeaderProps> = React.memo(({
                   {suggestions.news.length > 0 && (
                     <div className="py-1">
                       <div className="px-3 py-1 text-[10px] uppercase font-mono font-medium text-[var(--text-muted)] flex items-center gap-1.5">
-                        <Flame className="w-3 h-3 text-[var(--warning)]" /> News Wire Matches
+                        <Flame className="w-3 h-3 text-[var(--warning)]" /> {t('header.newsMatches')}
                       </div>
                       <div className="space-y-0.5 px-1">
                         {suggestions.news.map(n => {
@@ -784,8 +796,8 @@ export const Header: React.FC<HeaderProps> = React.memo(({
                    suggestions.catalysts.length === 0 && 
                    suggestions.news.length === 0 && (
                     <div className="p-4 text-center text-xs text-[var(--text-muted)]">
-                      No exact ticker or view matches for &ldquo;<span className="text-[var(--text-primary)] font-medium">{searchQuery}</span>&rdquo;
-                      <div className="mt-1 text-[11px] opacity-75">Press Enter to filter news feed wire anyway</div>
+                      {t('header.noMatches')} &ldquo;<span className="text-[var(--text-primary)] font-medium">{searchQuery}</span>&rdquo;
+                      <div className="mt-1 text-[11px] opacity-75">{t('header.pressEnterAnyway')}</div>
                     </div>
                   )}
                 </div>
@@ -793,13 +805,13 @@ export const Header: React.FC<HeaderProps> = React.memo(({
                 {/* Footer Controls & Shortcut Legend */}
                 <div className="px-3 py-1.5 bg-[var(--bg-canvas)] border-t border-[var(--border-hairline)] flex items-center justify-between text-[10px] text-[var(--text-muted)] font-mono">
                   <div className="flex items-center gap-3">
-                    <span>↑↓ Navigate</span>
-                    <span>↵ Jump</span>
-                    <span>ESC Close</span>
+                    <span>↑↓ {t('header.navNavigate')}</span>
+                    <span>↵ {t('header.navJump')}</span>
+                    <span>ESC {t('header.navClose')}</span>
                   </div>
                   <div className="flex items-center gap-1 text-[var(--accent)] font-medium">
                     <Sparkles className="w-3 h-3" />
-                    <span>Auto-Complete</span>
+                    <span>{t('header.autoComplete')}</span>
                   </div>
                 </div>
               </div>
@@ -807,26 +819,47 @@ export const Header: React.FC<HeaderProps> = React.memo(({
           </div>
         )}
 
-        {/* Right Section: Market Status, Exact Time, Theme Toggle, Actions */}
-        <div className="flex items-center gap-3 text-xs shrink-0">
+        {/* Right Section: Market Status, Exact Time, Language & Theme Toggle, Actions */}
+        <div className="flex items-center gap-2 text-xs shrink-0">
           {/* Active Session & Market Open Status */}
-          <div className="hidden xl:flex items-center gap-2 text-[11px]">
+          <div className="hidden xl:flex items-center gap-1.5 text-[11px] font-sans">
             <span className="w-1.5 h-1.5 rounded-full bg-[var(--bullish)]" />
-            <span className="font-semibold text-[var(--text-primary)]">Market open</span>
-            <span className="text-[var(--border-strong)]">/</span>
+            <span className="font-semibold text-[var(--text-primary)]">
+              {t('Pasar buka', 'Market open')}
+            </span>
+            <span className="text-[var(--border-strong)]">·</span>
             <span className="text-[var(--text-muted)]">{activeSessionName}</span>
           </div>
 
           {/* Current Date & Time (Tabular Numerals) */}
-          <div className="hidden sm:flex items-center gap-2 text-[11px] tabular-nums">
-            <span className="text-[var(--text-muted)] font-mono">{timeState.dateStr}</span>
+          <div className="hidden sm:flex items-center gap-1.5 text-[11px] tabular-nums font-mono">
+            <span className="text-[var(--text-muted)]">{timeState.dateStr}</span>
             <span className="text-[var(--border-strong)]">·</span>
-            <span className="font-semibold text-[var(--text-primary)] font-mono">
+            <span className="font-semibold text-[var(--text-primary)]">
               {timeState.wibTime || 'LIVE'}
             </span>
           </div>
 
-          <span className="hidden xl:block w-px h-5 bg-[var(--border-hairline)]" />
+          <span className="hidden xl:block w-px h-4 bg-[var(--border-hairline)]" />
+
+          {/* Language Toggle: ID / EN */}
+          <LanguageToggle variant="pill" />
+
+          {/* Optional Ticker Tape Toggle */}
+          {onToggleTickerBar && (
+            <button
+              onClick={onToggleTickerBar}
+              className={`h-7 px-2 rounded text-[11px] font-mono flex items-center gap-1 transition cursor-pointer border ${
+                showTickerBar
+                  ? 'border-[var(--accent)] text-[var(--accent)] bg-[var(--accent-subtle)] font-semibold'
+                  : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-section-alt)]'
+              }`}
+              title={showTickerBar ? t('Sembunyikan pita ticker live', 'Hide live ticker stream') : t('Tampilkan pita ticker live', 'Show live ticker stream')}
+            >
+              <Activity className="w-3 h-3" />
+              <span className="hidden lg:inline">Ticker</span>
+            </button>
+          )}
 
           {/* Theme Toggle */}
           {onToggleTheme && (
@@ -841,12 +874,12 @@ export const Header: React.FC<HeaderProps> = React.memo(({
           {onOpenAutoTriggerModal && (
             <button
               onClick={onOpenAutoTriggerModal}
-              className={`h-8 px-2.5 rounded-md text-[11px] flex items-center gap-1.5 transition cursor-pointer ${
+              className={`h-7 px-2 rounded-md text-[11px] flex items-center gap-1.5 transition cursor-pointer ${
                 isAutoTriggerActive
                   ? 'badge-warning'
                   : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-section-alt)]'
               }`}
-              title="News Auto-Trigger Settings"
+              title={t('Pengaturan Pemicu Berita Otomatis', 'News Auto-Trigger Settings')}
               id="open-auto-trigger-modal-btn"
             >
               <Zap className={`w-3 h-3 ${isAutoTriggerActive ? 'text-[var(--warning)] animate-pulse' : ''}`} />
@@ -860,12 +893,14 @@ export const Header: React.FC<HeaderProps> = React.memo(({
           <button
             onClick={onTriggerGlobalSync}
             disabled={isSyncing}
-            className="h-8 px-2.5 rounded-md text-[var(--text-primary)] text-[11px] flex items-center gap-1.5 transition cursor-pointer disabled:opacity-50 hover:bg-[var(--bg-section-alt)]"
-            title="Synchronize all real-time market feeds"
+            className="h-7 px-2.5 rounded-md text-[var(--text-primary)] text-[11px] flex items-center gap-1.5 transition cursor-pointer disabled:opacity-50 hover:bg-[var(--bg-section-alt)] border border-[var(--border-subtle)] font-mono"
+            title={t('Sinkronkan seluruh feed data pasar realtime', 'Synchronize all real-time market feeds')}
             id="global-sync-btn"
           >
             <RefreshCw className={`w-3 h-3 ${isSyncing ? 'animate-spin text-[var(--accent)]' : ''}`} />
-            <span className="hidden sm:inline font-semibold">{isSyncing ? 'Syncing' : 'Sync'}</span>
+            <span className="hidden sm:inline font-semibold">
+              {isSyncing ? t('Sinkron...', 'Syncing...') : t('Sinkron', 'Sync')}
+            </span>
           </button>
         </div>
       </div>

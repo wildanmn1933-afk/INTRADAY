@@ -26,6 +26,7 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Input } from './ui/input';
 import { Autocomplete, AutocompleteItem } from './ui/autocomplete';
+import { useLanguage } from '../lib/LanguageContext';
 
 interface MacroCalendarViewProps {
   events: EconomicEvent[];
@@ -48,6 +49,7 @@ export const MacroCalendarView: React.FC<MacroCalendarViewProps> = React.memo(({
   onRefresh,
   isRefreshing,
 }) => {
+  const { t, language } = useLanguage();
   // Default to UPCOMING so upcoming events are immediately visible on screen!
   const [timingFilter, setTimingFilter] = useState<'UPCOMING' | 'TODAY' | 'TOMORROW' | 'RELEASED' | 'ALL'>('UPCOMING');
   const [impactFilter, setImpactFilter] = useState<string>('ALL');
@@ -182,7 +184,7 @@ export const MacroCalendarView: React.FC<MacroCalendarViewProps> = React.memo(({
     return { upcomingCount: up, todayCount: td, tomorrowCount: tm, releasedCount: rel };
   }, [events, currentTimeMs]);
 
-  // Find next upcoming event
+  // Find next upcoming catalyst, prioritizing High / Critical events or active filter
   const nextEvent = useMemo(() => {
     const upEvents = events
       .filter(e => {
@@ -191,8 +193,25 @@ export const MacroCalendarView: React.FC<MacroCalendarViewProps> = React.memo(({
       })
       .sort((a, b) => new Date(a.date_time_utc).getTime() - new Date(b.date_time_utc).getTime());
 
-    return upEvents[0] || null;
-  }, [events, currentTimeMs]);
+    if (upEvents.length === 0) return null;
+
+    // If an impact or currency filter is active, respect that filter first
+    if (impactFilter !== 'ALL' || currencyFilter !== 'ALL') {
+      const matchFilter = upEvents.find(e => {
+        if (impactFilter !== 'ALL' && e.impact !== impactFilter) return false;
+        if (currencyFilter !== 'ALL' && e.currency !== currencyFilter) return false;
+        return true;
+      });
+      if (matchFilter) return matchFilter;
+    }
+
+    // Otherwise, prefer next High or Critical event if one exists within 48h
+    const nextMajor = upEvents.find(
+      e => (e.impact === 'CRITICAL' || e.impact === 'HIGH') &&
+      (new Date(e.date_time_utc).getTime() - currentTimeMs < 48 * 3600000)
+    );
+    return nextMajor || upEvents[0];
+  }, [events, currentTimeMs, impactFilter, currencyFilter]);
 
   // Filtered list according to all active criteria
   const filteredEvents = useMemo(() => {
@@ -323,7 +342,7 @@ export const MacroCalendarView: React.FC<MacroCalendarViewProps> = React.memo(({
       const target = new Date(utcIso).getTime();
       const diff = target - currentTimeMs;
 
-      if (diff <= 0) return { text: 'Released', isUrgent: false, isNear: false };
+      if (diff <= 0) return { text: t('Telah Rilis', 'Released'), isUrgent: false, isNear: false };
 
       const sec = Math.floor(diff / 1000);
       const min = Math.floor(sec / 60);
@@ -332,19 +351,19 @@ export const MacroCalendarView: React.FC<MacroCalendarViewProps> = React.memo(({
 
       if (min < 60) {
         return {
-          text: `in ${min}m ${sec % 60}s`,
+          text: language === 'id' ? `${min}m ${sec % 60}d` : `${min}m ${sec % 60}s`,
           isUrgent: min < 15,
           isNear: true,
         };
       } else if (hours < 24) {
         return {
-          text: `in ${hours}h ${min % 60}m`,
+          text: language === 'id' ? `${hours}j ${min % 60}m` : `${hours}h ${min % 60}m`,
           isUrgent: false,
           isNear: true,
         };
       } else {
         return {
-          text: `in ${days}d ${hours % 24}h`,
+          text: language === 'id' ? `${days}h ${hours % 24}j` : `${days}d ${hours % 24}h`,
           isUrgent: false,
           isNear: false,
         };
@@ -355,51 +374,43 @@ export const MacroCalendarView: React.FC<MacroCalendarViewProps> = React.memo(({
   };
 
   return (
-    <section className="flex flex-col h-full space-y-5 font-sans" id="macro-calendar-root">
+    <section className="flex flex-col h-full space-y-3.5 font-sans" id="macro-calendar-root">
       <PageHeader
-        eyebrow="MAIN · ECONOMIC CALENDAR"
-        title="Economic calendar"
-        titleAdornment={
-          <>
-            <MetricInfoIcon term="MACRO_CALENDAR" position="bottom" />
-            <span className="text-[11px] text-[var(--text-muted)] tabular-nums">
-              {upcomingCount} scheduled
-            </span>
-          </>
-        }
+        eyebrow={t('RISET · KALENDER EKONOMI MAKRO', 'RESEARCH · MACRO ECONOMIC CALENDAR')}
+        title={t('Kalender Rilis Ekonomi Makro', 'Macro Economic Calendar')}
         description={
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap text-xs font-mono">
             <span className="flex items-center gap-1.5">
               <span className={`w-1.5 h-1.5 rounded-full ${
-                liveStatus === 'LIVE' ? 'bg-[var(--bullish)]' :
-                liveStatus === 'DELAYED' ? 'bg-[var(--warning)]' : 'bg-[var(--bearish)]'
+                liveStatus === 'LIVE' ? 'bg-emerald-500' :
+                liveStatus === 'DELAYED' ? 'bg-amber-500' : 'bg-rose-500'
               }`} />
-              <span>{liveStatus.charAt(0) + liveStatus.slice(1).toLowerCase()}</span>
+              <span className="text-[var(--text-primary)] font-semibold">{liveStatus === 'LIVE' ? t('Live Stream', 'Live Stream') : liveStatus === 'DELAYED' ? t('Tertunda', 'Delayed') : t('Tidak Tersedia', 'Unavailable')}</span>
             </span>
             <span className="text-[var(--border-strong)]">·</span>
-            <span>CME &amp; institutional wire</span>
+            <span>{t('Wire Institusional CME & Global', 'CME & Global Institutional Wire')}</span>
             <span className="text-[var(--border-strong)]">·</span>
-            <span>Synced {latestUpdated ? `${latestUpdated} WIB` : 'live'}</span>
+            <span>{t('Sinkron', 'Synced')} {latestUpdated ? `${latestUpdated} WIB` : 'live'}</span>
+            <span className="text-[var(--border-strong)]">·</span>
+            <span className="text-[var(--accent)] font-semibold">{upcomingCount} {t('Jadwal Rilis', 'Scheduled Releases')}</span>
           </div>
         }
         actions={
-          <>
+          <div className="flex items-center gap-2 flex-wrap">
             {/* Live WIB Reference Clock */}
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[var(--bg-section-alt)] border border-[var(--border-subtle)] font-mono">
               <Clock className="w-3.5 h-3.5 text-[var(--accent)]" />
-              <span className="text-xs font-semibold tabular-nums text-[var(--text-primary)]">{currentWibTime}</span>
-              <span className="metadata-label text-[9px] text-[var(--text-muted)]">WIB</span>
+              <span className="text-xs font-bold tabular-nums text-[var(--text-primary)]">{currentWibTime}</span>
+              <span className="text-[9px] text-[var(--text-muted)] font-bold">WIB</span>
             </div>
 
-            <span className="w-px h-5 bg-[var(--border-hairline)]" />
-
             {/* Timezone Selector */}
-            <div className="flex items-center gap-1.5 text-[var(--text-muted)]">
-              <Globe className="w-3.5 h-3.5" />
+            <div className="flex items-center gap-1.5 text-[var(--text-muted)] px-2 py-1 rounded bg-[var(--bg-section-alt)] border border-[var(--border-subtle)]">
+              <Globe className="w-3.5 h-3.5 text-[var(--accent)]" />
               <select
                 value={selectedTimezone}
                 onChange={(e) => setSelectedTimezone(e.target.value)}
-                className="bg-transparent text-[var(--text-primary)] text-[11px] outline-none cursor-pointer"
+                className="bg-transparent text-[var(--text-primary)] text-[11px] outline-none cursor-pointer font-mono"
               >
                 {TIMEZONES.map(tz => (
                   <option key={tz.value} value={tz.value} className="bg-[var(--bg-surface)] text-[var(--text-primary)]">
@@ -409,13 +420,117 @@ export const MacroCalendarView: React.FC<MacroCalendarViewProps> = React.memo(({
               </select>
             </div>
 
-            {/* Currency Filter */}
+            {/* Sync Button */}
+            <button
+              onClick={onRefresh}
+              disabled={isRefreshing}
+              title={t('Sinkronisasi kalender makro', 'Synchronize macro calendar')}
+              className="h-8 px-3 rounded-md text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-section-alt)] border border-[var(--border-subtle)] flex items-center gap-1.5 transition cursor-pointer disabled:opacity-50 font-mono"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-[var(--accent)]' : ''}`} />
+              <span>{t('Sinkronisasi', 'Sync')}</span>
+            </button>
+          </div>
+        }
+      />
+
+      {/* Next Upcoming Event Spotlight Banner - Balanced & Rich */}
+      {nextEvent && (
+        <div className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-3 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-xs">
+          {/* Left: Icon + Tags + Name + Release Time */}
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-8 h-8 rounded-md flex items-center justify-center bg-[var(--bg-section-alt)] border border-[var(--border-subtle)] text-[var(--accent)] shrink-0">
+              <Zap className="w-4 h-4" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-[var(--accent-subtle)] text-[var(--accent)] tracking-wider uppercase">
+                  {t('KATALIS TERDEKAT', 'NEXT CATALYST')}
+                </span>
+                <span className="text-[9.5px] font-mono font-bold px-1.5 py-0.2 rounded bg-[var(--bg-section-alt)] border border-[var(--border-subtle)] text-[var(--text-primary)]">
+                  {nextEvent.currency}
+                </span>
+                <span className={`text-[9px] px-1.5 py-0.2 rounded font-mono font-bold uppercase ${getImpactBadge(nextEvent.impact)}`}>
+                  {nextEvent.impact === 'CRITICAL' ? t('KRITIS', 'CRITICAL') : nextEvent.impact === 'HIGH' ? t('TINGGI', 'HIGH') : nextEvent.impact === 'MEDIUM' ? t('MENENGAH', 'MEDIUM') : t('RENDAH', 'LOW')}
+                </span>
+              </div>
+              <div className="text-sm font-bold text-[var(--text-primary)] truncate mt-0.5" title={nextEvent.event_name}>
+                {nextEvent.event_name}
+              </div>
+              <div className="text-[11px] text-[var(--text-muted)] flex items-center gap-1.5 mt-0.5 font-mono">
+                <Clock className="w-3 h-3 text-[var(--accent)] shrink-0" />
+                <span>
+                  {t('Jadwal:', 'Release:')} <strong className="text-[var(--text-primary)] font-semibold">{formatEventDateTime(nextEvent.date_time_utc).dayName}, {formatEventDateTime(nextEvent.date_time_utc).date} · {formatEventDateTime(nextEvent.date_time_utc).time} {formatEventDateTime(nextEvent.date_time_utc).zoneLabel}</strong>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Right: Metrics + Live Countdown Card */}
+          <div className="flex items-center gap-3 self-end md:self-auto shrink-0 flex-wrap">
+            <div className="flex items-center gap-3 py-1.5 px-2.5 rounded bg-[var(--bg-section-alt)] border border-[var(--border-subtle)] font-mono text-xs">
+              <div>
+                <span className="text-[9px] text-[var(--text-muted)] block uppercase tracking-wider">{t('Konsensus', 'Consensus')}</span>
+                <span className="font-bold text-[var(--text-primary)] text-xs">
+                  {nextEvent.forecast || '—'}
+                </span>
+              </div>
+              <div className="w-px h-5 bg-[var(--border-hairline)]" />
+              <div>
+                <span className="text-[9px] text-[var(--text-muted)] block uppercase tracking-wider">{t('Sebelumnya', 'Prior')}</span>
+                <span className="font-medium text-[var(--text-secondary)] text-xs">
+                  {nextEvent.previous || '—'}
+                </span>
+              </div>
+            </div>
+
+            <div className="py-1 px-2.5 rounded bg-[var(--bg-section-alt)] border border-[var(--border-subtle)] text-right font-mono min-w-[90px]">
+              <span className="text-[9px] text-[var(--text-muted)] block uppercase tracking-wider">{t('Hitung Mundur', 'Countdown')}</span>
+              <span className="text-xs font-bold text-[var(--text-primary)] tabular-nums flex items-center gap-1 justify-end">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                {formatRelativeCountdown(nextEvent.date_time_utc).text}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Unified Filter & Search Bar */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2.5 pb-2.5 border-b" style={{ borderColor: 'var(--border-hairline)' }}>
+        {/* Left: Timing Navigation Tabs */}
+        <div className="flex items-center gap-0.5 p-0.5 rounded-md bg-[var(--bg-section-alt)] border border-[var(--border-subtle)] flex-wrap">
+          {[
+            { id: 'UPCOMING', label: t('Akan Datang', 'Upcoming'), count: upcomingCount },
+            { id: 'TODAY', label: t('Hari Ini', 'Today'), count: todayCount },
+            { id: 'TOMORROW', label: t('Besok', 'Tomorrow'), count: tomorrowCount },
+            { id: 'RELEASED', label: t('Telah Rilis', 'Released'), count: releasedCount },
+            { id: 'ALL', label: t('Semua', 'All'), count: events.length },
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setTimingFilter(tab.id as any)}
+              className={`px-2.5 h-7 rounded text-[11px] font-medium transition cursor-pointer font-mono ${
+                timingFilter === tab.id
+                  ? 'bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-sm font-semibold'
+                  : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
+              }`}
+            >
+              <span>{tab.label}</span>
+              <span className="ml-1 tabular-nums opacity-70">({tab.count})</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Right: Currency Filter + Impact Filter + Search */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Currency Filter Dropdown */}
+          <div className="px-2 py-0.5 rounded bg-[var(--bg-section-alt)] border border-[var(--border-subtle)]">
             <select
               value={currencyFilter}
               onChange={(e) => setCurrencyFilter(e.target.value)}
-              className="bg-transparent text-[var(--text-primary)] text-[11px] outline-none cursor-pointer"
+              className="bg-transparent text-[var(--text-primary)] text-[11px] outline-none cursor-pointer font-mono h-6"
             >
-              <option value="ALL">All currencies</option>
+              <option value="ALL">{t('Semua Valuta', 'All Currencies')}</option>
               <option value="USD">USD</option>
               <option value="EUR">EUR</option>
               <option value="GBP">GBP</option>
@@ -425,120 +540,42 @@ export const MacroCalendarView: React.FC<MacroCalendarViewProps> = React.memo(({
               <option value="NZD">NZD</option>
               <option value="CHF">CHF</option>
             </select>
-
-            {/* Impact Filter */}
-            <div className="flex items-center gap-0.5 p-0.5 rounded-md bg-[var(--bg-section-alt)]">
-              {['ALL', 'CRITICAL', 'HIGH', 'MEDIUM'].map(f => (
-                <button
-                  key={f}
-                  onClick={() => setImpactFilter(f)}
-                  className={`h-7 px-2.5 rounded text-[11px] font-medium transition cursor-pointer ${
-                    impactFilter === f
-                      ? 'bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-sm'
-                      : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
-                  }`}
-                >
-                  {f === 'ALL' ? 'All' : f.charAt(0) + f.slice(1).toLowerCase()}
-                </button>
-              ))}
-            </div>
-
-            <button
-              onClick={onRefresh}
-              disabled={isRefreshing}
-              title="Refresh macro calendar"
-              className="h-8 w-8 rounded-md text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-section-alt)] flex items-center justify-center transition cursor-pointer disabled:opacity-50"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-[var(--accent)]' : ''}`} />
-            </button>
-          </>
-        }
-      />
-
-      {/* Next Upcoming Event Spotlight Banner */}
-      {nextEvent && (
-        <div
-          className="p-3.5 rounded-lg flex flex-col md:flex-row md:items-center justify-between gap-3"
-          style={{ backgroundColor: 'var(--accent-subtle)' }}
-        >
-          <div className="flex items-start md:items-center gap-3">
-            <div className="w-8 h-8 rounded-full flex items-center justify-center text-[var(--accent)] shrink-0" style={{ backgroundColor: 'var(--bg-surface)' }}>
-              <Zap className="w-4 h-4" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="metadata-label text-[9px] text-[var(--accent)]">
-                  Next catalyst
-                </span>
-                <span className="text-[10px] font-semibold text-[var(--text-secondary)]">
-                  {nextEvent.currency}
-                </span>
-                <span className={`text-[9px] px-2 py-0.5 rounded-full font-semibold uppercase ${getImpactBadge(nextEvent.impact)}`}>
-                  {nextEvent.impact}
-                </span>
-              </div>
-              <div className="text-sm font-semibold text-[var(--text-primary)] mt-1">
-                {nextEvent.event_name}
-              </div>
-              <div className="text-[11px] text-[var(--text-muted)] flex items-center gap-2 mt-1 flex-wrap">
-                <span>
-                  Release: <strong className="text-[var(--text-primary)] font-mono">{formatEventDateTime(nextEvent.date_time_utc).dayName}, {formatEventDateTime(nextEvent.date_time_utc).date} · {formatEventDateTime(nextEvent.date_time_utc).time} {formatEventDateTime(nextEvent.date_time_utc).zoneLabel}</strong>
-                </span>
-                {nextEvent.forecast && <span>· Forecast: <strong className="text-[var(--text-primary)] font-mono">{nextEvent.forecast}</strong></span>}
-                {nextEvent.previous && <span>· Prior: <span className="text-[var(--text-muted)] font-mono">{nextEvent.previous}</span></span>}
-              </div>
-            </div>
           </div>
 
-          {/* Countdown Pill */}
-          <div className="flex items-center gap-2.5 self-start md:self-auto shrink-0">
-            <Clock className="w-4 h-4 text-[var(--accent)]" />
-            <div>
-              <div className="metadata-label text-[9px] text-[var(--text-muted)]">Countdown</div>
-              <div className="text-sm font-semibold text-[var(--text-primary)] tabular-nums">
-                {formatRelativeCountdown(nextEvent.date_time_utc).text}
-              </div>
-            </div>
+          {/* Impact Filter Segmented */}
+          <div className="flex items-center gap-0.5 p-0.5 rounded-md bg-[var(--bg-section-alt)] border border-[var(--border-subtle)]">
+            {[
+              { id: 'ALL', label: t('Semua', 'All') },
+              { id: 'CRITICAL', label: t('Kritis', 'Critical') },
+              { id: 'HIGH', label: t('Tinggi', 'High') },
+              { id: 'MEDIUM', label: t('Menengah', 'Medium') },
+            ].map(f => (
+              <button
+                key={f.id}
+                onClick={() => setImpactFilter(f.id)}
+                className={`h-6 px-2 rounded text-[10.5px] font-medium transition cursor-pointer font-mono ${
+                  impactFilter === f.id
+                    ? 'bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-sm font-semibold'
+                    : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
           </div>
-        </div>
-      )}
 
-      {/* Timing Navigation Tabs & Quick Search */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-2.5 border-b" style={{ borderColor: 'var(--border-hairline)' }}>
-        <div className="flex items-center gap-0.5 p-0.5 rounded-md bg-[var(--bg-section-alt)] flex-wrap">
-          {[
-            { id: 'UPCOMING', label: 'Upcoming', count: upcomingCount },
-            { id: 'TODAY', label: 'Today', count: todayCount },
-            { id: 'TOMORROW', label: 'Tomorrow', count: tomorrowCount },
-            { id: 'RELEASED', label: 'Released', count: releasedCount },
-            { id: 'ALL', label: 'All', count: events.length },
-          ].map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setTimingFilter(tab.id as any)}
-              className={`px-2.5 h-7 rounded text-[11px] font-medium transition cursor-pointer ${
-                timingFilter === tab.id
-                  ? 'bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-sm'
-                  : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
-              }`}
-            >
-              <span>{tab.label}</span>
-              <span className="ml-1 tabular-nums opacity-70">{tab.count}</span>
-            </button>
-          ))}
-        </div>
-
-        {/* Quick Search with Autocomplete */}
-        <div className="w-56 sm:w-64">
-          <Autocomplete
-            value={searchQuery}
-            onChange={setSearchQuery}
-            placeholder="Search indicator or CCY..."
-            items={calendarSuggestions}
-            recentStorageKey="macro_search"
-            className="w-full"
-            inputClassName="h-8 bg-[var(--bg-section-alt)] text-xs focus:border-[var(--border-strong)]"
-          />
+          {/* Quick Search with Autocomplete */}
+          <div className="w-48 sm:w-56">
+            <Autocomplete
+              value={searchQuery}
+              onChange={setSearchQuery}
+              placeholder={t('Cari indikator atau valuta...', 'Search indicator or currency...')}
+              items={calendarSuggestions}
+              recentStorageKey="macro_search"
+              className="w-full"
+              inputClassName="h-7 bg-[var(--bg-surface)] text-xs focus:border-[var(--border-strong)] border border-[var(--border-subtle)]"
+            />
+          </div>
         </div>
       </div>
 
@@ -549,64 +586,64 @@ export const MacroCalendarView: React.FC<MacroCalendarViewProps> = React.memo(({
             <tr>
               <th>
                 <MetricTooltip term={selectedTimezone === 'Asia/Jakarta' ? 'WIB' : 'UTC'} underline={false}>
-                  <span>Release ({selectedTimezone === 'Asia/Jakarta' ? 'WIB UTC+7' : selectedTimezone})</span>
+                  <span>{t('WAKTU RILIS', 'RELEASE TIME')} ({selectedTimezone === 'Asia/Jakarta' ? 'WIB UTC+7' : selectedTimezone})</span>
                 </MetricTooltip>
               </th>
               <th>
                 <MetricTooltip term="COUNTDOWN" underline={false}>
-                  <span>Status</span>
+                  <span>STATUS</span>
                 </MetricTooltip>
               </th>
               <th>
                 <MetricTooltip term="CCY" underline={false}>
-                  <span>CCY</span>
+                  <span>{t('VALUTA', 'CURRENCY')}</span>
                 </MetricTooltip>
               </th>
               <th>
                 <MetricTooltip term="IMPACT" underline={false}>
-                  <span>Impact</span>
+                  <span>{t('DAMPAK', 'IMPACT')}</span>
                 </MetricTooltip>
               </th>
-              <th>EVENT / INDICATOR</th>
+              <th>{t('PERISTIWA / INDIKATOR MAKRO', 'EVENT / MACRO INDICATOR')}</th>
               <th className="text-right">
                 <MetricTooltip term="ACTUAL" underline={false}>
-                  <span>Actual</span>
+                  <span>{t('AKTUAL', 'ACTUAL')}</span>
                 </MetricTooltip>
               </th>
               <th className="text-right">
                 <MetricTooltip term="FORECAST" underline={false}>
-                  <span>Forecast</span>
+                  <span>{t('KONSENSUS', 'CONSENSUS')}</span>
                 </MetricTooltip>
               </th>
               <th className="text-right">
                 <MetricTooltip term="PREVIOUS" underline={false}>
-                  <span>Previous</span>
+                  <span>{t('SEBELUMNYA', 'PRIOR')}</span>
                 </MetricTooltip>
               </th>
               <th className="text-right">
                 <MetricTooltip term="SURPRISE" underline={false}>
-                  <span>Surprise</span>
+                  <span>{t('DEVIASI', 'SURPRISE')}</span>
                 </MetricTooltip>
               </th>
               <th className="text-right">
                 <MetricTooltip term="CHANGE" underline={false}>
-                  <span>Change</span>
+                  <span>{t('PERUBAHAN', 'CHANGE')}</span>
                 </MetricTooltip>
               </th>
               <th className="text-center">
                 <MetricTooltip term="REACTION" underline={false}>
-                  <span>Reaction</span>
+                  <span>{t('REAKSI', 'REACTION')}</span>
                 </MetricTooltip>
               </th>
               <th className="text-right">
                 <MetricTooltip term="SOURCE" underline={false}>
-                  <span>SOURCE</span>
+                  <span>{t('SUMBER', 'SOURCE')}</span>
                 </MetricTooltip>
               </th>
               <th className="text-center">
                 <Tooltip
-                  title="Macro & Fundamental Intel"
-                  content="Open the detail drawer for market scenarios, rate implications, and cross-asset correlation."
+                  title={t('Intelijen Makro & Fundamental', 'Macro & Fundamental Intel')}
+                  content={t('Buka laci detail untuk skenario pasar, implikasi suku bunga, dan korelasi lintas aset.', 'Open detail drawer for market scenarios, rate implications, and cross-asset correlation.')}
                   position="top"
                 >
                   <span className="cursor-help">INTEL</span>

@@ -151,7 +151,7 @@ export const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
           Select Your Surveillance Tier
         </h2>
         <p className="text-sm text-slate-400 mt-2 max-w-xl mx-auto">
-          Akses penuh ke semua analisis makro, sentimen bank sentral, streaming sub-detik, dan data inteligensi pasar secara <span className="text-emerald-400 font-semibold">100% Gratis</span> tanpa biaya atau kartu kredit.
+          Full access to all macroeconomic analysis, central bank sentiment, sub-second telemetry streaming, and market intelligence data is <span className="text-emerald-400 font-semibold">100% Free</span> with no credit card required.
         </p>
 
         {/* Current User Plan Banner if Logged In */}
@@ -357,7 +357,7 @@ export const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
                 )}
 
                 <div className="text-center mt-2.5 text-[10px] text-slate-500 font-sans">
-                  Akses 100% Gratis • Tanpa Kartu Kredit atau Biaya
+                  100% Free Access • No Credit Card or Hidden Fees
                 </div>
               </div>
             </div>

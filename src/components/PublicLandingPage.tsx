@@ -22,6 +22,7 @@ import {
 import { User } from '../types';
 import { CATEGORY_HERO_IMAGES, getCurrencyFlagUrl } from '../lib/assets';
 import { ThemeToggle } from './ThemeToggle';
+import { SplineSceneBasic } from '@/components/ui/demo';
 
 interface PublicLandingPageProps {
   currentPath: string;
@@ -138,69 +139,82 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
         </div>
       </header>
 
-      {/* 2. EDITORIAL HERO SECTION */}
-      <section className="relative px-4 sm:px-8 pt-12 sm:pt-20 pb-16 max-w-6xl mx-auto w-full text-center flex flex-col items-center">
-        {/* Unboxed Precision Metadata */}
-        <div className="flex items-center gap-2 mb-6 font-mono text-xs">
-          <span className="w-2 h-2 rounded-xs bg-[var(--accent)]" />
-          <span className="metadata-label text-[10px] sm:text-xs text-[var(--text-muted)] tracking-wider">
-            INSTITUTIONAL MACROECONOMIC & CROSS-ASSET SURVEILLANCE
-          </span>
+      {/* 2. EDITORIAL HERO SECTION WITH 3D ROBOT */}
+      <section className="relative px-4 sm:px-8 pt-10 sm:pt-16 pb-12 max-w-7xl mx-auto w-full">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
+          {/* Left Column: Editorial Headline & Actions */}
+          <div className="lg:col-span-7 flex flex-col items-center lg:items-start text-center lg:text-left">
+            {/* Unboxed Precision Metadata */}
+            <div className="flex items-center gap-2 mb-4 font-mono text-xs">
+              <span className="w-2 h-2 rounded-xs bg-[var(--accent)]" />
+              <span className="metadata-label text-[10px] sm:text-xs text-[var(--text-muted)] tracking-wider">
+                INSTITUTIONAL MACROECONOMIC & CROSS-ASSET SURVEILLANCE
+              </span>
+            </div>
+
+            {/* Space Grotesk Editorial Headline */}
+            <h1 className="headline-display text-[var(--text-primary)] max-w-2xl text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight">
+              Grounded Macro Intel, Currency Flow & Directional Bias
+            </h1>
+
+            {/* Clean Subtitle */}
+            <p className="mt-4 text-sm sm:text-base text-[var(--text-secondary)] max-w-xl leading-relaxed font-sans">
+              Eliminating market noise with G8 relative currency dispersion, 14 core intraday directional biases, canonical news deduplication, and multi-session historical permanence.
+            </p>
+
+            {/* High-Contrast CTAs */}
+            <div className="mt-6 flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto font-mono text-xs">
+              <button
+                onClick={() => onNavigate('/dashboard')}
+                className="w-full sm:w-auto px-6 py-3 rounded bg-[var(--accent)] hover:opacity-90 text-[var(--accent-contrast)] font-bold transition flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+              >
+                <span>MASUK KE TERMINAL DESK</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => {
+                  const el = document.getElementById('features-section');
+                  if (el) el.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="w-full sm:w-auto px-5 py-3 rounded bg-[var(--bg-surface)] hover:bg-[var(--bg-section-alt)] text-[var(--text-primary)] border border-[var(--border-subtle)] font-semibold transition flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <LineChart className="w-4 h-4 text-[var(--accent)]" />
+                <span>LIHAT ARSITEKTUR FITUR</span>
+              </button>
+            </div>
+
+            {/* Institutional Metric Badges */}
+            <div className="mt-8 flex flex-wrap items-center justify-center lg:justify-start gap-4 sm:gap-6 font-mono text-xs text-[var(--text-secondary)] border-t pt-4 w-full" style={{ borderColor: 'var(--border-subtle)' }}>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[var(--bullish)]">●</span>
+                <span className="font-semibold text-[var(--text-primary)]">G8 FLOW DISPERSION</span>
+                <span className="text-[var(--text-muted)]">(28 Pairs)</span>
+              </div>
+              <div className="text-[var(--border-subtle)] hidden sm:inline">·</div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[var(--accent)]">●</span>
+                <span className="font-semibold text-[var(--text-primary)]">14 CORE ASSET RADAR</span>
+              </div>
+              <div className="text-[var(--border-subtle)] hidden sm:inline">·</div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[var(--bullish)]">●</span>
+                <span className="font-semibold text-[var(--text-primary)]">ZERO DUPLICATION WIRE</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column: Interactive 3D Robot (Seamless & Borderless) */}
+          <div className="lg:col-span-5 w-full h-[360px] sm:h-[460px] lg:h-[500px] relative overflow-visible flex items-center justify-center">
+            <SplineSceneBasic
+              layout="borderless"
+              showText={false}
+              className="w-full h-full min-h-[360px]"
+            />
+          </div>
         </div>
 
-        {/* Space Grotesk Editorial Headline */}
-        <h1 className="headline-display text-[var(--text-primary)] max-w-4xl">
-          Grounded Macro Intel, Currency Flow & Directional Bias
-        </h1>
-
-        {/* Clean Subtitle */}
-        <p className="mt-5 text-sm sm:text-base text-[var(--text-secondary)] max-w-2xl leading-relaxed font-sans">
-          Eliminating market noise with G8 relative currency dispersion, 14 core intraday directional biases, canonical news deduplication, and multi-session historical permanence.
-        </p>
-
-        {/* High-Contrast CTAs */}
-        <div className="mt-8 flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto font-mono text-xs">
-          <button
-            onClick={() => onNavigate('/dashboard')}
-            className="w-full sm:w-auto px-6 py-3 rounded bg-[var(--accent)] hover:opacity-90 text-[var(--accent-contrast)] font-bold transition flex items-center justify-center gap-2 cursor-pointer shadow-xs"
-          >
-            <span>MASUK KE TERMINAL DESK</span>
-            <ArrowRight className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => {
-              const el = document.getElementById('features-section');
-              if (el) el.scrollIntoView({ behavior: 'smooth' });
-            }}
-            className="w-full sm:w-auto px-5 py-3 rounded bg-[var(--bg-surface)] hover:bg-[var(--bg-section-alt)] text-[var(--text-primary)] border border-[var(--border-subtle)] font-semibold transition flex items-center justify-center gap-2 cursor-pointer"
-          >
-            <LineChart className="w-4 h-4 text-[var(--accent)]" />
-            <span>LIHAT ARSITEKTUR FITUR</span>
-          </button>
-        </div>
-
-        {/* Institutional Metric Badges */}
-        <div className="mt-10 flex flex-wrap items-center justify-center gap-6 font-mono text-xs text-[var(--text-secondary)] border-y py-3 w-full max-w-3xl" style={{ borderColor: 'var(--border-subtle)' }}>
-          <div className="flex items-center gap-1.5">
-            <span className="text-[var(--bullish)]">●</span>
-            <span className="font-semibold text-[var(--text-primary)]">G8 FLOW DISPERSION</span>
-            <span className="text-[var(--text-muted)]">(28 Cross Pairs)</span>
-          </div>
-          <div className="text-[var(--border-subtle)]">·</div>
-          <div className="flex items-center gap-1.5">
-            <span className="text-[var(--accent)]">●</span>
-            <span className="font-semibold text-[var(--text-primary)]">14 CORE ASSET RADAR</span>
-            <span className="text-[var(--text-muted)]">(FX, Gold, US100, BTC)</span>
-          </div>
-          <div className="text-[var(--border-subtle)]">·</div>
-          <div className="flex items-center gap-1.5">
-            <span className="text-[var(--bullish)]">●</span>
-            <span className="font-semibold text-[var(--text-primary)]">ZERO DUPLICATION WIRE</span>
-          </div>
-        </div>
-
-        {/* 3. AUTHENTIC TERMINAL PREVIEW SHOWCASE (NO FAKE MACOS DOTS) */}
-        <div className="mt-10 w-full max-w-5xl terminal-panel overflow-hidden text-left shadow-lg">
+        {/* 3. AUTHENTIC TERMINAL PREVIEW SHOWCASE */}
+        <div className="mt-12 w-full max-w-5xl mx-auto terminal-panel overflow-hidden text-left shadow-lg">
           {/* Terminal Console Status Strip */}
           <div
             className="px-4 py-2.5 border-b flex items-center justify-between font-mono text-xs"

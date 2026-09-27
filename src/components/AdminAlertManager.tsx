@@ -250,7 +250,7 @@ export const AdminAlertManager: React.FC = () => {
                 className="w-full bg-[var(--bg-card)] border border-[var(--border-subtle)] px-3 py-1.5 rounded text-[var(--text-primary)] placeholder:text-[var(--text-muted)] outline-none focus:border-[var(--accent)]"
               />
               <p className="text-[10px] text-[var(--text-muted)] font-sans mt-0.5">
-                Dapatkan Bot Token dari <span className="text-[var(--accent)] font-semibold">@BotFather</span> di Telegram.
+                Obtain Bot Token from <span className="text-[var(--accent)] font-semibold">@BotFather</span> on Telegram.
               </p>
             </div>
 
@@ -266,7 +266,7 @@ export const AdminAlertManager: React.FC = () => {
                 className="w-full bg-[var(--bg-card)] border border-[var(--border-subtle)] px-3 py-1.5 rounded text-[var(--text-primary)] placeholder:text-[var(--text-muted)] outline-none focus:border-[var(--accent)]"
               />
               <p className="text-[10px] text-[var(--text-muted)] font-sans mt-0.5">
-                Dapatkan ID akun/grup Telegram via bot <span className="text-[var(--accent)] font-semibold">@userinfobot</span>.
+                Obtain your Telegram user or group ID via <span className="text-[var(--accent)] font-semibold">@userinfobot</span>.
               </p>
             </div>
 

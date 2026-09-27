@@ -491,13 +491,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ currentUser }) => {
               <div className="p-8 text-center rounded-lg bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-xs text-[var(--text-muted)] font-mono space-y-2">
                 <p className="font-semibold text-[var(--text-primary)]">
                   {safeDuplicates.length === 0
-                    ? 'Belum ada event duplikat terkonsolidasi.'
-                    : 'Tidak ada event yang cocok dengan filter pencarian.'}
+                    ? 'No consolidated duplicate events recorded yet.'
+                    : 'No events match the search filter.'}
                 </p>
                 <p>
                   {safeDuplicates.length === 0
-                    ? 'Sistem ARAH Market Intelligence secara otomatis menyatukan berbagai headline lintas sumber dan bahasa (English, Indonesian, Spanish) ke dalam 1 Canonical Event ID tanpa redundansi data.'
-                    : 'Coba ubah kata kunci pencarian atau bersihkan kolom filter.'}
+                    ? 'The ARAH Market Intelligence system automatically clusters cross-source, multi-lingual headlines (English, Indonesian, Spanish) into a single Canonical Event ID without data redundancy.'
+                    : 'Try adjusting your search query or clearing filter criteria.'}
                 </p>
               </div>
             ) : (

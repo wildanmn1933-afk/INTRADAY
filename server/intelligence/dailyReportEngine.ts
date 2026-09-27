@@ -55,7 +55,7 @@ export class DailyReportEngine {
   /**
    * Get or generate today's daily report
    */
-  static async getDailyReport(language: 'id' | 'en' = 'id', forceRefresh = false, dateStr?: string): Promise<DailyMarketReportData> {
+  static async getDailyReport(language: 'id' | 'en' = 'en', forceRefresh = false, dateStr?: string): Promise<DailyMarketReportData> {
     const isId = language === 'id';
     const now = new Date();
     const todayStr = dateStr || now.toISOString().split('T')[0];
@@ -809,7 +809,7 @@ export class WeeklyReportEngine {
   /**
    * Get or generate Weekly Report
    */
-  static async getWeeklyReport(language: 'id' | 'en' = 'id', forceRefresh = false, weekStr?: string): Promise<WeeklyMarketReportData> {
+  static async getWeeklyReport(language: 'id' | 'en' = 'en', forceRefresh = false, weekStr?: string): Promise<WeeklyMarketReportData> {
     const now = new Date();
     const currentWeekRange = weekStr || this.getCurrentWeekRange(now, language);
     const cacheKey = `weekly_report_${language}_${currentWeekRange}`;

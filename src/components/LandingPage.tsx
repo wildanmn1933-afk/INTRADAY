@@ -21,8 +21,10 @@ import { api } from '../lib/api';
 import { MarketPrice, CurrencyStrength } from '../types';
 import { getCurrencyFlagUrl } from '../lib/assets';
 import { ThemeToggle } from './ThemeToggle';
+import { LanguageToggle } from './LanguageToggle';
 import { useTheme } from '../lib/theme';
-import { MarketChart3D } from './MarketChart3D';
+import { useLanguage } from '../lib/LanguageContext';
+import { SplineScene } from './ui/splite';
 
 interface LandingPageProps {
   onNavigate: (to: string) => void;
@@ -39,6 +41,7 @@ const fmtPct = (v: number) => `${v >= 0 ? '+' : ''}${v.toFixed(2)}%`;
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, onOpenAuth }) => {
   const { theme, toggleTheme } = useTheme();
+  const { t } = useLanguage();
   const [prices, setPrices] = useState<MarketPrice[]>([]);
   const [strengths, setStrengths] = useState<CurrencyStrength[]>([]);
   const [eventCount, setEventCount] = useState<number | null>(null);
@@ -65,11 +68,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, onOpenAuth
 
   useEffect(() => {
     const prev = document.title;
-    document.title = 'Arah Market — Macro & FX Intelligence';
+    document.title = t('Arah Market — Intelijen Makro & Valas Global', 'Arah Market — Macro & FX Intelligence');
     return () => {
       document.title = prev;
     };
-  }, []);
+  }, [t]);
 
   // A live desk reads the widest movers first, not an alphabetical list.
   const movers = useMemo(
@@ -101,55 +104,55 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, onOpenAuth
 
   const moverRange = range(movers.map(m => Math.abs(m.change_24h_pct)));
 
-  const capabilities = [
+  const capabilities = useMemo(() => [
     {
       icon: Radio,
       route: '/news',
-      title: 'Canonical news wire',
-      body: 'Every headline deduplicated across sources, graded by impact, and mapped to the instruments it actually moves. No repeats, no filler.',
+      title: t('landing.cap.news.title'),
+      body: t('landing.cap.news.body'),
     },
     {
       icon: Target,
       route: '/arah-market',
-      title: 'Market bias dossier',
-      body: 'Fundamental and price-action reads scored separately per pair, then reconciled into one conviction-weighted verdict.',
+      title: t('landing.cap.bias.title'),
+      body: t('landing.cap.bias.body'),
     },
     {
       icon: GitMerge,
       route: '/intermarket',
-      title: 'Intermarket flows',
-      body: 'Rate differentials, index correlations, and commodity linkage evaluated as one transmission chain rather than isolated charts.',
+      title: t('landing.cap.intermarket.title'),
+      body: t('landing.cap.intermarket.body'),
     },
     {
       icon: Calendar,
       route: '/calendar',
-      title: 'Economic calendar',
-      body: 'Scheduled releases with live actual-versus-forecast surprise scoring and the realised market reaction attached.',
+      title: t('landing.cap.calendar.title'),
+      body: t('landing.cap.calendar.body'),
     },
     {
       icon: Brain,
       route: '/intelligence',
-      title: 'AI analysis',
-      body: 'Gemini synthesises the session into a written macro regime read, grounded strictly in verified prices and released data.',
+      title: t('landing.cap.ai.title'),
+      body: t('landing.cap.ai.body'),
     },
     {
       icon: Activity,
       route: '/markets',
-      title: 'Market surveillance',
-      body: 'Live price grid across FX majors, metals, energy, indices, and crypto with spread and session context.',
+      title: t('landing.cap.markets.title'),
+      body: t('landing.cap.markets.body'),
     },
-  ];
+  ], [t]);
 
   return (
     <div className="min-h-screen flex flex-col font-sans bg-[var(--bg-canvas)] text-[var(--text-primary)]">
       {/* Top Announcement Ribbon */}
       <div className="w-full py-2 px-4 text-center text-xs font-medium border-b border-[var(--border-subtle)] bg-[var(--bg-section-alt)] text-[var(--text-secondary)]">
-        ✦ ARAH Engine v2.4 Live · Real-time Institutional Liquidity, Order Flow & Multi-Asset Quantitative Surveillance.{' '}
+        {t('landing.ribbon')}{' '}
         <button
           onClick={onOpenAuth}
           className="underline font-semibold text-[var(--text-primary)] hover:text-amber-500 transition cursor-pointer"
         >
-          Buka Terminal Gratis →
+          {t('landing.ribbonCta')}
         </button>
       </div>
 
@@ -167,31 +170,43 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, onOpenAuth
         </div>
 
         <nav className="hidden md:flex items-center gap-6 text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
-          <a href="#desk" className="hover:text-[var(--text-primary)] transition">Surveillance</a>
-          <a href="#capability" className="hover:text-[var(--text-primary)] transition">Sistem & Intelijen</a>
-          <a href="#coverage" className="hover:text-[var(--text-primary)] transition">Currency Ranking</a>
+          <a href="#desk" className="hover:text-[var(--text-primary)] transition">{t('landing.nav.surveillance')}</a>
+          <a href="#capability" className="hover:text-[var(--text-primary)] transition">{t('landing.nav.systems')}</a>
+          <a href="#coverage" className="hover:text-[var(--text-primary)] transition">{t('landing.nav.currencies')}</a>
         </nav>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           <button
             onClick={onOpenAuth}
             className="text-xs font-medium hover:text-[var(--text-primary)] text-[var(--text-secondary)] transition cursor-pointer hidden sm:block"
           >
-            Masuk
+            {t('landing.nav.signIn')}
           </button>
           <button
             onClick={onOpenAuth}
             className="press inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition shadow-sm cursor-pointer bg-black text-white hover:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200"
           >
-            <span>Buka Terminal</span>
+            <span>{t('landing.nav.openTerminal')}</span>
             <ArrowUpRight className="w-3.5 h-3.5" />
           </button>
+          <LanguageToggle variant="pill" />
           <ThemeToggle theme={theme} onToggle={toggleTheme} variant="button" />
         </div>
       </header>
 
       {/* ============ HERO SECTION: Clean Canvas with Perspective Ground Grid ============ */}
       <section id="desk" className="relative px-4 sm:px-8 pt-12 pb-16 lg:pt-16 lg:pb-24 border-b overflow-hidden" style={{ borderColor: 'var(--border-subtle)' }}>
+        {/* 3D Robot Background Visual - Positioned to visually merge with page layout */}
+        <div className="absolute inset-0 z-0">
+          <SplineScene
+            scene="https://prod.spline.design/kZDDjO5HuC9GJUM2/scene.splinecode"
+            className="w-full h-full"
+          />
+          {/* Gradient Overlay to mask the edges and visually merge with page layout */}
+          <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-[var(--bg-canvas)] via-[var(--bg-canvas)]/75 to-transparent lg:w-3/5" />
+          <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-[var(--bg-canvas)] via-transparent to-[var(--bg-canvas)]/40" />
+        </div>
+
         {/* Subtle Perspective Floor Grid */}
         <div
           className="absolute inset-0 pointer-events-none opacity-[0.14] dark:opacity-[0.08]"
@@ -213,28 +228,26 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, onOpenAuth
                 ◆
               </span>
               <span className="font-semibold text-[var(--text-primary)]">ARAH INTELLIGENCE</span>
-              <span className="text-[var(--text-muted)] text-[11px]">Systematic Market Protocol</span>
+              <span className="text-[var(--text-muted)] text-[11px]">{t('landing.hero.badgeProtocol')}</span>
             </div>
 
             {/* Headline */}
             <h1 className="text-4xl sm:text-5xl lg:text-[54px] font-black tracking-tight text-[var(--text-primary)] leading-[1.06]">
-              Sistematisasi Analisis. Presisi Eksekusi.
+              {t('landing.hero.title')}
             </h1>
 
             {/* Subtitle Quote */}
             <p className="mt-5 text-base sm:text-lg font-medium text-[var(--text-primary)] leading-snug">
-              Pasar bergerak atas likuiditas dan ketidakseimbangan order flow, bukan opini.
+              {t('landing.hero.quote')}
             </p>
 
             {/* Explanatory Body */}
             <p className="mt-4 text-sm leading-relaxed text-[var(--text-secondary)]">
-              ARAH MARKET menyatukan pemetaan struktur likuiditas institusional (Order Block & Fair Value Gap),
-              analisis disparitas mata uang global, dan pemindaian makro otomatis ke dalam satu terminal analitik berkecepatan tinggi.
+              {t('landing.hero.p1')}
             </p>
 
             <p className="mt-3 text-sm leading-relaxed text-[var(--text-secondary)]">
-              Aturan konfirmasi mekanikal dikuantifikasi sebelum chart dibuka: hilangkan bias emosional,
-              dan eksekusi probabilitas matematis dengan manajemen risiko tanpa kompromi.
+              {t('landing.hero.p2')}
             </p>
 
             {/* CTA Buttons */}
@@ -243,7 +256,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, onOpenAuth
                 onClick={onOpenAuth}
                 className="inline-flex items-center gap-2 px-5 py-3 rounded-full text-sm font-bold bg-black text-white dark:bg-white dark:text-black hover:opacity-90 transition shadow-md cursor-pointer"
               >
-                <span>Buka Live Terminal</span>
+                <span>{t('landing.hero.launchBtn')}</span>
                 <ArrowUpRight className="w-4 h-4" />
               </button>
 
@@ -252,42 +265,40 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, onOpenAuth
                 className="inline-flex items-center gap-2 px-5 py-3 rounded-full text-sm font-medium border border-[var(--border-strong)] text-[var(--text-primary)] hover:bg-[var(--bg-section-alt)] transition cursor-pointer"
               >
                 <Activity className="w-4 h-4 text-amber-500" />
-                <span>{heroTab === '3d' ? 'Lihat Live Tape Feed' : 'Tampilkan 3D Visual'}</span>
+                <span>{heroTab === '3d' ? t('landing.hero.toggleTape') : t('landing.hero.toggleRobot')}</span>
               </button>
             </div>
 
             {/* Unique Quantitative Edge Badges */}
             <div className="mt-8 pt-6 border-t border-[var(--border-hairline)] grid grid-cols-3 gap-3 font-mono text-[11px]">
               <div>
-                <span className="text-[var(--text-muted)] block text-[9px] uppercase tracking-wider">Algoritma</span>
+                <span className="text-[var(--text-muted)] block text-[9px] uppercase tracking-wider">{t('Algoritma', 'Algorithm')}</span>
                 <span className="font-bold text-[var(--text-primary)]">Volume Profile</span>
               </div>
               <div>
-                <span className="text-[var(--text-muted)] block text-[9px] uppercase tracking-wider">Protokol</span>
+                <span className="text-[var(--text-muted)] block text-[9px] uppercase tracking-wider">{t('Protokol', 'Protocol')}</span>
                 <span className="font-bold text-amber-500">Order Flow Delta</span>
               </div>
               <div>
-                <span className="text-[var(--text-muted)] block text-[9px] uppercase tracking-wider">Latensi Feed</span>
+                <span className="text-[var(--text-muted)] block text-[9px] uppercase tracking-wider">{t('Latensi Feed', 'Feed Latency')}</span>
                 <span className="font-bold text-emerald-500">14ms Real-Time</span>
               </div>
             </div>
           </div>
 
-          {/* Right Column: 3D Floating Isometric Cards in Open Space (NO CONTAINER BOX) */}
-          <div className="lg:col-span-6 xl:col-span-7 flex flex-col items-center justify-center min-h-[440px] sm:min-h-[500px]">
+          {/* Right Column: Open Area for 3D Robot Background Visual / Live Tape Feed */}
+          <div className="lg:col-span-6 xl:col-span-7 flex flex-col items-center justify-center min-h-[440px] sm:min-h-[520px] relative overflow-visible pointer-events-none">
             {heroTab === '3d' ? (
-              <div className="w-full flex items-center justify-center overflow-visible py-4">
-                <MarketChart3D variant="hero" symbol="XAUUSD" showControls={false} />
-              </div>
+              <div className="w-full h-[460px] sm:h-[540px] flex items-center justify-center overflow-visible pointer-events-none" />
             ) : (
-              <div className="w-full terminal-panel overflow-hidden">
+              <div className="w-full terminal-panel overflow-hidden pointer-events-auto">
                 <div className="section-head px-3.5 py-2 flex items-center justify-between border-b" style={{ borderColor: 'var(--border-hairline)' }}>
-                  <span className="text-xs font-mono font-bold">Live Market Tape</span>
+                  <span className="text-xs font-mono font-bold">{t('landing.hero.tapeTitle')}</span>
                   <button
                     onClick={() => setHeroTab('3d')}
                     className="text-xs font-mono text-amber-500 hover:underline cursor-pointer"
                   >
-                    Kembali ke 3D Desk
+                    {t('landing.hero.return3d')}
                   </button>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0">
@@ -327,7 +338,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, onOpenAuth
                   {!loading && movers.length > 0 && moverRange && (
                     <div className="px-3.5 py-2 flex items-center gap-2 text-[10px] font-mono" style={{ color: 'var(--text-muted)' }}>
                       <Gauge className="w-3 h-3" />
-                      <span>24h dispersion {moverRange.min.toFixed(2)}% – {moverRange.max.toFixed(2)}%</span>
+                      <span>{t('landing.hero.dispersion')} {moverRange.min.toFixed(2)}% – {moverRange.max.toFixed(2)}%</span>
                     </div>
                   )}
                 </div>
@@ -340,10 +351,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, onOpenAuth
       <section className="px-4 sm:px-8 py-10 border-b" style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-section-alt)' }}>
         <div className="max-w-[1400px] mx-auto grid grid-cols-2 md:grid-cols-4 gap-px" style={{ background: 'var(--border-subtle)' }}>
           {[
-            { k: 'Instruments tracked', v: prices.length ? String(prices.length) : '—' },
-            { k: 'Currencies ranked', v: rankedCurrencies.length ? String(rankedCurrencies.length) : '—' },
-            { k: 'Calendar events', v: eventCount !== null ? String(eventCount) : '—' },
-            { k: 'Realtime transport', v: 'SSE' },
+            { k: t('landing.stats.instruments'), v: prices.length ? String(prices.length) : '—' },
+            { k: t('landing.stats.currencies'), v: rankedCurrencies.length ? String(rankedCurrencies.length) : '—' },
+            { k: t('landing.stats.events'), v: eventCount !== null ? String(eventCount) : '—' },
+            { k: t('landing.stats.transport'), v: 'SSE' },
           ].map(stat => (
             <div key={stat.k} className="px-4 py-5" style={{ background: 'var(--bg-canvas)' }}>
               <div className="num text-2xl font-semibold">{stat.v}</div>
@@ -359,7 +370,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, onOpenAuth
       <section id="capability" className="px-4 sm:px-8 py-16 border-b" style={{ borderColor: 'var(--border-subtle)' }}>
         <div className="max-w-[1400px] mx-auto">
           <h2 className="headline-h1 max-w-[22ch]">
-            Six systems, one reading of the session.
+            {t('landing.capabilities.heading')}
           </h2>
 
           <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-px" style={{ background: 'var(--border-subtle)' }}>
@@ -402,20 +413,19 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, onOpenAuth
         <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10">
           <div className="lg:col-span-4">
             <h2 className="headline-h2 max-w-[20ch]">
-              Strength is relative, so we rank it.
+              {t('landing.coverage.heading')}
             </h2>
             <p className="mt-4 text-[13px] leading-relaxed max-w-[46ch]" style={{ color: 'var(--text-secondary)' }}>
-              G8 currencies scored against each other on the same session basis. The strongest and
-              weakest legs are what pair selection actually keys off.
+              {t('landing.coverage.desc')}
             </p>
             <div className="mt-5 space-y-2 text-[12px] font-mono" style={{ color: 'var(--text-muted)' }}>
               <div className="flex items-center gap-2">
                 <ShieldCheck className="w-3.5 h-3.5" style={{ color: 'var(--accent)' }} />
-                <span>Grounds every read in released data</span>
+                <span>{t('landing.coverage.badgeData')}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Clock className="w-3.5 h-3.5" style={{ color: 'var(--accent)' }} />
-                <span>Updated through the trading session</span>
+                <span>{t('landing.coverage.badgeUpdate')}</span>
               </div>
             </div>
           </div>
@@ -423,8 +433,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, onOpenAuth
           <div className="lg:col-span-8">
             <div className="terminal-panel overflow-hidden">
               <div className="section-head px-3.5 py-2.5">
-                <span className="metadata-label" style={{ color: 'var(--text-secondary)' }}>Currency ranking</span>
-                <span className="text-[10px] font-mono" style={{ color: 'var(--text-muted)' }}>session basis</span>
+                <span className="metadata-label" style={{ color: 'var(--text-secondary)' }}>{t('landing.coverage.tableTitle')}</span>
+                <span className="text-[10px] font-mono" style={{ color: 'var(--text-muted)' }}>{t('landing.coverage.basis')}</span>
               </div>
 
               {loading ? (
@@ -433,7 +443,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, onOpenAuth
                 </div>
               ) : rankedCurrencies.length === 0 ? (
                 <div className="px-3.5 py-8 text-center text-xs font-mono" style={{ color: 'var(--text-muted)' }}>
-                  Currency strength feed is warming up.
+                  {t('landing.coverage.warming')}
                 </div>
               ) : (
                 <div className="divide-y" style={{ borderColor: 'var(--border-hairline)' }}>
@@ -475,27 +485,27 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, onOpenAuth
         <div className="max-w-[1400px] mx-auto flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>
             <h2 className="headline-h2 max-w-[24ch]">
-              Read the session before the session reads you.
+              {t('landing.cta.heading')}
             </h2>
             <p className="mt-3 text-[13px] max-w-[52ch]" style={{ color: 'var(--text-secondary)' }}>
-              Sign in to open the full terminal, or browse the public views without an account.
+              {t('landing.cta.desc')}
             </p>
           </div>
           <div className="flex items-center gap-2.5 shrink-0">
             <button
               onClick={onOpenAuth}
-              className="press inline-flex items-center gap-2 px-4 py-2.5 rounded text-sm font-semibold shadow-sm"
+              className="press inline-flex items-center gap-2 px-4 py-2.5 rounded text-sm font-semibold shadow-sm cursor-pointer"
               style={{ background: 'var(--accent)', color: 'var(--accent-contrast)' }}
             >
-              Open terminal
+              {t('landing.cta.openTerminal')}
               <ArrowRight className="w-4 h-4" />
             </button>
             <a
               href="#capability"
-              className="press inline-flex items-center gap-2 px-4 py-2.5 rounded text-sm font-semibold border"
+              className="press inline-flex items-center gap-2 px-4 py-2.5 rounded text-sm font-semibold border cursor-pointer"
               style={{ borderColor: 'var(--border-strong)' }}
             >
-              Capability
+              {t('landing.cta.capabilities')}
             </a>
           </div>
         </div>
@@ -503,13 +513,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, onOpenAuth
 
       <footer className="mt-auto px-4 sm:px-8 py-6 border-t" style={{ borderColor: 'var(--border-subtle)' }}>
         <div className="max-w-[1400px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] font-mono" style={{ color: 'var(--text-muted)' }}>
-          <span>Arah Market — macro &amp; FX intelligence</span>
+          <span>{t('landing.footer.tagline')}</span>
           <span className="flex items-center gap-1.5">
             <Globe2 className="w-3 h-3" />
-            Research tooling. Not investment advice.
+            {t('landing.footer.disclaimer')}
           </span>
         </div>
       </footer>
     </div>
   );
 };
+

@@ -456,7 +456,7 @@ export class RelationalDatabase {
     const cleanCode = inputCode.trim();
     const user = this.getUserByEmail(cleanEmail);
     if (!user) {
-      return { success: false, error: 'Pengguna dengan email ini tidak ditemukan.' };
+      return { success: false, error: 'User with this email not found.' };
     }
 
     if (user.is_verified || user.verification_status === 'verified') {
@@ -470,11 +470,11 @@ export class RelationalDatabase {
     // Look for matching code
     const matchingToken = tokens.find(vt => vt.code === cleanCode);
     if (!matchingToken) {
-      return { success: false, error: 'Kode verifikasi tidak sesuai. Periksa kembali 6 angka di email Anda.' };
+      return { success: false, error: 'Verification code is invalid. Please double check the 6-digit code in your email.' };
     }
 
     if (new Date(matchingToken.expires_at) <= new Date()) {
-      return { success: false, error: 'Kode verifikasi telah kedaluwarsa. Silakan minta kode baru.' };
+      return { success: false, error: 'Verification code has expired. Please request a new code.' };
     }
 
     matchingToken.used_at = new Date().toISOString();
@@ -510,13 +510,13 @@ export class RelationalDatabase {
     user?: User;
   } {
     const vt = this.indexes.tokensByToken.get(token);
-    if (!vt) return { success: false, error: 'Tautan atau token tidak valid atau tidak ditemukan.' };
-    if (vt.used_at) return { success: false, error: 'Tautan atau token ini sudah pernah digunakan sebelumnya.' };
-    if (new Date(vt.expires_at) <= new Date()) return { success: false, error: 'Tautan atau token telah kedaluwarsa. Silakan minta tautan baru.' };
-    if (type && vt.type && vt.type !== type) return { success: false, error: 'Tipe token tidak sesuai.' };
+    if (!vt) return { success: false, error: 'Invalid or missing link/token.' };
+    if (vt.used_at) return { success: false, error: 'This link or token has already been used.' };
+    if (new Date(vt.expires_at) <= new Date()) return { success: false, error: 'This token has expired. Please request a new link.' };
+    if (type && vt.type && vt.type !== type) return { success: false, error: 'Token type mismatch.' };
 
     const user = this.getUserById(vt.user_id);
-    if (!user) return { success: false, error: 'Akun pengguna untuk token ini tidak ditemukan.' };
+    if (!user) return { success: false, error: 'User account for this token was not found.' };
 
     vt.used_at = new Date().toISOString();
     this.scheduleSave();
@@ -537,12 +537,12 @@ export class RelationalDatabase {
   public consumeVerificationToken(token: string): { success: boolean; error?: string; user?: User } {
     const vt = this.getVerificationToken(token);
     if (!vt) {
-      return { success: false, error: 'Tautan verifikasi tidak valid atau tidak ditemukan.' };
+      return { success: false, error: 'Verification link is invalid or expired.' };
     }
 
     const user = this.getUserById(vt.user_id);
     if (!user) {
-      return { success: false, error: 'Akun pengguna untuk token ini tidak ditemukan.' };
+      return { success: false, error: 'User account for this token was not found.' };
     }
 
     // 1. If user is already verified, always treat as success (idempotent verification)
@@ -553,7 +553,7 @@ export class RelationalDatabase {
     const now = new Date();
     // 2. Check if token is expired (> 24 hours)
     if (new Date(vt.expires_at) <= now) {
-      return { success: false, error: 'Tautan verifikasi telah kedaluwarsa. Silakan minta tautan aktivasi baru.' };
+      return { success: false, error: 'Verification link has expired. Please request a new activation link.' };
     }
 
     // 3. Mark token as consumed and activate user
@@ -1235,9 +1235,9 @@ export class RelationalDatabase {
             'Yesterday market showed hesitation ahead of rate guidance before clearing higher today.',
           ],
           historical_insights: [
-            'USD strength menurun selama 3 sesi terakhir berturut-turut dari 5.2 ke 4.4.',
-            'XAUUSD konsisten bergerak berlawanan dengan USD (+0.45% saat DXY -0.32%).',
-            'GBP memimpin kekuatan G8 di atas 7.0 selama 48 jam berturut-turut.',
+            'USD strength declined for the 3rd consecutive session from 5.2 to 4.4.',
+            'XAUUSD consistently moved inversely to USD (+0.45% while DXY -0.32%).',
+            'GBP leads G8 strength above 7.0 for 48 consecutive hours.',
           ],
           created_at: '2026-09-20T05:00:00.000Z',
         },
@@ -1314,8 +1314,8 @@ export class RelationalDatabase {
           id: 'mem_usd_weakening',
           type: 'CURRENCY',
           title: 'USD Persistent Weakening Across Recorded Sessions',
-          description: `Kekuatan USD menurun (${usd.delta_yesterday >= 0 ? '+' : ''}${usd.delta_yesterday} vs kemarin, ${usd.delta_7d >= 0 ? '+' : ''}${usd.delta_7d} vs 7 hari lalu) sejalan dengan pelonggaran yield Treasury.`,
-          evidence: `USD Score: ${usd.today_score.toFixed(2)} (kemarin: ${usd.yesterday_score.toFixed(2)}, 7H: ${usd.seven_day_score.toFixed(2)})`,
+          description: `USD strength has softened (${usd.delta_yesterday >= 0 ? '+' : ''}${usd.delta_yesterday} vs yesterday, ${usd.delta_7d >= 0 ? '+' : ''}${usd.delta_7d} vs 7 days ago) aligned with Treasury yield easing.`,
+          evidence: `USD Score: ${usd.today_score.toFixed(2)} (yesterday: ${usd.yesterday_score.toFixed(2)}, 7D: ${usd.seven_day_score.toFixed(2)})`,
           metric: `${usd.delta_7d >= 0 ? '+' : ''}${usd.delta_7d} 7D Delta`,
           confidence: 94,
           created_at: new Date().toISOString(),
@@ -1325,8 +1325,8 @@ export class RelationalDatabase {
           id: 'mem_usd_steady',
           type: 'CURRENCY',
           title: 'USD Holding Resilient Range in Multi-Session Tracking',
-          description: `Kekuatan USD stabil di kisaran ${usd.today_score.toFixed(2)}/10, mempertahankan level resistance teknikal DXY.`,
-          evidence: `Score konsisten di atas 4.5 dalam 3 sesi pengamatan terakhir.`,
+          description: `USD strength remains stable near ${usd.today_score.toFixed(2)}/10, defending DXY technical resistance levels.`,
+          evidence: `Score consistently above 4.5 across the last 3 observation sessions.`,
           metric: `${usd.today_score.toFixed(2)} / 10.0`,
           confidence: 91,
           created_at: new Date().toISOString(),
@@ -1339,8 +1339,8 @@ export class RelationalDatabase {
       insights.push({
         id: 'mem_eur_divergence',
         type: 'CURRENCY',
-        title: 'EUR Divergensi Terhadap Rata-rata 7 Hari',
-        description: `EUR mencatat perubahan ${eur7dDelta >= 0 ? '+' : ''}${eur7dDelta} poin dibandingkan rata-rata 7 hari lalu di tengah sinyal perlambatan manufaktur Zona Euro.`,
+        title: 'EUR Divergence vs 7-Day Moving Baseline',
+        description: `EUR recorded a shift of ${eur7dDelta >= 0 ? '+' : ''}${eur7dDelta} points compared to its 7-day average amid Eurozone manufacturing trajectory signals.`,
         evidence: `EUR Today: ${eur.today_score.toFixed(2)} vs 7-Day: ${eur.seven_day_score.toFixed(2)}`,
         metric: `${eur7dDelta >= 0 ? '+' : ''}${eur7dDelta} pts vs 7D`,
         confidence: 92,
@@ -1354,9 +1354,9 @@ export class RelationalDatabase {
     insights.push({
       id: 'mem_xau_usd_inverse',
       type: 'CORRELATION',
-      title: 'XAUUSD Bergerak Berlawanan Terhadap USD',
-      description: `Emas (XAUUSD) menunjukkan korelasi negatif kuat terhadap USD: spot price bergerak ${xauChg >= 0 ? '+' : ''}${xauChg.toFixed(2)}% saat skor DXY berada di area tekanan ${usd?.today_score.toFixed(1) || '4.4'}/10.`,
-      evidence: `XAUUSD $${xauPrice?.price.toLocaleString() || '2,742'} berbanding DXY 100.85 dalam 3 sesi terakhir.`,
+      title: 'XAUUSD Trading Inversely Against USD',
+      description: `Gold (XAUUSD) exhibits robust inverse correlation against USD: spot price moved ${xauChg >= 0 ? '+' : ''}${xauChg.toFixed(2)}% while DXY score is in pressure territory (${usd?.today_score.toFixed(1) || '4.4'}/10).`,
+      evidence: `XAUUSD $${xauPrice?.price.toLocaleString() || '2,742'} vs DXY 100.85 across last 3 sessions.`,
       metric: `-0.86 Inverse Correlation`,
       confidence: 96,
       created_at: new Date().toISOString(),
@@ -1366,9 +1366,9 @@ export class RelationalDatabase {
       insights.push({
         id: 'mem_gbp_dominance',
         type: 'CURRENCY',
-        title: 'GBP Mempertahankan Dominasi Kekuatan G8',
-        description: `Poundsterling (GBP) memimpin peringkat modal G8 dengan skor ${gbp.today_score.toFixed(2)}/10, didukung sikap hawkish Bank of England.`,
-        evidence: `GBP memegang Rank #1 di atas EUR (${eur?.today_score.toFixed(2)}) dan USD (${usd?.today_score.toFixed(2)}).`,
+        title: 'GBP Maintaining G8 Relative Strength Dominance',
+        description: `British Pound (GBP) leads G8 capital rankings with a score of ${gbp.today_score.toFixed(2)}/10, supported by Bank of England policy stance.`,
+        evidence: `GBP holds Rank #1 above EUR (${eur?.today_score.toFixed(2)}) and USD (${usd?.today_score.toFixed(2)}).`,
         metric: `#1 G8 Rank (${gbp.today_score.toFixed(2)})`,
         confidence: 95,
         created_at: new Date().toISOString(),
@@ -1379,9 +1379,9 @@ export class RelationalDatabase {
       insights.push({
         id: 'mem_jpy_lag',
         type: 'CURRENCY',
-        title: 'JPY Tekanan Carry Trade Berkelanjutan',
-        description: `Yen Jepang (JPY) bertahan di peringkat terbawah G8 (${jpy.today_score.toFixed(2)}/10), menjaga spread yield menguntungkan untuk mata uang berimbal hasil tinggi.`,
-        evidence: `JPY score melemah ${jpy.delta_7d} poin dalam 7 hari terakhir.`,
+        title: 'JPY Persistent Carry Trade Drag',
+        description: `Japanese Yen (JPY) anchors the bottom of G8 rankings (${jpy.today_score.toFixed(2)}/10), keeping yield spreads attractive for high-beta currencies.`,
+        evidence: `JPY score softened ${jpy.delta_7d} points over the last 7 days.`,
         metric: `${jpy.today_score.toFixed(2)} / 10.0 (Weakest)`,
         confidence: 93,
         created_at: new Date().toISOString(),

@@ -5,6 +5,9 @@ import {
   TrendingUp,
   Clock,
   BarChart2,
+  Compass,
+  Flame,
+  RefreshCw,
 } from 'lucide-react';
 import {
   MarketPrice,
@@ -19,6 +22,7 @@ import {
 import { ExecutiveMarketBrief } from './ExecutiveMarketBrief';
 import { NavTabId } from './Sidebar';
 import { PageHeader } from './shared/PageHeader';
+import { useLanguage } from '../lib/LanguageContext';
 
 interface OverviewDashboardProps {
   intradayMap: IntradayAssetBias[];
@@ -49,7 +53,12 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = React.memo(({
   globalRegime,
   arahMarketData,
   onOpenChart,
+  onSelectEvent,
+  onSyncWire,
+  isSyncingWire = false,
 }) => {
+  const { t } = useLanguage();
+
   // Executive KPI telemetry calculations
   const kpiStats = useMemo(() => {
     let strongest: CurrencyStrength | null = null;
@@ -63,13 +72,13 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = React.memo(({
     const bullishCount = intradayMap.filter(a => a.overall_bias === 'BULLISH').length;
     const bearishCount = intradayMap.filter(a => a.overall_bias === 'BEARISH').length;
 
-    let overallRegime = 'BALANCED / ROTATIONAL';
+    let overallRegime = t('ROTASI SEIMBANG', 'BALANCED / ROTATIONAL');
     let regimeStatus = 'NEUTRAL';
     if (bullishCount >= 7) {
-      overallRegime = 'RISK-ON DOMINANT';
+      overallRegime = t('RISK-ON DOMINAN', 'RISK-ON DOMINANT');
       regimeStatus = 'BULLISH';
     } else if (bearishCount >= 7) {
-      overallRegime = 'DEFENSIVE / RISK-OFF';
+      overallRegime = t('DEFENSIF / RISK-OFF', 'DEFENSIVE / RISK-OFF');
       regimeStatus = 'BEARISH';
     }
 
@@ -96,217 +105,155 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = React.memo(({
       us100,
       us10y,
     };
-  }, [strengths, intradayMap, calendar, prices]);
+  }, [strengths, intradayMap, calendar, prices, t]);
+
+  const activeRegime = globalRegime?.title || kpiStats.overallRegime;
+  const riskScore = globalRegime?.riskScore ?? (kpiStats.bullishCount > kpiStats.bearishCount ? 20 : -10);
+  const dxyBiasVsOpen = globalRegime?.dxyBiasVsOpen || 'AT_OPEN';
 
   return (
     <div className="space-y-4" id="terminal-overview-dashboard">
       {/* ======================================================== */}
-      {/* 1. SWISS EDITORIAL MARKET OVERVIEW HERO                 */}
+      {/* 1. INSTITUTIONAL PAGE HEADER                             */}
       {/* ======================================================== */}
-      <section
-        className="terminal-panel p-4 sm:p-5 border transition-colors"
-        id="editorial-market-overview"
-      >
-        <PageHeader
-          eyebrow="MAIN · OVERVIEW"
-          accentNote="INTRADAY REGIME"
-          title={`Today's market regime: ${kpiStats.overallRegime}`}
-          description="Cross-asset analysis across G8 currencies, US benchmark yields, technology equities, and gold. High-conviction setups prioritized based on intermarket yield differentials and liquidity flows."
-          actions={
-            <div
-              className="w-full lg:w-80 shrink-0 rounded-lg p-3.5 space-y-3"
-              style={{ backgroundColor: 'var(--bg-section-alt)' }}
-            >
-              <div className="flex items-center justify-between">
-                <span className="metadata-label text-[9px] text-[var(--text-muted)]">
-                  At a glance
-                </span>
-                <span className="text-[10px] font-semibold text-[var(--bullish)] tabular-nums">
-                  {kpiStats.bullishCount} bull / {kpiStats.bearishCount} bear
-                </span>
-              </div>
-
-              <div className="grid grid-cols-2 gap-x-3 gap-y-2.5 text-[11px] tabular-nums">
-                <div className="space-y-0.5">
-                  <span className="metadata-label text-[9px] text-[var(--text-muted)] block">
-                    US dollar · DXY
-                  </span>
-                  <span className="font-bold text-[var(--text-primary)]">
-                    {kpiStats.dxy?.price.toFixed(2) || '101.24'}
-                    <span className={`ml-1 text-[10px] ${((kpiStats.dxy?.change_24h_pct ?? 0) >= 0) ? 'text-[var(--bullish)]' : 'text-[var(--bearish)]'}`}>
-                      {((kpiStats.dxy?.change_24h_pct ?? 0) >= 0) ? '+' : ''}
-                      {(kpiStats.dxy?.change_24h_pct ?? 0.18).toFixed(2)}%
-                    </span>
-                  </span>
-                </div>
-
-                <div className="space-y-0.5">
-                  <span className="metadata-label text-[9px] text-[var(--text-muted)] block">
-                    Gold · XAUUSD
-                  </span>
-                  <span className="font-bold text-[var(--text-primary)]">
-                    ${kpiStats.gold?.price.toFixed(1) || '2,654.8'}
-                    <span className={`ml-1 text-[10px] ${((kpiStats.gold?.change_24h_pct ?? 0) >= 0) ? 'text-[var(--bullish)]' : 'text-[var(--bearish)]'}`}>
-                      {((kpiStats.gold?.change_24h_pct ?? 0) >= 0) ? '+' : ''}
-                      {(kpiStats.gold?.change_24h_pct ?? 0.73).toFixed(2)}%
-                    </span>
-                  </span>
-                </div>
-
-                <div className="space-y-0.5">
-                  <span className="metadata-label text-[9px] text-[var(--text-muted)] block">
-                    Nasdaq · US100
-                  </span>
-                  <span className="font-bold text-[var(--text-primary)]">
-                    {kpiStats.us100?.price.toLocaleString(undefined, { maximumFractionDigits: 0 }) || '23,421'}
-                    <span className={`ml-1 text-[10px] ${((kpiStats.us100?.change_24h_pct ?? 0) >= 0) ? 'text-[var(--bullish)]' : 'text-[var(--bearish)]'}`}>
-                      {((kpiStats.us100?.change_24h_pct ?? 0) >= 0) ? '+' : ''}
-                      {(kpiStats.us100?.change_24h_pct ?? 0.41).toFixed(2)}%
-                    </span>
-                  </span>
-                </div>
-
-                <div className="space-y-0.5">
-                  <span className="metadata-label text-[9px] text-[var(--text-muted)] block">
-                    10Y yield · US10Y
-                  </span>
-                  <span className="font-bold text-[var(--text-primary)]">
-                    {kpiStats.us10y?.price.toFixed(3) || '4.085'}%
-                    <span className={`ml-1 text-[10px] ${((kpiStats.us10y?.change_24h_pct ?? 0) <= 0) ? 'text-[var(--bullish)]' : 'text-[var(--bearish)]'}`}>
-                      {((kpiStats.us10y?.change_24h_pct ?? 0) >= 0) ? '+' : ''}
-                      {(kpiStats.us10y?.change_24h_pct ?? -0.32).toFixed(2)}%
-                    </span>
-                  </span>
-                </div>
-              </div>
-
-              <div className="pt-1 flex items-center justify-between text-[10px] text-[var(--text-muted)] border-t" style={{ borderColor: 'var(--border-hairline)' }}>
-                <span>LEAD: <strong className="text-[var(--bullish)]">{kpiStats.strongest?.currency || 'USD'} ({kpiStats.strongest?.strength_score.toFixed(1) || '7.8'})</strong></span>
-                <span>LAG: <strong className="text-[var(--bearish)]">{kpiStats.weakest?.currency || 'JPY'} ({kpiStats.weakest?.strength_score.toFixed(1) || '2.1'})</strong></span>
-              </div>
-            </div>
-          }
-        />
-      </section>
-
-      {/* ======================================================== */}
-      {/* 2. 4-COLUMN STRUCTURAL KPI TELEMETRY GRID               */}
-      {/* ======================================================== */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {/* KPI 1: Market Regime */}
-        <div className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-3.5 flex flex-col justify-between gap-2">
-          <div className="flex items-center justify-between">
-            <span className="metadata-label text-[10px] text-[var(--text-muted)]">
-              Regime
-            </span>
-            <span
-              className={`text-[9px] px-2 py-0.5 rounded-full font-semibold ${
-                kpiStats.regimeStatus === 'BULLISH'
-                  ? 'badge-bullish'
-                  : kpiStats.regimeStatus === 'BEARISH'
-                  ? 'badge-bearish'
-                  : 'badge-neutral'
-              }`}
-            >
-              {kpiStats.regimeStatus}
-            </span>
-          </div>
-          <div className="text-[15px] font-semibold text-[var(--text-primary)]">
-            {kpiStats.overallRegime}
-          </div>
-          <div className="text-[11px] text-[var(--text-muted)]">
-            Distribution across 13 core tracking assets
-          </div>
-        </div>
-
-        {/* KPI 2: Currency Divergence */}
-        <div className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-3.5 flex flex-col justify-between gap-2">
-          <div className="flex items-center justify-between">
-            <span className="metadata-label text-[10px] text-[var(--text-muted)]">
-              G8 divergence
-            </span>
-            <button
-              onClick={() => onNavigateTab('currency')}
-              className="text-[10px] font-mono text-[var(--accent)] hover:underline cursor-pointer"
-            >
-              Matrix →
-            </button>
-          </div>
-          <div className="text-xs font-mono font-bold text-[var(--text-primary)] flex items-center gap-1.5">
-            <span className="text-[var(--bullish)]">{kpiStats.strongest?.currency || 'USD'}</span>
-            <span className="text-[var(--text-muted)]">vs</span>
-            <span className="text-[var(--bearish)]">{kpiStats.weakest?.currency || 'JPY'}</span>
-            <span className="text-[10px] font-normal text-[var(--text-muted)] ml-auto">
-              Δ {((kpiStats.strongest?.strength_score ?? 6) - (kpiStats.weakest?.strength_score ?? 2)).toFixed(1)}pt
-            </span>
-          </div>
-          <div className="text-[11px] text-[var(--text-muted)]">
-            Maximum directional divergence basket
-          </div>
-        </div>
-
-        {/* KPI 3: Key Imminent Catalyst */}
-        <div className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-3.5 flex flex-col justify-between gap-2">
-          <div className="flex items-center justify-between">
-            <span className="metadata-label text-[10px] text-[var(--text-muted)]">
-              NEXT HIGH IMPACT
-            </span>
-            {kpiStats.upcomingHigh && (
-              <span className="text-[9px] font-mono font-semibold px-1 py-0 rounded badge-warning">
-                {kpiStats.upcomingHigh.currency}
-              </span>
+      <PageHeader
+        eyebrow={t('overview.eyebrow')}
+        accentNote={
+          <span className="flex items-center gap-1.5 font-mono text-[10px]">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span>{t('overview.liveBadge')}</span>
+          </span>
+        }
+        title={t('overview.title')}
+        description={t('overview.desc')}
+        actions={
+          <div className="flex items-center gap-2">
+            {onSyncWire && (
+              <button
+                onClick={onSyncWire}
+                disabled={isSyncingWire}
+                className="h-8 px-3 rounded-md text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-section-alt)] border border-[var(--border-subtle)] flex items-center gap-1.5 transition cursor-pointer shrink-0 disabled:opacity-50 font-mono"
+                title={t('overview.syncTooltip')}
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isSyncingWire ? 'animate-spin text-[var(--accent)]' : ''}`} />
+                <span>{t('overview.syncBtn')}</span>
+              </button>
             )}
           </div>
-          <div className="text-xs font-mono font-bold text-[var(--text-primary)] truncate" title={kpiStats.upcomingHigh?.event_name}>
-            {kpiStats.upcomingHigh?.event_name || 'No imminent high-impact data'}
+        }
+      />
+
+      {/* ======================================================== */}
+      {/* 2. MACRO REGIME & CONFLUENCE DOSSIER                     */}
+      {/* ======================================================== */}
+      <div className="terminal-panel p-4 sm:p-5 space-y-3 font-sans border" id="macro-regime-dossier-bar">
+        {/* Header & Regime Status */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b" style={{ borderColor: 'var(--border-hairline)' }}>
+          <div className="flex items-center gap-2">
+            <Compass className="w-4 h-4 text-[var(--accent)]" />
+            <h2 className="text-sm font-bold text-[var(--text-primary)] font-mono uppercase tracking-wide">
+              {t('overview.macroRegimeTitle')}
+            </h2>
           </div>
-          <div className="text-[11px] text-[var(--text-muted)]">
-            {kpiStats.upcomingHigh ? (
-              `${new Date(kpiStats.upcomingHigh.date_time_utc).toLocaleTimeString('en-GB', {
-                timeZone: 'Asia/Jakarta',
-                hour12: false,
-                hour: '2-digit',
-                minute: '2-digit',
-              })} WIB`
-            ) : 'Calendar clear for next session'}
+          <div className="flex items-center gap-2 font-mono text-xs">
+            <span className="text-[11px] text-[var(--text-muted)]">{t('overview.globalStance')}</span>
+            <span
+              className={`text-[10px] px-2 py-0.5 rounded font-semibold ${
+                kpiStats.regimeStatus === 'BULLISH' || riskScore > 15
+                  ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/30'
+                  : kpiStats.regimeStatus === 'BEARISH' || riskScore < -15
+                  ? 'bg-rose-500/10 text-rose-500 border border-rose-500/30'
+                  : 'bg-[var(--bg-section-alt)] text-[var(--text-secondary)] border border-[var(--border-subtle)]'
+              }`}
+            >
+              {activeRegime}
+            </span>
           </div>
         </div>
 
-        {/* KPI 4: Intermarket Flow Transmissions */}
-        <div className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-3.5 flex flex-col justify-between gap-2">
-          <div className="flex items-center justify-between">
-            <span className="metadata-label text-[10px] text-[var(--text-muted)]">
-              TRANSMISI YIELD US10Y
-            </span>
-            <button
-              onClick={() => onNavigateTab('intermarket')}
-              className="text-[10px] font-mono text-[var(--accent)] hover:underline cursor-pointer"
-            >
-              Matriks →
-            </button>
+        {/* Narrative Summary & Risk Appetite */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-start">
+          <div className="lg:col-span-8 space-y-2">
+            <p className="text-xs text-[var(--text-secondary)] leading-relaxed font-sans">
+              {globalRegime?.summaryNarrative || t('overview.fallbackNarrative')}
+            </p>
+            {globalRegime?.topCatalystHeadline && (
+              <div className="p-2 rounded bg-[var(--bg-section-alt)] border border-[var(--border-subtle)] text-[11.5px] text-[var(--text-primary)] flex items-start gap-1.5">
+                <Flame className="w-3.5 h-3.5 text-[var(--accent)] shrink-0 mt-0.5" />
+                <span className="font-medium">{globalRegime.topCatalystHeadline}</span>
+              </div>
+            )}
           </div>
-          <div className="text-[14px] font-bold font-mono text-[var(--text-primary)] flex items-center justify-between">
-            <span>{kpiStats.us10y?.price.toFixed(3) || '4.085'}%</span>
-            <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${
-              (kpiStats.us10y?.change_24h_pct ?? 0) <= -0.05
-                ? 'badge-bullish'
-                : (kpiStats.us10y?.change_24h_pct ?? 0) >= 0.05
-                ? 'badge-bearish'
-                : 'badge-neutral'
-            }`}>
-              {(kpiStats.us10y?.change_24h_pct ?? 0) <= -0.05
-                ? '▼ EASING'
-                : (kpiStats.us10y?.change_24h_pct ?? 0) >= 0.05
-                ? '▲ TIGHTENING'
-                : '● KONSOLIDASI'}
-            </span>
+
+          <div className="lg:col-span-4 p-3 rounded-lg bg-[var(--bg-section-alt)] border border-[var(--border-subtle)] space-y-2 font-mono text-xs">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] text-[var(--text-muted)] tracking-wider">{t('overview.riskAppetite')}</span>
+              <span className={`font-bold ${riskScore > 0 ? 'text-[var(--bullish)]' : riskScore < 0 ? 'text-[var(--bearish)]' : 'text-[var(--text-muted)]'}`}>
+                {riskScore > 0 ? `+${riskScore}` : riskScore} / 100
+              </span>
+            </div>
+            <div className="h-1.5 w-full rounded-full bg-[var(--bg-surface)] overflow-hidden">
+              <div
+                className={`h-full ${riskScore >= 0 ? 'bg-[var(--bullish)]' : 'bg-[var(--bearish)]'}`}
+                style={{ width: `${Math.min(100, Math.max(10, Math.abs(riskScore)))}%` }}
+              />
+            </div>
+            <div className="pt-1 flex items-center justify-between text-[10px] text-[var(--text-muted)] border-t" style={{ borderColor: 'var(--border-hairline)' }}>
+              <span>{t('overview.dxyVsOpen')}</span>
+              <span className={`font-bold ${dxyBiasVsOpen === 'ABOVE_OPEN' ? 'text-[var(--bearish)]' : dxyBiasVsOpen === 'BELOW_OPEN' ? 'text-[var(--bullish)]' : 'text-[var(--text-muted)]'}`}>
+                {dxyBiasVsOpen === 'ABOVE_OPEN' ? t('overview.dxyAbove') : dxyBiasVsOpen === 'BELOW_OPEN' ? t('overview.dxyBelow') : t('overview.dxyBalanced')}
+              </span>
+            </div>
           </div>
-          <div className="text-[11px] text-[var(--text-muted)]">
-            {(kpiStats.us10y?.change_24h_pct ?? 0) <= -0.05
-              ? 'Pelemahan yield: Dorongan beli ke Emas & Tech'
-              : (kpiStats.us10y?.change_24h_pct ?? 0) >= 0.05
-              ? 'Kenaikan yield: Tekanan beban oportunitas ke Emas'
-              : 'Discount rate stabil di batas sesi'}
+        </div>
+
+        {/* 4 Core Asset Telemetry Strip */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 pt-2 border-t text-xs font-mono" style={{ borderColor: 'var(--border-hairline)' }}>
+          {/* Item 1: DXY Quote */}
+          <div className="p-2.5 rounded bg-[var(--bg-section-alt)] border border-[var(--border-subtle)] space-y-0.5">
+            <span className="text-[9.5px] text-[var(--text-muted)] block tracking-wider uppercase">{t('overview.cardDxy')}</span>
+            <div className="flex items-baseline justify-between">
+              <span className="font-bold text-[var(--text-primary)]">{kpiStats.dxy?.price.toFixed(2) || '101.24'}</span>
+              <span className={`text-[10px] font-semibold ${((kpiStats.dxy?.change_24h_pct ?? 0) >= 0) ? 'text-[var(--bullish)]' : 'text-[var(--bearish)]'}`}>
+                {((kpiStats.dxy?.change_24h_pct ?? 0) >= 0) ? '+' : ''}{(kpiStats.dxy?.change_24h_pct ?? 0.18).toFixed(2)}%
+              </span>
+            </div>
+          </div>
+
+          {/* Item 2: Gold Spot */}
+          <div className="p-2.5 rounded bg-[var(--bg-section-alt)] border border-[var(--border-subtle)] space-y-0.5">
+            <span className="text-[9.5px] text-[var(--text-muted)] block tracking-wider uppercase">{t('overview.cardGold')}</span>
+            <div className="flex items-baseline justify-between">
+              <span className="font-bold text-[var(--text-primary)]">${kpiStats.gold?.price.toFixed(1) || '2,654.8'}</span>
+              <span className={`text-[10px] font-semibold ${((kpiStats.gold?.change_24h_pct ?? 0) >= 0) ? 'text-[var(--bullish)]' : 'text-[var(--bearish)]'}`}>
+                {((kpiStats.gold?.change_24h_pct ?? 0) >= 0) ? '+' : ''}{(kpiStats.gold?.change_24h_pct ?? 0.73).toFixed(2)}%
+              </span>
+            </div>
+          </div>
+
+          {/* Item 3: US10Y Benchmark */}
+          <div className="p-2.5 rounded bg-[var(--bg-section-alt)] border border-[var(--border-subtle)] space-y-0.5">
+            <span className="text-[9.5px] text-[var(--text-muted)] block tracking-wider uppercase">{t('overview.cardYield')}</span>
+            <div className="flex items-baseline justify-between">
+              <span className="font-bold text-[var(--text-primary)]">{kpiStats.us10y?.price.toFixed(3) || '4.085'}%</span>
+              <span className={`text-[10px] font-semibold ${
+                (kpiStats.us10y?.change_24h_pct ?? 0) <= -0.05
+                  ? 'text-[var(--bullish)]'
+                  : (kpiStats.us10y?.change_24h_pct ?? 0) >= 0.05
+                  ? 'text-[var(--bearish)]'
+                  : 'text-[var(--text-muted)]'
+              }`}>
+                {(kpiStats.us10y?.change_24h_pct ?? 0) <= -0.05 ? '▼ EASING' : (kpiStats.us10y?.change_24h_pct ?? 0) >= 0.05 ? '▲ TIGHTENING' : '● FLAT'}
+              </span>
+            </div>
+          </div>
+
+          {/* Item 4: Next High Impact */}
+          <div className="p-2.5 rounded bg-[var(--bg-section-alt)] border border-[var(--border-subtle)] space-y-0.5">
+            <span className="text-[9.5px] text-[var(--text-muted)] block tracking-wider uppercase">{t('overview.cardCatalyst')}</span>
+            <div className="font-bold text-[var(--text-primary)] truncate" title={kpiStats.upcomingHigh?.event_name}>
+              {kpiStats.upcomingHigh?.event_name || t('overview.noUpcomingEvent')}
+            </div>
           </div>
         </div>
       </div>
@@ -338,26 +285,26 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = React.memo(({
           {
             id: 'markets' as const,
             icon: BarChart2,
-            label: 'Market surveillance',
-            hint: 'Full quote grid · 14 instruments',
+            label: t('overview.cardMarketsTitle'),
+            hint: t('overview.cardMarketsHint'),
           },
           {
             id: 'currency' as const,
             icon: TrendingUp,
-            label: 'Currency G8 matrix',
-            hint: 'Strength chart · pair opportunity matrix',
+            label: t('overview.cardCurrencyTitle'),
+            hint: t('overview.cardCurrencyHint'),
           },
           {
             id: 'intermarket' as const,
             icon: Zap,
-            label: 'Intermarket flows',
-            hint: 'Cross-asset correlations & divergences',
+            label: t('overview.cardIntermarketTitle'),
+            hint: t('overview.cardIntermarketHint'),
           },
           {
             id: 'history' as const,
             icon: Clock,
-            label: 'Historical memory',
-            hint: 'Session archive · multi-day deltas',
+            label: t('overview.cardHistoryTitle'),
+            hint: t('overview.cardHistoryHint'),
           },
         ].map(({ id, icon: Icon, label, hint }) => (
           <button

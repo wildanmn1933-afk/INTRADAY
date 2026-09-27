@@ -222,17 +222,17 @@ export class IntradayMarketMapEngine {
           fundamentalScore = isEasing ? 60 : -45;
           priceActionScore = change24h <= 0 ? 55 : -55;
           topDrivers = [
-            `Ekspektasi siklus pelonggaran suku bunga Federal Reserve menjaga yield benchmark tenor 10 tahun tetap terkendali.`,
-            `Permintaan likuiditas institusional pada pasar obligasi pemerintah AS menstabilkan kurva diskonto global.`,
-            `Pelonggaran yield menjadi katalis utama ekspansi valuasi rasio P/E saham teknologi dan daya tarik aset tanpa imbal hasil (Emas).`,
+            `Federal Reserve policy recalibration expectations keep benchmark 10-year yields contained.`,
+            `Institutional sovereign debt demand stabilizes the benchmark discount curve.`,
+            `Yield easing provides the primary tailwind for tech P/E multiple expansion and non-yielding bullion (Gold) demand.`,
           ];
           conflictingFactors = [
-            `Lelang surat utang Treasury AS dengan bid-to-cover rendah berpotensi memicu lonjakan yield sementara.`,
-            `Ketahanan data inflasi inti atau ketenagakerjaan AS dapat menunda ekspektasi pemotongan suku bunga Fed yang agresif.`,
+            `Treasury debt auctions with low bid-to-cover metrics can prompt episodic yield spikes.`,
+            `Resilience in core inflation or labor data can defer aggressive policy rate cuts.`,
           ];
-          todayCatalyst = usKeyRelease ? `${usKeyRelease.event_name}` : `Lelang US Treasury, pidato FOMC, & rilis data inflasi AS`;
-          marketReaction = `Yield diperdagangkan di level ${currentPrice.toFixed(3)}% (${change24h >= 0 ? '+' : ''}${change24h.toFixed(2)}%); dinamika transmisi suku bunga mendikte arah Nasdaq dan DXY.`;
-          conditionsToChange = `Lonjakan yield di atas 4.25% akan memicu tekanan jual langsung pada ekuitas pertumbuhan, sedangkan penurunan di bawah 3.95% akan mempercepat reli risk-on.`;
+          todayCatalyst = usKeyRelease ? `${usKeyRelease.event_name}` : `US Treasury auctions, FOMC rhetoric, & inflation data prints`;
+          marketReaction = `Yield trading at ${currentPrice.toFixed(3)}% (${change24h >= 0 ? '+' : ''}${change24h.toFixed(2)}%); interest rate transmission dynamics directly steer Nasdaq and DXY sentiment.`;
+          conditionsToChange = `A yield spike above 4.25% would prompt immediate selling across growth equities, whereas a break below 3.95% would accelerate broad risk-on expansion.`;
           confidence = 91;
           break;
         }

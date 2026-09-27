@@ -284,7 +284,7 @@ export const MarketAlertModal: React.FC<MarketAlertModalProps> = ({ isOpen, onCl
                   className="w-full bg-[var(--bg-card)] border border-[var(--border-subtle)] px-3 py-2 rounded text-[var(--text-primary)] placeholder:text-[var(--text-muted)] outline-none focus:border-[var(--accent)]"
                 />
                 <p className="text-[10px] text-[var(--text-muted)] font-sans mt-0.5">
-                  Dapatkan Bot Token secara gratis dari <span className="text-[var(--accent)] font-semibold">@BotFather</span> di Telegram.
+                  Obtain your Bot Token for free from <span className="text-[var(--accent)] font-semibold">@BotFather</span> on Telegram.
                 </p>
               </div>
 
@@ -300,7 +300,7 @@ export const MarketAlertModal: React.FC<MarketAlertModalProps> = ({ isOpen, onCl
                   className="w-full bg-[var(--bg-card)] border border-[var(--border-subtle)] px-3 py-2 rounded text-[var(--text-primary)] placeholder:text-[var(--text-muted)] outline-none focus:border-[var(--accent)]"
                 />
                 <p className="text-[10px] text-[var(--text-muted)] font-sans mt-0.5">
-                  Chat ID pribadi/grup Anda. Dapatkan ID Anda via bot <span className="text-[var(--accent)] font-semibold">@userinfobot</span> di Telegram.
+                  Your personal or group Chat ID. Obtain your ID via <span className="text-[var(--accent)] font-semibold">@userinfobot</span> on Telegram.
                 </p>
               </div>
 
@@ -390,7 +390,7 @@ export const MarketAlertModal: React.FC<MarketAlertModalProps> = ({ isOpen, onCl
                 <div className="p-2 rounded border border-[var(--border-subtle)] bg-[var(--bg-card)] text-[11px] text-[var(--text-primary)]">
                   <span className="font-bold text-emerald-500">2+ Confluences Aligned</span>
                   <p className="text-[10px] text-[var(--text-muted)] font-sans mt-0.5">
-                    Hanya mengirimkan notifikasi saat terbentuk aksi <b>LOOK FOR BUY</b> atau <b>LOOK FOR SELL</b> (minimal 2 pilar selaras tanpa divergensi).
+                    Dispatches notifications only when a qualified <b>LOOK FOR BUY</b> or <b>LOOK FOR SELL</b> bias materializes (minimum 2 pillars aligned without conflicting divergence).
                   </p>
                 </div>
               </div>
@@ -411,7 +411,7 @@ export const MarketAlertModal: React.FC<MarketAlertModalProps> = ({ isOpen, onCl
                   <option value={480}>480 Minutes (8 Hours)</option>
                 </select>
                 <p className="text-[10px] text-[var(--text-muted)] font-sans mt-0.5">
-                  Mencegah spam; sinyal pada pair yang sama tidak akan dikirim ulang sebelum masa cooldown berakhir (kecuali jika arah bias berbalik).
+                  Anti-spam protection: alerts on the same pair will not re-trigger until the cooldown period expires (unless the directional bias reverses).
                 </p>
               </div>
             </div>

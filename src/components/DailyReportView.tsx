@@ -42,6 +42,7 @@ import { PageHeader } from './shared/PageHeader';
 import { LoadingState } from './shared/LoadingState';
 import { EmptyState } from './shared/EmptyState';
 import { NavTabId } from './Sidebar';
+import { useLanguage } from '../lib/LanguageContext';
 
 interface DailyReportViewProps {
   user?: User | null;
@@ -57,7 +58,7 @@ export const DailyReportView: React.FC<DailyReportViewProps> = React.memo(({
   onSelectSymbol,
 }) => {
   const [activeTab, setActiveTab] = useState<IntelligenceTab>('daily');
-  const [language, setLanguage] = useState<'id' | 'en'>('id');
+  const { language, setLanguage } = useLanguage();
   const [epistemicFilter, setEpistemicFilter] = useState<'ALL' | EpistemicTag>('ALL');
 
   // Daily report state
@@ -359,25 +360,25 @@ export const DailyReportView: React.FC<DailyReportViewProps> = React.memo(({
         return (
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold font-mono text-[var(--bearish)] bg-[var(--bearish-bg)] border border-[var(--bearish-border)]">
             <span className="w-1.5 h-1.5 rounded-full bg-[var(--bearish)] animate-pulse"></span>
-            HIGH IMPACT
+            {language === 'id' ? 'DAMPAK TINGGI' : 'HIGH IMPACT'}
           </span>
         );
       case 'MODERATE_IMPACT':
         return (
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold font-mono text-[var(--warning)] bg-[var(--warning-bg)] border border-[var(--warning-border)]">
-            MODERATE IMPACT
+            {language === 'id' ? 'DAMPAK MODERAT' : 'MODERATE IMPACT'}
           </span>
         );
       case 'LOW_IMPACT':
         return (
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold font-mono text-[var(--bullish)] bg-[var(--bullish-bg)] border border-[var(--bullish-border)]">
-            LOW IMPACT
+            {language === 'id' ? 'DAMPAK RENDAH' : 'LOW IMPACT'}
           </span>
         );
       case 'NO_SIGNIFICANT_REACTION':
         return (
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold font-mono text-[var(--text-muted)] bg-[var(--bg-section-alt)] border border-[var(--border-subtle)]">
-            NO REACTION / NOISE
+            {language === 'id' ? 'TANPA REAKSI SIGNIFIKAN' : 'NO REACTION / NOISE'}
           </span>
         );
     }
@@ -403,9 +404,9 @@ export const DailyReportView: React.FC<DailyReportViewProps> = React.memo(({
       {/* 1. UNIFIED PAGE HEADER & SUITE CONTROLS */}
       <section className="terminal-panel p-4 sm:p-5 border transition-colors">
         <PageHeader
-          eyebrow="SURVEILLANCE · MARKET INTELLIGENCE"
-          accentNote="CAUSAL TRANSMISSION DESK"
-          title="Market Intelligence Reporting System"
+          eyebrow={language === 'id' ? 'SURVEILANS · INTELIJEN PASAR' : 'SURVEILLANCE · MARKET INTELLIGENCE'}
+          accentNote={language === 'id' ? 'DESK TRANSMISI KAUSAL' : 'CAUSAL TRANSMISSION DESK'}
+          title={language === 'id' ? 'Sistem Laporan Intelijen Pasar' : 'Market Intelligence Reporting System'}
           description={
             language === 'id'
               ? 'Transmisi makro kausal dan analisis epistemik multi-sesi. Mengisolasi katalis berdampak nyata dari kebisingan berita, membandingkan ekspektasi vs realita, dan menyimpan memori pola historis.'
@@ -1626,13 +1627,17 @@ export const DailyReportView: React.FC<DailyReportViewProps> = React.memo(({
                       <span className="absolute -left-[21px] sm:-left-[29px] top-1 w-2.5 h-2.5 rounded-full bg-[var(--accent)] border-2 border-[var(--bg-canvas)]"></span>
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-mono font-bold text-[var(--accent)]">{trans.date}</span>
-                        <span className="text-[10px] text-[var(--text-muted)] font-mono">({trans.durationDays} hari dalam rezim baru)</span>
+                        <span className="text-[10px] text-[var(--text-muted)] font-mono">
+                          {language === 'id' ? `(${trans.durationDays} hari dalam rezim baru)` : `(${trans.durationDays}d in new regime)`}
+                        </span>
                       </div>
                       <div className="text-xs font-semibold text-[var(--text-primary)]">
                         {trans.fromRegime} <span className="text-[var(--text-muted)]">→</span> <span className="text-[var(--bullish)]">{trans.toRegime}</span>
                       </div>
                       <p className="text-xs text-[var(--text-secondary)]">
-                        <strong className="text-[var(--text-primary)]">Katalis Pemicu:</strong> {trans.triggeringCatalyst}
+                        <strong className="text-[var(--text-primary)]">
+                          {language === 'id' ? 'Katalis Pemicu:' : 'Trigger Catalyst:'}
+                        </strong> {trans.triggeringCatalyst}
                       </p>
                     </div>
                   ))}
